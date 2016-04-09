@@ -67,9 +67,6 @@ module RegistrationCommands
         # Make an announcement welcoming him to everyone
         event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
 
-        # Get current server (workaround)
-        server = event.bot.server(150_739_077_757_403_137)
-
         # Add 'verified' role
         event.user.add_role(server, server.role(152_956_497_679_220_736))
 
