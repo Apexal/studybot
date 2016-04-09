@@ -25,7 +25,7 @@ module UtilityCommands
       if result.count > 0
         result = result.first
         user = event.bot.user(result['discord_id'])
-        event << "**#{result['first_name']} result['last_name']** of **#{result['advisement']}** *(#{username})* is #{user.mention()}!"
+        event << "**#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** is #{user.mention()}!"
         # event << result['mpicture']
       else
         event << "*#{username}* is not yet registered!"
