@@ -1,0 +1,19 @@
+---
+# Rename this to config.yaml
+
+auth:
+  discord:
+    application_id: 00000000000000
+    token: 'XXXXXXXXXXXXXXX'
+  mysql:
+    host: 'localhost'
+    database: 'db'
+    username: 'root'
+    password: 'password'
+  gmail:
+    username: 'username'
+    passkey: 'XXXXXXXXXXX'
+
+options:
+  bot:
+    prefix: '!'
