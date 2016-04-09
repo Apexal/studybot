@@ -24,10 +24,6 @@ $db = Mysql2::Client.new(host: $CONFIG["auth"]["mysql"]["host"], username: $CONF
 
 bot = Discordrb::Commands::CommandBot.new debug: true, token: $CONFIG["auth"]["discord"]["token"], application_id: $CONFIG["auth"]["discord"]["application_id"], prefix: $CONFIG["options"]["bot"]["prefix"]
 
-bot.message(with_text: 'Ping!') do |event|
-  event.respond 'Pong!'
-end
-
 bot.ready do |event|
   puts "Ready!"
 end
