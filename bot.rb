@@ -6,6 +6,7 @@ require 'yaml'
 $CONFIG = YAML::load_file('./config.yaml')
 
 require './modules/registration.rb'
+require './modules/rooms.rb'
 require './modules/utils.rb'
 
 Mail.defaults do
@@ -31,6 +32,7 @@ end
 
 bot.include! RegistrationEvents
 bot.include! RegistrationCommands
+bot.include! RoomCommands
 bot.include! UtilityEvents
 bot.include! UtilityCommands
 bot.include! Suppressor
