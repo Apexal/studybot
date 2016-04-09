@@ -2,7 +2,7 @@ class DummyRoleWriter
   def write(bits); end
 end
 
-module GameManager
+module GameEvents
   extend Discordrb::EventContainer
 
   # Stores info on who is playing what
