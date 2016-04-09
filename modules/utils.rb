@@ -51,6 +51,37 @@ module UtilityCommands
       "*#{who.name}* is not yet registered!"
     end
   end
+
+  command(:adv, description: 'List all users in an advisement. Usage: `!adv` or `!adv advisement`') do |event, adv|
+    if adv
+      adv = $db.escape(adv).upcase
+      if event.message.mentions.length == 1
+        adv = $db.query("SELECT advisement FROM students WHERE discord_id=#{event.message.mentions.first.id}").first['advisement']
+      end
+      query = "SELECT * FROM students WHERE verified=1 AND advisement LIKE '#{adv}%' ORDER BY advisement ASC"
+      event << "**:page_facing_up: __Listing All Users in #{adv}__ :page_facing_up:**"
+
+      results = $db.query(query)
+      results.each do |row|
+        user = event.bot.user(row['discord_id'])
+        if user
+          event << "`-` #{user.mention} #{row['first_name']} #{row['last_name']}"
+        end
+      end
+      event << "*#{results.count} total*"
+    else
+      total_users = 0
+      event << '**:page_facing_up: __Advisement Statistics__ :page_facing_up:**'
+      results = $db.query('SELECT advisement, COUNT(*) as count FROM students WHERE verified=1 GROUP BY advisement')
+      results.each do |row|
+        total_users += row['count']
+        event << "`-` **#{row['advisement']}** *#{row['count']} users*"
+      end
+      event << "*#{results.count} total advisements*"
+      event << "*#{total_users} total users*"
+    end
+    return ''
+  end
 end
 
 module Suppressor
