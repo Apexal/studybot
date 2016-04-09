@@ -19,9 +19,9 @@ module UtilityCommands
 
   command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user`') do |event, username|
     # Get user mentioned or default to sender of command
-    if username != nil and !username.start_with?("<@") 
+    if username != nil and !username.start_with?("<@")
       username = $db.escape(username)
-      result = $db.query("SELECT * FROM students WHERE username=#{username}")
+      result = $db.query("SELECT * FROM students WHERE username='#{username}'")
       if result.count > 0
         result = result.first
         user = event.bot.user(result['discord_id'])
