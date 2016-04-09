@@ -42,7 +42,7 @@ module RegistrationCommands
   end
 
   command(:verify, description: 'Verifies your identity with the emailed code.') do |event, code|
-    server = event.server
+    server = event.bot.server(150739077757403137)
     # Make sure they passed a code!
     if code != nil
       # Change hex code back into characters
