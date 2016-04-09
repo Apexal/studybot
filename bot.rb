@@ -3,7 +3,7 @@ require 'mysql2'
 require 'mail'
 require 'yaml'
 
-$CONFIG = YAML::load_file('../config.yaml')
+$CONFIG = YAML::load_file('./config.yaml')
 
 require './modules/registration.rb'
 
