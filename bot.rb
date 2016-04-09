@@ -9,6 +9,7 @@ require './modules/registration.rb'
 require './modules/rooms.rb'
 require './modules/games.rb'
 require './modules/quotes.rb'
+require './modules/voicechannels.rb'
 require './modules/utils.rb'
 
 Mail.defaults do
@@ -22,16 +23,18 @@ end
 
 $db = Mysql2::Client.new(host: $CONFIG["auth"]["mysql"]["host"], username: $CONFIG["auth"]["mysql"]["username"], password: $CONFIG["auth"]["mysql"]["password"], database: $CONFIG["auth"]["mysql"]["database"])
 
-bot = Discordrb::Commands::CommandBot.new debug: true, token: $CONFIG["auth"]["discord"]["token"], application_id: $CONFIG["auth"]["discord"]["application_id"], prefix: $CONFIG["options"]["bot"]["prefix"]
+bot = Discordrb::Commands::CommandBot.new token: $CONFIG["auth"]["discord"]["token"], application_id: $CONFIG["auth"]["discord"]["application_id"], prefix: $CONFIG["options"]["bot"]["prefix"]
 
 bot.ready do |event|
   puts "Ready!"
+  event.bot.game = "With Your Mind"
 end
 
 bot.include! RegistrationEvents
 bot.include! RegistrationCommands
 bot.include! RoomCommands
 bot.include! GameEvents
+bot.include! VoiceChannelEvents
 bot.include! UtilityEvents
 bot.include! UtilityCommands
 bot.include! QuoteCommands

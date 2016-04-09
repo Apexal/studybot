@@ -82,6 +82,11 @@ module UtilityCommands
     end
     return ''
   end
+  
+  command :exit do |event|
+	event.message.delete
+	event.bot.stop
+  end
 end
 
 module Suppressor

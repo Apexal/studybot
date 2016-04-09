@@ -24,9 +24,9 @@ module QuoteCommands
         botrole = server.roles.find { |r| r.name == 'bots' }
 
         if event.message.mentions.last != nil
-          quote = event.channel.history(30).find {|m| m.content.start_with?("!") == false and m.content.start_with?("?") == false and m.author.roles[server.id].include?(botrole) == false and m.author.id == sid}
+          quote = event.channel.history(30).find {|m| m.content.start_with?("!") == false and m.content.start_with?("?") == false and m.author.roles.include?(botrole) == false and m.author.id == sid}
         else
-          quote = event.channel.history(30).find {|m| m.content.start_with?("!") == false and m.content.start_with?("?") == false and m.author.roles[server.id].include?(botrole) == false }
+          quote = event.channel.history(30).find {|m| m.content.start_with?("!") == false and m.content.start_with?("?") == false and m.author.roles.include?(botrole) == false }
           speaker = $db.query("SELECT * FROM students WHERE discord_id=#{quote.author.id}").first # Yikes
         end
 
