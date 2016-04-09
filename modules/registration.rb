@@ -36,7 +36,6 @@ module RegistrationCommands
       event.user.pm('Invalid username! Please use your Regis username.')
       return
     end
-    "In Progress"
   end
 
   command(:verify, description: 'Verifies your identity with the emailed code.') do |event, code|
