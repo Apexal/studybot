@@ -2,7 +2,6 @@ module UtilityEvents
   extend Discordrb::EventContainer
 
   message(containing: '@online') do |event|
-    # server = event.bot.server(150739077757403137)
     mentions = []
     event.channel.users.each do |user|
       if [:online, :idle].include?(user.status) && (!['studybot', 'SuperUser', 'JunkBot', 'testing-bot', 'DiscordDJ'].include? user.name)
@@ -17,22 +16,21 @@ end
 module UtilityCommands
   extend Discordrb::Commands::CommandContainer
 
-  command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user`') do |event, username|
+  command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user or !whois regisusername`') do |event, username|
     # Get user mentioned or default to sender of command
     if username != nil and !username.start_with?("<@")
+      # Prevent nasty SQL injection
       username = $db.escape(username)
       result = $db.query("SELECT * FROM students WHERE username='#{username}'")
       if result.count > 0
         result = result.first
         user = event.bot.user(result['discord_id'])
         event << "**#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** is #{user.mention()}!"
-        # event << result['mpicture']
       else
         event << "*#{username}* is not yet registered!"
       end
       return
     end
-
 
     # Otherwise go off of mentions
     who = event.user
@@ -49,7 +47,6 @@ module UtilityCommands
     if result.count > 0
       result = result.first
       event << "*#{who.name}* is **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}**!"
-      # event << result['mpicture']
     else
       "*#{who.name}* is not yet registered!"
     end
@@ -61,5 +58,6 @@ module Suppressor
 
   message(containing: 'discord.gg') do |event|
     event.message.delete
+    event.user.pm "I wouldn't do that if I were you."
   end
 end
