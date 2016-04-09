@@ -6,6 +6,7 @@ require 'yaml'
 $CONFIG = YAML::load_file('./config.yaml')
 
 require './modules/registration.rb'
+require './modules/utils.rb'
 
 Mail.defaults do
   delivery_method :smtp, address: 'smtp.gmail.com',
@@ -24,6 +25,14 @@ bot.message(with_text: 'Ping!') do |event|
   event.respond 'Pong!'
 end
 
+bot.ready do |event|
+  puts "Ready!"
+end
+
 bot.include! RegistrationEvents
 bot.include! RegistrationCommands
+bot.include! UtilityEvents
+bot.include! UtilityCommands
+bot.include! Suppressor
+
 bot.run
