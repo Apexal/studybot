@@ -1,6 +1,9 @@
 module RegistrationEvents
   extend Discordrb::EventContainer
 
+  member_join do |event|
+    event.user.pm "Welcome to the Regis Discord Server, **#{event.user.name}**! Please tell us who you are by typing `!register yourregisusername`. *You will not be able to participate in the server until you do this.*"
+  end
 end
 
 module RegistrationCommands
