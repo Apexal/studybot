@@ -1,16 +1,20 @@
 module QuoteCommands
   extend Discordrb::Commands::CommandContainer
 
-  command(:addquote, description: 'Quote someone!') do |event, quote|
-    if quote != nil and quote.start_with? "<@"
+  command(:addquote, description: 'Quote someone!') do |event, quote, user|
+    if quote != nil and quote.split(" ").length == 1 and quote.start_with? "<@"
       quote = nil
     end
     server = event.bot.server(150739077757403137)
     speaker = event.user
     # Get first mentioned user to attribute quote to or if none is attributed use sender
     speaker = event.message.mentions.last unless event.message.mentions.empty?
-    sid = speaker.id
-
+    if !user.nil? and user.start_with? "<@"
+		speaker = event.bot.parse_mention user
+	end
+	sid = speaker.id
+	
+	
     speaker = $db.query("SELECT * FROM students WHERE discord_id=#{speaker.id}")
     # If user who sent message has linked Regis account (99.99% probability)
     user = $db.query("SELECT * FROM students WHERE discord_id=#{event.user.id}")
@@ -37,7 +41,6 @@ module QuoteCommands
         quote = quote.content
       end
 
-      quote = quote.gsub '"', "'" # Turn array of words into text and remove quotes if added
       quote = $db.escape(quote) # Escape text so no SQL injection
 
       if quote.length > 450
@@ -78,7 +81,7 @@ module QuoteCommands
 
     $db.query(query).each_slice(20) do |rows|
       rows.each do |row|
-        m = "`#{row['id']}` *\"#{row['text']}\"* "
+        m = "`#{row['id']}` *\"#{row['text'].gsub("\"", "'")}\"* "
         if method == :self
           m << "**~#{row['attributed_to']}**"
         end

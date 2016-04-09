@@ -43,6 +43,7 @@ module RegistrationCommands
 
   command(:verify, description: 'Verifies your identity with the emailed code.') do |event, code|
     server = event.bot.server(150739077757403137)
+	user = event.user.on(server)
     # Make sure they passed a code!
     if code != nil
       # Change hex code back into characters
@@ -59,17 +60,22 @@ module RegistrationCommands
         result = result.first
 
         # Set his discord_id and make him verified in the db
-        $db.query("UPDATE students SET discord_id='#{event.user.id}', verified=1 WHERE username='#{escaped}'")
+        $db.query("UPDATE students SET discord_id='#{user.id}', verified=1 WHERE username='#{escaped}'")
 
         # PM him a congratulatory message
-        event.user.pm("Congratulations, **#{result['first_name']}**. You are now a verifed Regis Discord User!")
+        user.pm("Congratulations, **#{result['first_name']}**. You are now a verifed Regis Discord User!")
 
         # Make an announcement welcoming him to everyone
-        event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
+        #event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
 
         # Add 'verified' role
-        event.user.add_role(server, server.role(152_956_497_679_220_736))
-
+        
+		# TODO: remember to change these back when Discordrb is updated
+		vrole = server.roles.find{|r| r.name == "verified"}
+		Discordrb::API.update_user_roles(event.bot.token, server.id, user.id, user.roles.map(&:id) + [vrole.id])
+		
+		#user.add_role(vrole)
+		
         # Decide grade for role
         digit = result['advisement'][0].to_i
         rolename = 'freshmen'
@@ -82,8 +88,10 @@ module RegistrationCommands
         end
 
         # Add grade role
-        event.user.add_role(server, server.roles.find { |r| r.name == rolename })
-
+		grole = server.roles.find { |r| r.name == rolename }
+        #user.add_role(server, grole)
+		Discordrb::API.update_user_roles(event.bot.token, server.id, user.id, user.roles.map(&:id) + [grole.id])
+		
         # Find advisement role or create it then add it to ther user
         adv = result['advisement'][0..1]
         advrole = server.roles.find { |r| r.name == adv }
@@ -93,8 +101,9 @@ module RegistrationCommands
           advrole.hoist = true
         end
 
-        event.user.add_role(server, advrole)
-
+        #user.add_role(advrole)
+		Discordrb::API.update_user_roles(event.bot.token, server.id, user.id, user.roles.map(&:id) + [advrole.id])
+		
         bots_role_id = server.roles.find { |r| r.name == 'bots' }.id
 
         # Advisement channel handling
@@ -119,7 +128,7 @@ module RegistrationCommands
           Discordrb::API.update_role_overrides(token, channel_id, bots_role_id, allow_perms.bits, 0) # bots
         end
       else
-        event.user.pm('Incorrect code!')
+        user.pm('Incorrect code!')
       end
     end
 
