@@ -9,9 +9,10 @@ module RoomCommands
   joinable = %w(gaming memes meta)
 
   command(:join, description: 'Join a special channel. `!join channelname`') do |event, channel_name|
+    server = event.bot.server(150739077757403137)
 
     if event.channel.private?
-      channel = event.server.channels.find { |c| c.name == channel_name }
+      channel = server.channels.find { |c| c.name == channel_name }
 
       if !channel.nil? && joinable.include?(channel_name)
         token = event.bot.token
@@ -32,8 +33,10 @@ module RoomCommands
   end
 
   command(:leave, description: 'Leave a special channel.') do |event, channel_name|
+    server = event.bot.server(150739077757403137)
+
     if event.channel.private?
-      channel = event.server.channels.find { |c| c.name == channel_name }
+      channel = server.channels.find { |c| c.name == channel_name }
 
       if !channel.nil? && joinable.include?(channel_name)
         token = event.bot.token
