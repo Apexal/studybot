@@ -2,6 +2,7 @@ require 'discordrb'
 require 'mysql2'
 require 'mail'
 require 'yaml'
+require 'nokogiri'
 
 $CONFIG = YAML::load_file('./config.yaml')
 
@@ -11,6 +12,8 @@ require './modules/games.rb'
 require './modules/quotes.rb'
 require './modules/voicechannels.rb'
 require './modules/utils.rb'
+
+
 
 Mail.defaults do
   delivery_method :smtp, address: 'smtp.gmail.com',
@@ -24,6 +27,11 @@ end
 $db = Mysql2::Client.new(host: $CONFIG["auth"]["mysql"]["host"], username: $CONFIG["auth"]["mysql"]["username"], password: $CONFIG["auth"]["mysql"]["password"], database: $CONFIG["auth"]["mysql"]["database"])
 
 bot = Discordrb::Commands::CommandBot.new advanced_functionality: true, token: $CONFIG["auth"]["discord"]["token"], application_id: $CONFIG["auth"]["discord"]["application_id"], prefix: $CONFIG["options"]["bot"]["prefix"]
+
+@events = Nokogiri::HTML(open("calendar.html")).xpath("//div[@id='main']//a[contains(text(), ';')]").map do |e|
+	parts = e.text.gsub(";", "").gsub(",", "").split(" ")
+	{:adv => parts[0], :course => parts[1...-1].join(" "), :teacher => parts[-1]}
+end
 
 bot.ready do |event|
   puts "Ready!"
