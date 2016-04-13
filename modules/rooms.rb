@@ -1,5 +1,18 @@
-class DummyRoleWriter
-  def write(bits); end
+module RoomEvents
+  extend Discordrb::EventContainer
+
+  presence do |event|
+    adv = $db.query("SELECT advisement FROM students WHERE discord_id=#{event.user.id}")
+    
+    if adv.count == 0
+      return
+    end
+    adv = adv.first["advisement"]
+    teachers = $db.query("SELECT staffs.last_name FROM staffs JOIN courses ON courses.teacher_id=staffs.id JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id WHERE students.discord_id=#{event.user.id}").map { |t| t['last_name'] }.uniq
+    
+    useful = $events.find_all { |e| adv.include? e[:adv] and teachers.include? e[:teacher] }
+    puts useful
+  end
 end
 
 module RoomCommands
@@ -40,7 +53,7 @@ module RoomCommands
         deny_perms.can_send_messages = true
         deny_perms.can_read_message_history = true
         deny_perms.can_mention_everyone = true
-		
+
         Discordrb::API.update_user_overrides(event.bot.token, channel.id, event.user.id, 0, deny_perms.bits)
         event.message.reply "You have left #{channel.mention}!"
       else
@@ -52,5 +65,49 @@ module RoomCommands
     end
 
     nil
+  end
+  
+  command :test do |event|
+    adv = $db.query("SELECT advisement FROM students WHERE discord_id=#{event.user.id}")
+    
+    if adv.count == 0
+      return
+    end
+    adv = adv.first["advisement"]
+    teachers = $db.query("SELECT staffs.last_name FROM staffs JOIN courses ON courses.teacher_id=staffs.id JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id WHERE students.discord_id=#{event.user.id}").map { |t| t['last_name'] }.uniq
+    
+    grades = {"1" => ["9", "I"], "2" => ["10", "II"], "3" => ["11", "III"], "4" => ["12", "IV"]}
+    
+    used = grades[adv[0]]
+    unused = []
+    puts grades[adv[0]]
+    
+    grades.each do |i, g| 
+      puts "#{i} vs #{adv[0]}"
+      if i != adv[0]
+        g.each {|c| unused << c }
+      end
+    end
+    
+    
+    useful = $events.find_all { |e| adv.include? e[:adv] and teachers.include? e[:teacher] and e[:date] > (DateTime.now - 1)}
+  
+    useful.each do |e|
+      skip = false 
+      unused.each do |text|
+        if e[:course].split(" ").include? text
+          skip = true
+        end
+      end
+      
+      if !skip
+        name = e[:course].split(" ")[0..1].select{|p| !used.include? p}.join("-")
+        name = "#{e[:adv]}_#{name}_test".downcase
+        
+        if event.server.text_channels.find {|c| c.name == name } == nil
+          puts "made ##{name}"
+        end
+      end
+    end
   end
 end

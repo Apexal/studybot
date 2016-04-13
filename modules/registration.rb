@@ -71,7 +71,7 @@ module RegistrationCommands
         # Add 'verified' role
 		vrole = server.roles.find{|r| r.name == "verified"}
 		user.add_role(vrole)
-		
+
         # Decide grade for role
         digit = result['advisement'][0].to_i
         rolename = 'freshmen'
@@ -86,7 +86,7 @@ module RegistrationCommands
         # Add grade role
 		grole = server.roles.find { |r| r.name == rolename }
         user.add_role(server, grole)
-		
+
         # Find advisement role or create it then add it to ther user
         adv = result['advisement'][0..1]
         advrole = server.roles.find { |r| r.name == adv }
@@ -97,7 +97,7 @@ module RegistrationCommands
         end
 
         user.add_role(advrole)
-		
+
         bots_role_id = server.roles.find { |r| r.name == 'bots' }.id
 
         # Advisement channel handling
@@ -106,7 +106,7 @@ module RegistrationCommands
         role_id = advrole.id
         user_id = event.user.id
 
-        allow_perms = Discordrb::Permissions.new(0, DummyRoleWriter.new)
+        allow_perms = Discordrb::Permissions.new
         allow_perms.can_read_messages = true
         allow_perms.can_send_messages = true
         allow_perms.can_read_message_history = true

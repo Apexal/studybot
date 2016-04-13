@@ -2,6 +2,18 @@ require 'discordrb'
 require 'mysql2'
 require 'mail'
 require 'yaml'
+require 'nokogiri'
+require 'date'
+
+$events = Nokogiri::HTML(open("calendar.html")).xpath("//div[@id='main']//a[contains(text(), ';')]").map do |e|
+	parts = e.text.gsub(";", "").gsub(",", "").split(" ")
+	day = e.xpath('./../../../../../../..//tr[@class="hb"]//strong').text.gsub(/[^0-9]/, '')
+	
+	now = Time.now
+	date = DateTime.new(now.year, now.month, Integer(day))
+	
+	{:date => date, :adv => parts[0], :course => parts[1...-1].join(" "), :teacher => parts[-1]}
+end
 
 $CONFIG = YAML::load_file('./config.yaml')
 
