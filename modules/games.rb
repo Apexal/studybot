@@ -19,7 +19,7 @@ module GameEvents
       end
 
       user_id = event.user.id
-      game_channel = server.channels.find { |c| c.name == playing[event.user.id] }
+      game_channel = server.voice_channels.find {|c| c.name == playing[event.user.id]}
 
       if joining
         if game_channel.nil? && playing.values.count(game) >= 2
@@ -30,10 +30,10 @@ module GameEvents
         playing.delete(event.user.id)
 
         # If nobody is playing the game anymore
-        if playing.value?(gname) == false
+        if playing.count(gname) < 2
           # Move all people inside to the Music channel
 		  if !game_channel.nil?
-			  musicchannel = server.channels.find { |c| c.name == "Music" }
+			  musicchannel = server.voice_channels.find { |c| c.name == "Music" }
 			  game_channel.users.each { |u| event.server.move(u, musicchannel) }
 			  game_channel.delete
 		  end

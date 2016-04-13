@@ -30,6 +30,7 @@ bot.ready do |event|
   event.bot.game = "With Your Mind"
 end
 
+bot.bucket :abusable, limit: 3, time_span: 60, delay: 10
 bot.include! RegistrationEvents
 bot.include! RegistrationCommands
 bot.include! RoomCommands

@@ -69,12 +69,8 @@ module RegistrationCommands
         #event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
 
         # Add 'verified' role
-        
-		# TODO: remember to change these back when Discordrb is updated
 		vrole = server.roles.find{|r| r.name == "verified"}
-		Discordrb::API.update_user_roles(event.bot.token, server.id, user.id, user.roles.map(&:id) + [vrole.id])
-		
-		#user.add_role(vrole)
+		user.add_role(vrole)
 		
         # Decide grade for role
         digit = result['advisement'][0].to_i
@@ -89,8 +85,7 @@ module RegistrationCommands
 
         # Add grade role
 		grole = server.roles.find { |r| r.name == rolename }
-        #user.add_role(server, grole)
-		Discordrb::API.update_user_roles(event.bot.token, server.id, user.id, user.roles.map(&:id) + [grole.id])
+        user.add_role(server, grole)
 		
         # Find advisement role or create it then add it to ther user
         adv = result['advisement'][0..1]
@@ -101,8 +96,7 @@ module RegistrationCommands
           advrole.hoist = true
         end
 
-        #user.add_role(advrole)
-		Discordrb::API.update_user_roles(event.bot.token, server.id, user.id, user.roles.map(&:id) + [advrole.id])
+        user.add_role(advrole)
 		
         bots_role_id = server.roles.find { |r| r.name == 'bots' }.id
 

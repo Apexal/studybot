@@ -15,7 +15,12 @@ end
 
 module UtilityCommands
   extend Discordrb::Commands::CommandContainer
-
+	
+	command(:flag, description: 'Show the official Regis Discord flag!') do |event|
+		event.channel.send_file(File.open('./flag.png', 'rb'))
+		'Designed by *Liam Quinn*'
+	end
+	
   command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user or !whois regisusername`') do |event, username|
     # Get user mentioned or default to sender of command
     if username != nil and !username.start_with?("<@")
@@ -81,6 +86,25 @@ module UtilityCommands
       event << "*#{total_users} total users*"
     end
     return ''
+  end
+  
+
+  command(:color, description: 'Set your color! Usage: `!color colorname`') do |event, color|
+    server = event.bot.server(150739077757403137)
+    colors = %w(red yellow purple blue green)
+    if colors.include?(color) || color == 'default'
+      colors.each do |c|
+        crole = server.roles.find { |r| r.name == c }
+        if c == color
+          event.user.add_role(crole)
+        else
+          event.user.remove_role(crole)
+        end
+      end
+      'Successfully changed user color!'
+    else
+      "The available colors are **#{colors.join ', '}, and default**."
+    end
   end
   
   command :exit do |event|

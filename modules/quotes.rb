@@ -56,7 +56,7 @@ module QuoteCommands
     end
   end
 
-  command(:quotes, description: 'List all of your quotes!') do |event|
+  command(:quotes, description: 'List all of your quotes!', bucket: :abusable) do |event|
 	if event.channel.name == "work"
 	  event.user.pm "Quotes can not be viewed in #work! Try #recreation."
 	  return
