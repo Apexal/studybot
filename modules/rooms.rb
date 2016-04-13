@@ -1,25 +1,14 @@
 module RoomEvents
   extend Discordrb::EventContainer
 
-  presence do |event|
-    adv = $db.query("SELECT advisement FROM students WHERE discord_id=#{event.user.id}")
-    
-    if adv.count == 0
-      return
-    end
-    adv = adv.first["advisement"]
-    teachers = $db.query("SELECT staffs.last_name FROM staffs JOIN courses ON courses.teacher_id=staffs.id JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id WHERE students.discord_id=#{event.user.id}").map { |t| t['last_name'] }.uniq
-    
-    useful = $events.find_all { |e| adv.include? e[:adv] and teachers.include? e[:teacher] }
-    puts useful
-  end
+  
 end
 
 module RoomCommands
   extend Discordrb::Commands::CommandContainer
 
   # List of special channels
-  joinable = %w(gaming memes meta)
+  joinable = %w(gaming memes meta testing)
 
   command(:join, description: 'Join a special channel. Usage: `!join channelname`') do |event, channel_name|
     server = event.bot.server(150739077757403137)
@@ -101,12 +90,24 @@ module RoomCommands
       end
       
       if !skip
-        name = e[:course].split(" ")[0..1].select{|p| !used.include? p}.join("-")
-        name = "#{e[:adv]}_#{name}_test".downcase
+        name = e[:course].split(" ")[0]
+        name = "#{e[:adv]}-#{name}-test".downcase
         
-        if event.server.text_channels.find {|c| c.name == name } == nil
-          puts "made ##{name}"
+        test_channel = event.server.text_channels.find {|c| c.name == name }
+        
+        if test_channel == nil
+          test_channel = event.server.create_channel name
+          Discordrb::API.update_role_overrides(event.bot.token, test_channel.id, event.server.id, 0, perms.bits)
+        else
+           
         end
+        
+        perms = Discordrb::Permissions.new
+        perms.can_read_messages = true
+        perms.can_send_messages = true
+        perms.can_read_message_history = true
+        
+        text_channel.define_overwrite(event.user, allow, 0)
       end
     end
   end
