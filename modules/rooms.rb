@@ -1,5 +1,16 @@
-class DummyRoleWriter
-  def write(bits); end
+module RoomEvents
+  extend Discordrb::EventContainer
+
+  presence do |event|
+    adv = $db.query("SELECT advisement FROM students WHERE discord_id=#{event.user.id}")
+    if adv.count == 0
+      return
+    end
+    adv = adv.first["advisement"]
+
+    useful = @events.find_all { |e| e[:adv].include? adv}
+    puts useful
+  end
 end
 
 module RoomCommands
@@ -40,7 +51,7 @@ module RoomCommands
         deny_perms.can_send_messages = true
         deny_perms.can_read_message_history = true
         deny_perms.can_mention_everyone = true
-		
+
         Discordrb::API.update_user_overrides(event.bot.token, channel.id, event.user.id, 0, deny_perms.bits)
         event.message.reply "You have left #{channel.mention}!"
       else

@@ -69,13 +69,13 @@ module RegistrationCommands
         #event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
 
         # Add 'verified' role
-        
+
 		# TODO: remember to change these back when Discordrb is updated
 		vrole = server.roles.find{|r| r.name == "verified"}
 		Discordrb::API.update_user_roles(event.bot.token, server.id, user.id, user.roles.map(&:id) + [vrole.id])
-		
+
 		#user.add_role(vrole)
-		
+
         # Decide grade for role
         digit = result['advisement'][0].to_i
         rolename = 'freshmen'
@@ -91,7 +91,7 @@ module RegistrationCommands
 		grole = server.roles.find { |r| r.name == rolename }
         #user.add_role(server, grole)
 		Discordrb::API.update_user_roles(event.bot.token, server.id, user.id, user.roles.map(&:id) + [grole.id])
-		
+
         # Find advisement role or create it then add it to ther user
         adv = result['advisement'][0..1]
         advrole = server.roles.find { |r| r.name == adv }
@@ -103,7 +103,7 @@ module RegistrationCommands
 
         #user.add_role(advrole)
 		Discordrb::API.update_user_roles(event.bot.token, server.id, user.id, user.roles.map(&:id) + [advrole.id])
-		
+
         bots_role_id = server.roles.find { |r| r.name == 'bots' }.id
 
         # Advisement channel handling
@@ -112,7 +112,7 @@ module RegistrationCommands
         role_id = advrole.id
         user_id = event.user.id
 
-        allow_perms = Discordrb::Permissions.new(0, DummyRoleWriter.new)
+        allow_perms = Discordrb::Permissions.new
         allow_perms.can_read_messages = true
         allow_perms.can_send_messages = true
         allow_perms.can_read_message_history = true
