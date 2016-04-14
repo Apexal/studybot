@@ -106,11 +106,6 @@ module UtilityCommands
       "The available colors are **#{colors.join ', '}, and default**."
     end
   end
-  
-  command :exit do |event|
-	event.message.delete
-	event.bot.stop
-  end
 end
 
 module Suppressor

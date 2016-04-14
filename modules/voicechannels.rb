@@ -11,17 +11,27 @@ module VoiceChannelEvents
 		perms.can_read_messages = true
 		perms.can_send_messages = true
 		
-		if event.channel != nil and !['Music', 'AFK'].include? event.channel.name
+		if event.channel != nil and event.channel.name != "AFK"
 			text_channel = server.text_channels.find { |c| c.id == hierarchy[event.channel.id] }
 			
 			if text_channel == nil
-				text_channel = event.server.create_channel "voice-channel"
+				c_name = "voice-channel"
+				c_name = event.channel.name unless event.channel.name != "Music"
+				
+				text_channel = event.server.create_channel c_name
 				text_channel.topic = "Private chat for all those in your voice channel."
+				
 				Discordrb::API.update_role_overrides(event.bot.token, text_channel.id, server.id, 0, perms.bits)
 				hierarchy[event.channel.id] = text_channel.id
 			end
 			
 			Discordrb::API.update_user_overrides(event.bot.token, text_channel.id, event.user.id, perms.bits, 0)
+			
+			hierarchy.each do |voice_id, text_id|
+				if text_channel.id != text_id
+					Discordrb::API.update_user_overrides(event.bot.token, text_id, event.user.id, 0, 0)
+				end
+			end
 		else
 			hierarchy.each do |voice_id, text_id|
 				Discordrb::API.update_user_overrides(event.bot.token, text_id, event.user.id, 0, 0)

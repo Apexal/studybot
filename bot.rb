@@ -53,4 +53,18 @@ bot.include! UtilityCommands
 bot.include! QuoteCommands
 bot.include! Suppressor
 
-bot.run
+bot.run :async
+
+server = bot.server(150739077757403137)
+
+perms = Discordrb::Permissions.new
+perms.can_read_message_history = true
+perms.can_read_messages = true
+perms.can_send_messages = true
+
+djrole = server.roles.find{|r| r.name == "dj"}
+server.text_channels.each do |c|
+  Discordrb::API.update_role_overrides(bot.token, c.id, djrole.id, 0, perms.bits)
+end
+
+bot.sync

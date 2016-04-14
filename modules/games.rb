@@ -36,6 +36,9 @@ module GameEvents
 			  musicchannel = server.voice_channels.find { |c| c.name == "Music" }
 			  game_channel.users.each { |u| event.server.move(u, musicchannel) }
 			  game_channel.delete
+			  
+			  server.text_channels.find{|t| t.id == hierarchy[game_channel.id]}.delete
+			  hierarchy.delete game_channel.id
 		  end
         end
       end
