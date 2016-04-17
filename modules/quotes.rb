@@ -2,6 +2,7 @@ module QuoteCommands
   extend Discordrb::Commands::CommandContainer
 
   command(:addquote, description: 'Quote someone!') do |event, quote, user|
+	puts "Adding quote from #{event.user.name}"
     if quote != nil and quote.split(" ").length == 1 and quote.start_with? "<@"
       quote = nil
     end
