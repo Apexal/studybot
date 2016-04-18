@@ -11,6 +11,19 @@ module UtilityEvents
 
     event.channel.send_message mentions.join(' ')
   end
+  
+  ['freshmen', 'sophomores', 'juniors', 'seniors'].each do |g|
+	message(containing: "@#{g}") do |event|
+		mentions = []
+		event.channel.users.select{|u|u.roles.map{|r| r.name}.include? g }.each do |user|
+			mentions.push(user.mention)
+		end
+		if mentions.length > 0
+			event.channel.send_message mentions.join(' ')
+		end
+		nil
+	  end
+  end
 end
 
 module UtilityCommands
