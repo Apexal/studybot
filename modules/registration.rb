@@ -44,7 +44,9 @@ module RegistrationCommands
   command(:verify, description: 'Verifies your identity with the emailed code.') do |event, code|
     server = event.bot.server(150739077757403137)
 	user = event.user.on(server)
-    # Make sure they passed a code!
+	puts "Attempting to verify #{user} (#{event.user.name})"
+    
+	# Make sure they passed a code!
     if code != nil
       # Change hex code back into characters
       username = code.scan(/../).map { |x| x.hex.chr }.join
@@ -64,14 +66,15 @@ module RegistrationCommands
 
         # PM him a congratulatory message
         user.pm("Congratulations, **#{result['first_name']}**. You are now a verifed Regis Discord User!")
-
+		
         # Make an announcement welcoming him to everyone
         event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
-
+		
         # Add 'verified' role
+		puts "Adding 'verified' role"
 		vrole = server.roles.find{|r| r.name == "verified"}
 		user.add_role(vrole)
-
+		
         # Decide grade for role
         digit = result['advisement'][0].to_i
         rolename = 'freshmen'
@@ -82,45 +85,56 @@ module RegistrationCommands
         elsif digit == 4
           rolename = 'seniors'
         end
-
+		puts "Adding '#{rolename}' role"
+		
         # Add grade role
 		grole = server.roles.find { |r| r.name == rolename }
         user.add_role(grole)
-
-        # Find advisement role or create it then add it to ther user
-        adv = result['advisement'][0..1]
-        advrole = server.roles.find { |r| r.name == adv }
-        if advrole.nil?
-          advrole = server.create_role
-          advrole.name = adv
-          advrole.hoist = true
-        end
-
-        user.add_role(advrole)
-
+		
         bots_role_id = server.roles.find { |r| r.name == 'bots' }.id
 
         # Advisement channel handling
-        adv_channel = event.bot.find_channel(adv.downcase).first
-        token = event.bot.token
-        role_id = advrole.id
-        user_id = event.user.id
-
-        allow_perms = Discordrb::Permissions.new
-        allow_perms.can_read_messages = true
-        allow_perms.can_send_messages = true
-        allow_perms.can_read_message_history = true
-        allow_perms.can_mention_everyone = true
-        deny_perms = allow_perms
-
-        if adv_channel.nil?
-          adv_channel = server.create_channel(adv)
-          adv_channel.topic = "Private chat for Advisements #{adv}-1 and #{adv}-2."
-          channel_id = adv_channel.id
-          Discordrb::API.update_role_overrides(token, channel_id, server.id, 0, deny_perms.bits) # @everyone
-          Discordrb::API.update_role_overrides(token, channel_id, role_id, allow_perms.bits, 0) # advisement role
-          Discordrb::API.update_role_overrides(token, channel_id, bots_role_id, allow_perms.bits, 0) # bots
-        end
+		
+		token = event.bot.token
+		
+		perms = Discordrb::Permissions.new
+        perms.can_read_messages = true
+        perms.can_send_messages = true
+        perms.can_read_message_history = true
+        perms.can_mention_everyone = true
+		
+		large_adv = result['advisement'][0..1]
+		small_adv = result['advisement']
+		
+		# Add the roles for each adv and create channels for each
+		[large_adv, small_adv].each do |a|
+			advrole = server.roles.find { |r| r.name == a }
+			if advrole.nil?
+				puts "Creating role"
+				advrole = server.create_role
+				advrole.name = a
+				advrole.hoist = true if a.length <= 2 # This should only hoist large advisement roles
+			end
+			
+			if user.roles.include?(advrole) == false
+				puts "Adding role"
+				user.add_role(advrole)
+			end
+			
+			puts "Finding channel"
+			adv_channel = event.bot.find_channel(a.downcase).first
+			if adv_channel.nil?
+				puts "Creating channel"
+				adv_channel = server.create_channel(a)
+				adv_channel.topic = "Private chat for Advisement #{a}"
+				channel_id = adv_channel.id
+				
+				puts "Updating perms"
+				Discordrb::API.update_role_overrides(token, adv_channel.id, server.id, 0, perms.bits) # @everyone
+				Discordrb::API.update_role_overrides(token, adv_channel.id, advrole.id, perms.bits, 0) # advisement role
+				Discordrb::API.update_role_overrides(token, adv_channel.id, bots_role_id, perms.bits, 0) # bots
+			end
+		end
       else
         user.pm('Incorrect code!')
       end

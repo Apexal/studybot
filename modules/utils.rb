@@ -1,16 +1,5 @@
 module UtilityEvents
   extend Discordrb::EventContainer
-
-  message(containing: '@online') do |event|
-    mentions = []
-    event.channel.users.each do |user|
-      if [:online, :idle].include?(user.status) && (!['studybot', 'SuperUser', 'JunkBot', 'testing-bot', 'DiscordDJ'].include? user.name)
-        mentions.push(user.mention)
-      end
-    end
-
-    event.channel.send_message mentions.join(' ')
-  end
   
   ['freshmen', 'sophomores', 'juniors', 'seniors'].each do |g|
 	message(containing: "@#{g}") do |event|
@@ -28,6 +17,74 @@ end
 
 module UtilityCommands
   extend Discordrb::Commands::CommandContainer
+	
+	command(:rooms) do |event|
+		return false if event.user.name != "President Mantranga"
+		
+		server = event.bot.server(150739077757403137)
+		vrole = server.roles.find{|r| r.name == "verified"}
+		user = event.user.on(server)
+		
+		bots_role_id = server.roles.find { |r| r.name == 'bots' }.id
+		
+		token = event.bot.token
+		
+		perms = Discordrb::Permissions.new
+        perms.can_read_messages = true
+        perms.can_send_messages = true
+        perms.can_read_message_history = true
+        perms.can_mention_everyone = true
+		
+		puts server.users.length
+		
+		server.users.each do |u|
+			sleep 0.5
+			print "Working on #{u.name} "
+			user_info = $db.query("SELECT * FROM students WHERE discord_id=#{u.id}")
+			if user_info.count == 0
+				next
+			else
+				user_info = user_info.first
+			end
+			
+			print " (#{user_info['username']}) \n"
+			
+			large_adv = user_info['advisement'][0..1]
+			small_adv = user_info['advisement']
+			
+			# Add the roles for each adv and create channels for each
+			[large_adv, small_adv].each do |a|
+				advrole = server.roles.find { |r| r.name == a }
+				if advrole.nil?
+					puts "Creating role"
+					advrole = server.create_role
+					advrole.name = a
+					advrole.hoist = true if a.length <= 2 # This should only hoist large advisement roles
+				end
+				
+				if u.roles.include?(advrole) == false
+					puts "Adding role"
+					u.add_role(advrole)
+				end
+				
+				puts "Finding channel"
+				adv_channel = event.bot.find_channel(a.downcase).first
+				if adv_channel.nil?
+					puts "Creating channel"
+					adv_channel = server.create_channel(a)
+					adv_channel.topic = "Private chat for Advisement #{a}"
+					channel_id = adv_channel.id
+				end
+				
+				puts "Updating perms"
+				Discordrb::API.update_role_overrides(token, adv_channel.id, server.id, 0, perms.bits) # @everyone
+				Discordrb::API.update_role_overrides(token, adv_channel.id, advrole.id, perms.bits, 0) # advisement role
+				Discordrb::API.update_role_overrides(token, adv_channel.id, bots_role_id, perms.bits, 0) # bots
+			end
+		end
+		
+		"Done"
+	end
 	
 	command(:flag, description: 'Show the official Regis Discord flag!') do |event|
 		event.channel.send_file(File.open('./flag.png', 'rb'))
