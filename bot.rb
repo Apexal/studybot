@@ -25,6 +25,7 @@ require './modules/games.rb'
 require './modules/quotes.rb'
 require './modules/voicechannels.rb'
 require './modules/utils.rb'
+require './modules/courses.rb'
 
 Mail.defaults do
   delivery_method :smtp, address: 'smtp.gmail.com',
@@ -100,6 +101,7 @@ bot.include! UtilityEvents
 bot.include! UtilityCommands
 bot.include! QuoteCommands
 bot.include! Suppressor
+bot.include! CourseCommands
 
 bot.run
 
