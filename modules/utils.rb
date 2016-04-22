@@ -89,25 +89,6 @@ module UtilityCommands
     end
     return ''
   end
-  
-
-  command(:color, description: 'Set your color! Usage: `!color colorname`') do |event, color|
-    server = event.bot.server(150739077757403137)
-    colors = %w(red yellow purple blue green)
-    if colors.include?(color) || color == 'default'
-      colors.each do |c|
-        crole = server.roles.find { |r| r.name == c }
-        if c == color
-          event.user.add_role(crole)
-        else
-          event.user.remove_role(crole)
-        end
-      end
-      'Successfully changed user color!'
-    else
-      "The available colors are **#{colors.join ', '}, and default**."
-    end
-  end
 end
 
 module Suppressor

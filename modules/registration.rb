@@ -90,13 +90,14 @@ module RegistrationCommands
         # Add grade role
 		grole = server.roles.find { |r| r.name == rolename }
         user.add_role(grole)
-		
+		sleep 1
         bots_role_id = server.roles.find { |r| r.name == 'bots' }.id
 
         # Advisement channel handling
 		
 		token = event.bot.token
 		
+		# Perms for course text-channels
 		perms = Discordrb::Permissions.new
         perms.can_read_messages = true
         perms.can_send_messages = true
@@ -109,6 +110,7 @@ module RegistrationCommands
 		# Add the roles for each adv and create channels for each
 		[large_adv, small_adv].each do |a|
 			advrole = server.roles.find { |r| r.name == a }
+			# Create role if doesn't exist
 			if advrole.nil?
 				puts "Creating role"
 				advrole = server.create_role
@@ -116,14 +118,15 @@ module RegistrationCommands
 				advrole.hoist = true if a.length <= 2 # This should only hoist large advisement roles
 			end
 			
-			if user.roles.include?(advrole) == false
-				puts "Adding role"
-				user.add_role(advrole)
-			end
+			# Add role
+			puts "Adding role"
+			user.add_role(advrole)
 			
+			# Advisement channel
 			puts "Finding channel"
 			adv_channel = event.bot.find_channel(a.downcase).first
 			if adv_channel.nil?
+				# Create if not exist
 				puts "Creating channel"
 				adv_channel = server.create_channel(a)
 				adv_channel.topic = "Private chat for Advisement #{a}"
@@ -134,7 +137,49 @@ module RegistrationCommands
 				Discordrb::API.update_role_overrides(token, adv_channel.id, advrole.id, perms.bits, 0) # advisement role
 				Discordrb::API.update_role_overrides(token, adv_channel.id, bots_role_id, perms.bits, 0) # bots
 			end
+			sleep 1
 		end
+		
+		# THE GOOD STUFF
+		
+		# Get all classes for this student
+		query = "SELECT courses.id, courses.title, staffs.last_name FROM courses JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id JOIN staffs ON staffs.id=courses.teacher_id WHERE students.discord_id=#{event.user.id} AND courses.is_class=1"
+		$db.query(query).each do |course|
+			# Ignore unnecessary classes
+			if course['title'].include? "Phys " or course['title'].include? "Guidance " or course['title'].include? "Speech " or course['title'].include? "Advisement " or course['title'].include? "Health " or course['title'].include? "Amer "
+				next
+			end
+			
+			# Turn something like 'Math II (Alg 2)' into 'math'
+			course_name = course['title'].split(" (")[0].split(" ").join("-")
+			['IV', 'III', 'II', 'I', '9', '10', '11', '12'].each {|i| course_name.gsub!("-#{i}", "") }
+			
+			# Create course role if not exist
+			course_role = server.roles.find{|r| r.name == "course-#{course['id']}"}
+			if course_role.nil?
+				course_role = server.create_role
+				course_role.name = "course-#{course['id']}"
+			end
+			
+			# Add that lovely course role m8
+			user.add_role(course_role)
+			
+			bots_role_id = server.roles.find { |r| r.name == 'bots' }.id
+	
+			# Create the text-channel for the course if it doesn't exist
+			course_rooms = $db.query("SELECT room_id FROM course_rooms WHERE course_id=#{course['id']}")
+			if course_rooms.count == 0
+				course_room = server.create_channel course_name
+				$db.query("insert into course_rooms (course_id, room_id) values (#{course['id']}, #{course_room.id})")
+
+				course_room.topic = "Disscussion room for #{course['title']} with #{course['last_name']}."
+				
+				course_room.define_overwrite(course_role, perms, 0)
+				Discordrb::API.update_role_overrides(event.bot.token, course_room.id, bots_role_id, perms.bits, 0) # bots
+				Discordrb::API.update_role_overrides(event.bot.token, course_room.id, server.id, 0, perms.bits) # @everyone
+			end
+			sleep 1
+		end		
       else
         user.pm('Incorrect code!')
       end
