@@ -40,6 +40,7 @@ end
 $db = Mysql2::Client.new(host: $CONFIG["auth"]["mysql"]["host"], username: $CONFIG["auth"]["mysql"]["username"], password: $CONFIG["auth"]["mysql"]["password"], database: $CONFIG["auth"]["mysql"]["database"])
 
 bot = Discordrb::Commands::CommandBot.new advanced_functionality: true, token: $CONFIG["auth"]["discord"]["token"], application_id: $CONFIG["auth"]["discord"]["application_id"], prefix: $CONFIG["options"]["bot"]["prefix"]
+
 bot.bucket :abusable, limit: 3, time_span: 60, delay: 10
 bot.include! StartupEvents
 bot.include! RegistrationEvents
@@ -53,5 +54,8 @@ bot.include! QuoteCommands
 bot.include! Suppressor
 bot.include! CourseCommands
 
-bot.run
+bot.run :async
 
+bot.profile.avatar = File.open('./Regis_crest.jpeg', 'rb')
+
+bot.sync

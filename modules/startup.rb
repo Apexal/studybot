@@ -18,6 +18,7 @@ module StartupEvents
 			puts "Deleting ##{c.name}"
 			c.delete
 		else
+			#Discordrb::API.update_user_overrides(event.bot.token, c.id, djrole.id, 0, perms.bits)
 			c.define_overwrite(djrole, 0, perms)
 		end
 	end

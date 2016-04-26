@@ -98,4 +98,9 @@ module Suppressor
     event.message.delete
     event.user.pm "I wouldn't do that if I were you."
   end
+  
+  message(containing: 'https://images-2.discordapp.net/.eJwdyEsOhCAMANC7cAB-5WO8DUGCRm0JrXExmbtPMm_5PuqZl1rVLjJ4NWY7uNLcNAvN0pvuRP1qZRysK92miJS63w2FjcsBfPDWpuRzciH7f8ECANEu0bpok3nwRHpRD-zq-wMENyLF.r1RzJEKXNF2LyuWCKw2ZUDYfOc8.png?width=400&height=227') do |event|
+      event.message.delete
+  end
+  
 end
