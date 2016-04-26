@@ -62,7 +62,9 @@ module QuoteCommands
 	  event.user.pm "Quotes can not be viewed in #work! Try #recreation."
 	  return
 	end
-
+	
+	toDelete = []
+	
     query = ""
     method = :other
     user = event.user
@@ -74,11 +76,9 @@ module QuoteCommands
       method = :self
       query = "SELECT quotes.id, quotes.user, quotes.text, quotes.attributed_to, quotes.date FROM quotes INNER JOIN students ON quotes.user=students.username WHERE students.discord_id=#{user.id}"
     end
-
-    event.send_message "**__Quotes#{method == :self ? " Recorded By" : " From"} #{user.name}__**"
-
+    
     index = 1
-    messages = []
+    messages = ["**__Quotes#{method == :self ? " Recorded By" : " From"} #{user.name}__**"]
 
     $db.query(query).each_slice(20) do |rows|
       rows.each do |row|
@@ -89,11 +89,15 @@ module QuoteCommands
         messages << m
         index += 1
       end
-      event.send_message messages.join "\n"
+      toDelete << event.send_message(messages.join("\n"))
       messages = []
     end
-
-    "#{index-1} total"
+	
+    event.send_message "#{index-1} total"
+    
+    sleep(30)
+	toDelete.each{|m| m.delete}
+	nil
   end
 
   command(:delquote, description: 'Delete a quote.') do |event, *indexes|
