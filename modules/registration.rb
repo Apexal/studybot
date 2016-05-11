@@ -60,7 +60,9 @@ module RegistrationCommands
       # If that guy exists
       if result.count > 0
         result = result.first
-
+		
+		roles_to_add = []
+		
         # Set his discord_id and make him verified in the db
         $db.query("UPDATE students SET discord_id='#{user.id}', verified=1 WHERE username='#{escaped}'")
 
@@ -73,7 +75,7 @@ module RegistrationCommands
         # Add 'verified' role
 		puts "Adding 'verified' role"
 		vrole = server.roles.find{|r| r.name == "verified"}
-		user.add_role(vrole)
+		roles_to_add << vrole
 		
         # Decide grade for role
         digit = result['advisement'][0].to_i
@@ -89,7 +91,7 @@ module RegistrationCommands
 		
         # Add grade role
 		grole = server.roles.find { |r| r.name == rolename }
-        user.add_role(grole)
+        roles_to_add << grole
 		sleep 1
         bots_role_id = server.roles.find { |r| r.name == 'bots' }.id
 
@@ -120,7 +122,7 @@ module RegistrationCommands
 			
 			# Add role
 			puts "Adding role"
-			user.add_role(advrole)
+			roles_to_add << advrole
 			
 			# Advisement channel
 			puts "Finding channel"
@@ -162,7 +164,7 @@ module RegistrationCommands
 			end
 			
 			# Add that lovely course role m8
-			user.add_role(course_role)
+			roles_to_add << course_role
 			
 			bots_role_id = server.roles.find { |r| r.name == 'bots' }.id
 	
@@ -179,7 +181,8 @@ module RegistrationCommands
 				Discordrb::API.update_role_overrides(event.bot.token, course_room.id, server.id, 0, perms.bits) # @everyone
 			end
 			sleep 1
-		end		
+		end
+		user.add_role roles_to_add
       else
         user.pm('Incorrect code!')
       end
