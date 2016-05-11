@@ -12,6 +12,21 @@ module UtilityCommands
 		'Designed by *Liam Quinn*'
 	end
 	
+	command(:color, description: 'Set your color! Usage: `!color colorname`') do |event, color|
+		server = event.server
+		colors = %w(red orange yellow dark pink purple blue green)
+		if colors.include?(color) || color == 'default'
+			croles = server.roles.find_all { |r| colors.include? r.name }
+			event.user.remove_role croles
+			if color != "default"
+				event.user.add_role croles.find{ |r| r.name == color}
+			end
+			"Successfully changed user color!"
+		else
+			"The available colors are **#{colors.join ', '}, and default**."
+		end
+	end
+	
   command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user or !whois regisusername`') do |event, username|
     # Get user mentioned or default to sender of command
     if username != nil and !username.start_with?("<@")
