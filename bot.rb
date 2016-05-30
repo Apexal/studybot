@@ -54,7 +54,7 @@ bot.include! UtilityCommands
 bot.include! QuoteCommands
 bot.include! Suppressor
 bot.include! CourseCommands
-bot.include! NicknameEvents
+#bot.include! NicknameEvents
 
 bot.run :async
 
