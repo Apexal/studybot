@@ -1,8 +1,13 @@
 module RegistrationEvents
     extend Discordrb::EventContainer
-
+    
     member_join do |event|
-        event.user.pm "Welcome to the Regis Discord Server, **#{event.user.name}**! Please tell us who you are by typing `!register yourregisusername`. *You will not be able to participate in the server until you do this.*"
+        event.bot.find_channel('meta').first.send_message "#{event.server.owner.mention} #{event.user.name} just joined the server!"
+        m = event.bot.find_channel('welcome').first.send_message "#{event.user.mention} Hello! Please check your Direct Messages (top left) to get started!"
+        
+        event.user.pm "Welcome! Please type `!register yourregisusername` to get started. *You will not be able to participate in the server until you do this.*"
+        sleep 100
+        m.delete
     end
 end
 
