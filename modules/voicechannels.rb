@@ -2,7 +2,7 @@ module VoiceChannelEvents
     extend Discordrb::EventContainer
     $hierarchy = Hash.new
     voice_state_update do |event|
-        puts "Voice state update"
+        #puts "Voice state update"
         server = event.server
         perms = Discordrb::Permissions.new
         perms.can_read_message_history = true
@@ -12,18 +12,22 @@ module VoiceChannelEvents
             # voice-channel associated with this voice channel
             text_channel = server.text_channels.find { |c| c.id == $hierarchy[event.channel.id] }
             # If it doesn't exist create it
-            if text_channel == nil
+            if text_channel.nil?
                 puts "Creating #voice-channel for #{event.channel.name}"
                 # Name it 'voice-channel' or 'Music'
+                
                 c_name = "voice-channel"
                 c_name = event.channel.name unless event.channel.name != "Music"
+                
                 text_channel = event.server.create_channel c_name
-                text_channel.topic = "Private chat for all those in your voice channel."
+                text_channel.topic = (c_name == "voice_channel") ? "Private chat for all those in your voice channel." : "Private channel for DJ commands"
+                
                 # Give the current user and BOTS access to it, restrict @everyone
                 if c_name == "Music"
-                    djrole = server.roles.find{|r| r.name=="dj"}
-                    Discordrb::API.update_user_overrides(event.bot.token, text_channel.id, djrole.id, perms.bits, 0)
+                    text_channel.define_overwrite(server.roles.find{|r| r.name=="dj"}, perms, 0)
+                    #Discordrb::API.update_user_overrides(event.bot.token, text_channel.id, djrole.id, perms.bits, 0)
                 end
+                
                 Discordrb::API.update_user_overrides(event.bot.token, text_channel.id, event.user.id, perms.bits, 0)
                 Discordrb::API.update_role_overrides(event.bot.token, text_channel.id, server.roles.find{|r| r.name == "bots"}.id, perms.bits, 0)
                 Discordrb::API.update_role_overrides(event.bot.token, text_channel.id, server.id, 0, perms.bits)
