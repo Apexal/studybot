@@ -3,6 +3,8 @@ module RegistrationEvents
     
     member_join do |event|
         event.bot.find_channel('meta').first.send_message "#{event.server.owner.mention} #{event.user.name} just joined the server!"
+        
+        sleep 10
         m = event.bot.find_channel('welcome').first.send_message "#{event.user.mention} Hello! Please check your Direct Messages (top left) to get started!"
         
         event.user.pm "Welcome! Please type `!register yourregisusername` to get started. *You will not be able to participate in the server until you do this.*"
