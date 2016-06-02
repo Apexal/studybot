@@ -8,6 +8,28 @@ module UtilityCommands
         event.channel.send_file(File.open('./flag.png', 'rb'))
         'Designed by *Liam Quinn*'
     end
+	
+	command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study) do |event|
+		if !event.message.channel.private?
+			event.message.delete
+		end
+		
+		server = event.bot.server(150739077757403137)
+		studyrole = server.roles.find{|r| r.name=="studying"}
+		
+		user = event.user.on(server)
+		clean_name = user.display_name
+		clean_name.sub! "[S] ", ""
+		
+		if user.role? studyrole
+			user.nickname = clean_name
+			user.remove_role studyrole
+		else
+			user.nickname = "[S] #{clean_name}"
+			user.add_role studyrole
+		end
+	end
+	
     command(:color, description: 'Set your color! Usage: `!color colorname`') do |event, color|
         server = event.server
         colors = %w(red orange yellow dark pink purple blue green)
@@ -22,6 +44,8 @@ module UtilityCommands
             "The available colors are **#{colors.join ', '}, and default**."
         end
     end
+	
+	
     command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user or !whois regisusername`') do |event, username|
         # Get user mentioned or default to sender of command
         if username != nil and !username.start_with?("<@")

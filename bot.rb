@@ -43,6 +43,8 @@ $db = Mysql2::Client.new(host: $CONFIG["auth"]["mysql"]["host"], username: $CONF
 bot = Discordrb::Commands::CommandBot.new advanced_functionality: true, token: $CONFIG["auth"]["discord"]["token"], application_id: $CONFIG["auth"]["discord"]["application_id"], prefix: $CONFIG["options"]["bot"]["prefix"]
 
 bot.bucket :abusable, limit: 3, time_span: 60, delay: 10
+bot.bucket :study, limit: 10, time_span: 60, delay: 10
+
 bot.include! StartupEvents
 bot.include! RegistrationEvents
 bot.include! RegistrationCommands

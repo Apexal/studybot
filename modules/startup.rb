@@ -4,6 +4,7 @@ module StartupEvents
         bot = event.bot
         puts "Ready!"
         server = bot.server(150739077757403137)
+
         # text-channel perms
         perms = Discordrb::Permissions.new
         perms.can_read_message_history = true
