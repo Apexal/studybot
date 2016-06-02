@@ -1,6 +1,10 @@
 module RegistrationEvents
     extend Discordrb::EventContainer
     
+	member_leave do |event|
+		event.server.owner.pm "#{event.user.mention} has left!"
+	end
+	
     member_join do |event|
         event.bot.find_channel('meta').first.send_message "#{event.server.owner.mention} #{event.user.name} just joined the server!"
         

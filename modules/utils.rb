@@ -112,18 +112,18 @@ module UtilityCommands
         end
         return ''
     end
+	
+	command(:rules, description: 'Show the rules of the server') do |event|
+		event << "__***Server Rules***__ :bookmark_tabs:"
+		event << "`1` Don't be a jerk."
+		event << "`2` Report any and all abuse directly to the Owner <@152621041976344577>."
+		event << "`3` Do not post any sexual content."
+	end
 end
 
 module Suppressor
     extend Discordrb::EventContainer
 
-    message(containing: 'discord.gg') do |event|
-        event.message.delete
-        event.user.pm "I wouldn't do that if I were you."
-    end
-    message(containing: 'https://images-2.discordapp.net/.eJwdyEsOhCAMANC7cAB-5WO8DUGCRm0JrXExmbtPMm_5PuqZl1rVLjJ4NWY7uNLcNAvN0pvuRP1qZRysK92miJS63w2FjcsBfPDWpuRzciH7f8ECANEu0bpok3nwRHpRD-zq-wMENyLF.r1RzJEKXNF2LyuWCKw2ZUDYfOc8.png?width=400&height=227') do |event|
-        event.message.delete
-    end
     message(containing: not!("google.com/"), in: "#finals") do |event|
         if event.message.author != event.server.owner
             event.message.delete
