@@ -1,6 +1,6 @@
 module QuoteCommands
     extend Discordrb::Commands::CommandContainer
-
+	
     command(:addquote, description: 'Quote someone!', bucket: :abusable) do |event, quote, user|
         puts "Adding quote from #{event.user.name}"
         if quote != nil and quote.split(" ").length == 1 and quote.start_with? "<@"
@@ -46,7 +46,12 @@ module QuoteCommands
                 event << "Quote too long!"
                 return
             end
-
+			
+			if quote.split(" ").length == 1 and (quote.start_with?("<@") or quote == "@here" or quote == "@everyone")
+				event << "You can't quote that!"
+				return
+			end
+			
             query = "INSERT INTO quotes (user, text, attributed_to, date) VALUES ('#{user['username']}', '#{quote}', '#{speaker['username']}', '#{Time.now.strftime('%F')}')"
             $db.query(query)
             "Saved quote: *\"#{quote}\"* by #{speaker['first_name'] + " " + speaker['last_name']}"
@@ -57,14 +62,17 @@ module QuoteCommands
 
     command(:quotes, description: 'List all of your quotes!', bucket: :abusable) do |event|
         if event.channel.name == "work"
-            event.user.pm "Quotes can not be viewed in #work! Try #recreation."
+            event.message.delete
+			event.user.pm "Quotes are not allowed in #work!"
             return
         end
+		
+		# Store temporary messages
         toDelete = []
         query = ""
         method = :other
         user = event.user
-
+		
         if event.message.mentions.first != nil
             user = event.message.mentions.first
             query = "SELECT quotes.id, quotes.user, quotes.text, quotes.attributed_to, quotes.date FROM quotes INNER JOIN students ON quotes.attributed_to=students.username WHERE students.discord_id=#{user.id}"
@@ -74,10 +82,13 @@ module QuoteCommands
         end
         index = 1
         messages = ["**__Quotes#{method == :self ? " Recorded By" : " From"} #{user.name}__**"]
-
+		
         $db.query(query).each_slice(20) do |rows|
             rows.each do |row|
-                m = "`#{row['id']}` *\"#{row['text'].gsub("\"", "'")}\"* "
+				
+				text = replace_mentions(row['text']).gsub("\"", "'") # The text of the message
+				
+                m = "`#{row['id']}` *\"#{text}\"* "
                 if method == :self
                     m << "**~#{row['attributed_to']}**"
                 end

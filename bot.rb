@@ -45,6 +45,47 @@ bot = Discordrb::Commands::CommandBot.new advanced_functionality: true, token: $
 bot.bucket :abusable, limit: 3, time_span: 60, delay: 10
 bot.bucket :study, limit: 10, time_span: 60, delay: 10
 
+def replace_mentions(message)
+	message.strip!
+	message.gsub! "**", ""
+	
+	message.gsub! "@everyone", "**everyone**"
+	message.gsub! "@here", "**here**"
+	
+	words = message.split " "
+	
+	done = []
+	words.each_with_index do |w, i|
+		w.sub!("(", "")
+		w.sub!(")", "")
+		w.sub!("'", "")
+		
+		if w.start_with? "<@" and w.end_with? ">"
+			id = w.sub("<@!", "").sub("<@", "").sub(">", "") # Get ID 
+			
+			if !done.include? id and /\A\d+\z/.match(id)
+				user = $db.query("SELECT username FROM students WHERE discord_id=#{id}")
+				
+				if user.count > 0
+					user = user.first
+					rep = "**@#{user['username']}**" # replacement
+					
+					message.gsub! "<@#{id}>", rep # Only works when they don't have a nickname
+					message.gsub! "<@!#{id}>", rep
+				end
+				
+				done << id
+			end
+		end
+	end
+	
+	if words.length == 1 and done == 1
+		return message.sub("@", "")
+	end
+	
+	return message
+end
+
 bot.include! StartupEvents
 bot.include! RegistrationEvents
 bot.include! RegistrationCommands

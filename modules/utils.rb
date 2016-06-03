@@ -9,6 +9,24 @@ module UtilityCommands
         'Designed by *Liam Quinn*'
     end
 	
+	command(:clean) do |event|
+		cleaned = event.message.content
+		cleaned.gsub! "@everyone", "**everyone**"
+		cleaned.gsub! "@here", "**everyone here**"
+		
+		event.message.mentions.each do |m|
+			user = $db.query("SELECT username FROM students WHERE discord_id=#{m.id}")
+			
+			if user.count > 0
+				user = user.first
+				cleaned.gsub! m.mention, "**#{user['username']}**" # Only works when they don't have a nickname
+				cleaned.gsub! "<@!#{m.id}>", "**#{user['username']}**"
+			end
+		end
+		
+		event.message.reply cleaned
+	end
+	
 	command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study) do |event|
 		if !event.message.channel.private?
 			event.message.delete
