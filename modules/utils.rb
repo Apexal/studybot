@@ -9,29 +9,13 @@ module UtilityCommands
         'Designed by *Liam Quinn*'
     end
 	
-	command(:clean) do |event|
-		cleaned = event.message.content
-		cleaned.gsub! "@everyone", "**everyone**"
-		cleaned.gsub! "@here", "**everyone here**"
-		
-		event.message.mentions.each do |m|
-			user = $db.query("SELECT username FROM students WHERE discord_id=#{m.id}")
-			
-			if user.count > 0
-				user = user.first
-				cleaned.gsub! m.mention, "**#{user['username']}**" # Only works when they don't have a nickname
-				cleaned.gsub! "<@!#{m.id}>", "**#{user['username']}**"
-			end
-		end
-		
-		event.message.reply cleaned
-	end
-	
 	command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study) do |event|
 		if !event.message.channel.private?
 			event.message.delete
 		end
 		
+        grades = ['freshmen', 'sophomores', 'juniors', 'seniors']
+        
 		server = event.bot.server(150739077757403137)
 		studyrole = server.roles.find{|r| r.name=="studying"}
 		
@@ -39,13 +23,38 @@ module UtilityCommands
 		clean_name = user.display_name
 		clean_name.sub! "[S] ", ""
 		
+        perms = Discordrb::Permissions.new
+        perms.can_read_messages = true
+        perms.can_read_message_history = true
+        perms.can_send_messages = true
+        
 		if user.role? studyrole
 			user.nickname = clean_name
 			user.remove_role studyrole
+            
+            # Issue for grade channels
+            grades.each do |g|
+                role = server.roles.find{|r| r.name==g}
+                if role.nil? == false and user.role? role
+                    grade_channel = server.text_channels.find{|c| c.name==g}
+                    Discordrb::API.update_user_overrides(event.bot.token, grade_channel.id, user.id, 0, 0)
+                end
+            end
 		else
 			user.nickname = "[S] #{clean_name}"
 			user.add_role studyrole
+            
+            # Issue for grade channels
+            grades.each do |g|
+                role = server.roles.find{|r| r.name==g}
+                if role.nil? == false and user.role? role
+                    grade_channel = server.text_channels.find{|c| c.name==g}
+                    Discordrb::API.update_user_overrides(event.bot.token, grade_channel.id, user.id, 0, perms.bits)
+                end
+            end
 		end
+        
+        nil
 	end
 	
     command(:color, description: 'Set your color! Usage: `!color colorname`') do |event, color|
