@@ -9,12 +9,15 @@ module UtilityCommands
         'Designed by *Liam Quinn*'
     end
 	
+	grades = ['freshmen', 'sophomores', 'juniors', 'seniors']
+	special = {"memes" => "memer", "testing" => "tester", "gaming" => "gamer"}
+	
 	command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study) do |event|
 		if !event.message.channel.private?
 			event.message.delete
 		end
 		
-        grades = ['freshmen', 'sophomores', 'juniors', 'seniors']
+        
         
 		server = event.bot.server(150739077757403137)
 		studyrole = server.roles.find{|r| r.name=="studying"}
@@ -40,7 +43,19 @@ module UtilityCommands
                     Discordrb::API.update_user_overrides(event.bot.token, grade_channel.id, user.id, 0, 0)
                 end
             end
+            
+            # For the special channels
+            special.each do |c_name, r_name|
+				role = server.roles.find{|r| r.name==r_name}
+				channel = server.text_channels.find{|c| c.name==c_name}
+				
+				if user.role? role
+					Discordrb::API.update_user_overrides(event.bot.token, channel.id, user.id, 0, 0)
+				end
+			end
 		else
+			# GOING INTO STUDYMODE
+			
 			user.nickname = "[S] #{clean_name}"
 			user.add_role studyrole
             
@@ -52,7 +67,19 @@ module UtilityCommands
                     Discordrb::API.update_user_overrides(event.bot.token, grade_channel.id, user.id, 0, perms.bits)
                 end
             end
+            
+            # For the special channels
+            special.each do |c_name, r_name|
+				role = server.roles.find{|r| r.name==r_name}
+				channel = server.text_channels.find{|c| c.name==c_name}
+				
+				if user.role? role
+					Discordrb::API.update_user_overrides(event.bot.token, channel.id, user.id, 0, perms.bits)
+				end
+			end
 		end
+        
+        
         
         nil
 	end
