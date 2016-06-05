@@ -172,6 +172,10 @@ module RegistrationCommands
                     sleep 1
                 end
                 user.add_role roles_to_add
+                
+                user.pm "You can choose to join #gaming, #memes, and/or #testing with `!join channnel`"
+                sleep 1
+                user.pm "For example, `!join #gaming"
             else
                 user.pm('Incorrect code!')
             end

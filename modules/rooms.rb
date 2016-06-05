@@ -14,21 +14,18 @@ module RoomCommands
     command(:join, description: 'Join a special channel. Usage: `!join channelname`') do |event, channel_name|
         server = event.bot.server(150739077757403137)
 		user = event.user.on(server)
+ 
+		role = server.roles.find{|r| r.name == channels_to_roles[channel_name]}
 		
-        if !event.channel.private?
-            role = server.roles.find{|r| r.name == channels_to_roles[channel_name]}
-            
-            if !role.nil? && joinable.include?(channel_name)
-                user.add_role role
-            else
-                event.user.pm "You can only join/leave **#{joinable.join ', '}**. Try `!join memes`"
-            end
-        else
-            event.user.pm "`!join` and `!leave` are only available in PM's. Try using them here!"
-            
-        end
+		if !role.nil? && joinable.include?(channel_name)
+			user.add_role role
+		else
+			user.pm "You can only join/leave **#{joinable.join ', '}**. Try `!join memes`"
+		end
 		
-		event.message.delete
+		if !event.channel.private?
+			event.message.delete
+		end
         nil
     end
 
@@ -36,20 +33,17 @@ module RoomCommands
         server = event.bot.server(150739077757403137)
 		user = event.user.on(server)
 		
-        if !event.channel.private?
-            role = server.roles.find{|r| r.name == channels_to_roles[channel_name]}
-            
-            if !role.nil? && joinable.include?(channel_name)
-                user.remove_role role
-            else
-                event.user.pm "You can only join/leave **#{joinable.join ', '}**. Try `!join memes`"
-            end
-        else
-            event.user.pm "`!join` and `!leave` are only available in PM's. Try using them here!"
-            
-        end
+		role = server.roles.find{|r| r.name == channels_to_roles[channel_name]}
 		
-		event.message.delete
+		if !role.nil? && joinable.include?(channel_name)
+			user.remove_role role
+		else
+			user.pm "You can only join/leave **#{joinable.join ', '}**. Try `!join memes`"
+		end
+
+		if !event.channel.private?
+			event.message.delete
+		end
         nil
     end
 end
