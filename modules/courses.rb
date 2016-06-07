@@ -24,13 +24,49 @@ module CourseCommands
         user.add_role(course_roles)
     end
     
-	
-	#command(:cleancourses) do |event|
-    #    return if event.user.name != "President Mantranga"
-    #    $db.query("DELETE FROM course_rooms")
-    #    event.server.text_channels.find_all{|c| c.name.start_with?("course-")}.each do |c|
-    #        c.delete
-    #        sleep 0.5
-    #    end
-    #end
+    # END OF YEAR COMMAND
+    command(:endyear) do |event|
+        return if event.user.id != event.server.owner.id
+        
+        puts "Ending the year. Deleting course rooms and channels."
+        event.bot.find_channel('announcements').first.send_message "@everyone Removing all traces of school so you can enjoy the summer."
+        
+        # Remove course rooms
+        $db.query("DELETE FROM course_rooms")
+        event.server.text_channels.find_all{|c| c.name.start_with?("course-")}.each do |c|
+            c.delete
+            sleep 1
+        end
+        
+        # Remove course roles
+        event.server.roles.find_all{|r| r.name.start_with?("course-")}.each do |r|
+            r.delete
+            sleep 1
+        end
+        
+        # Remove advisement channels
+        #$db.query("SELECT advisement FROM students WHERE verified=1 GROUP BY advisement").map{|result| result['advisement']}.each do |adv|
+        #    begin
+        #        event.server.roles.find_all{|r| r.name == adv[0..1]}.delete
+        #        event.server.text_channels.find{|c| c.name == adv[0..1]}.delete
+        #    rescue
+        #    
+        #    end
+        #    
+        #    begin
+        #        event.server.text_channels.find{|c| c.name == adv}.delete
+        #        event.server.roles.find_all{|r| r.name == adv}.delete
+        #    rescue
+        #        puts "Error removing #{adv}"
+        #    end
+        #end
+        
+        puts "Done."
+    end
+    
+    command(:startyear) do |event|
+        return if event.user.id != event.server.owner.id
+        
+        event.bot.find_channel('announcements').first.send_message "It's that time again. Opening course and advisement channels."
+    end
 end
