@@ -1,5 +1,8 @@
 module CourseCommands
     extend Discordrb::Commands::CommandContainer
+    
+    skippable = ['phys', 'guidance', 'speech', 'advisement', 'health', 'amer']
+    
     command(:fixcourses) do |event|
         server = event.bot.server(150739077757403137)
         user = if event.message.mentions.empty? then event.user else event.message.mentions.first end
@@ -7,11 +10,15 @@ module CourseCommands
         # Get all classes for this student
         query = "SELECT courses.id, courses.title, staffs.last_name FROM courses JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id JOIN staffs ON staffs.id=courses.teacher_id WHERE students.discord_id=#{user.id} AND courses.is_class=1"
         course_roles = []
+        
         $db.query(query).each do |course|
             # Ignore unnecessary classes
-            if course['title'].include? "Phys " or course['title'].include? "Guidance " or course['title'].include? "Speech " or course['title'].include? "Advisement " or course['title'].include? "Health " or course['title'].include? "Amer "
-                next
+            skippable.each do |s|
+                if course['title'].downcase.include? s
+                    next
+                end
             end
+            
             # Create course role if not exist
             course_role = server.roles.find{|r| r.name == "course-#{course['id']}"}
             if course_role.nil?
@@ -32,11 +39,11 @@ module CourseCommands
         event.bot.find_channel('announcements').first.send_message "@everyone Removing all traces of school so you can enjoy the summer."
         
         # Remove course rooms
-        $db.query("DELETE FROM course_rooms")
-        event.server.text_channels.find_all{|c| c.name.start_with?("course-")}.each do |c|
-            c.delete
+        $db.query("SELECT room_id FROM course_rooms").each do |row|
+            event.server.text_channels.find{|c| c.id==row['room_id']}.delete
             sleep 1
         end
+        $db.query("DELETE FROM course_rooms")
         
         # Remove course roles
         event.server.roles.find_all{|r| r.name.start_with?("course-")}.each do |r|
@@ -67,6 +74,6 @@ module CourseCommands
     command(:startyear) do |event|
         return if event.user.id != event.server.owner.id
         
-        event.bot.find_channel('announcements').first.send_message "It's that time again. Opening course and advisement channels."
+        #event.bot.find_channel('announcements').first.send_message "It's that time again. Opening course and advisement channels."
     end
 end
