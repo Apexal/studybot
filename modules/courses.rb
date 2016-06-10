@@ -36,12 +36,16 @@ module CourseCommands
         return if event.user.id != event.server.owner.id
         
         puts "Ending the year. Deleting course rooms and channels."
-        event.bot.find_channel('announcements').first.send_message "@everyone Removing all traces of school so you can enjoy the summer."
+        #event.bot.find_channel('announcements').first.send_message "@everyone Removing all traces of school so you can enjoy the summer."
         
         # Remove course rooms
         $db.query("SELECT room_id FROM course_rooms").each do |row|
-            event.server.text_channels.find{|c| c.id==row['room_id']}.delete
-            sleep 1
+            begin
+				event.server.text_channels.find{|c| c.id==row['room_id']}.delete
+				sleep 1
+			rescue
+				puts "No room #{row['room_id']}"
+			end
         end
         $db.query("DELETE FROM course_rooms")
         
@@ -51,6 +55,15 @@ module CourseCommands
             sleep 1
         end
         
+		restricted = ['announcements', 'welcome', 'work', 'recreation', 'gaming', 'memes', 'meta', 'testing', 'freshmen', 'sophomores', 'freshmen', 'juniors', 'seniors', 'voice-channel']
+		
+		#event.server.text_channels.each do |c|
+		#	if !c.name.start_with?("1") and !c.name.start_with?("2") and !restricted.include?(c.name)
+		#		c.delete
+		#		sleep 1
+		#	end
+		#end
+		
         # Remove advisement channels
         #$db.query("SELECT advisement FROM students WHERE verified=1 GROUP BY advisement").map{|result| result['advisement']}.each do |adv|
         #    begin

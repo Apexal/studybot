@@ -28,6 +28,7 @@ require './modules/voicechannels.rb'
 require './modules/utils.rb'
 require './modules/courses.rb'
 require './modules/nicknames.rb'
+require './modules/groups.rb'
 
 Mail.defaults do
   delivery_method :smtp, address: 'smtp.gmail.com',
@@ -97,6 +98,7 @@ bot.include! UtilityCommands
 bot.include! QuoteCommands
 bot.include! Suppressor
 bot.include! CourseCommands
+bot.include! GroupCommands
 #bot.include! NicknameEvents
 
 bot.run :async
