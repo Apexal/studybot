@@ -1,6 +1,7 @@
 module StartupEvents
     extend Discordrb::EventContainer
     ready do |event|
+        
         bot = event.bot
         puts "Ready!"
         server = bot.server(150739077757403137)

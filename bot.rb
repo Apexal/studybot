@@ -19,16 +19,8 @@ end
 
 $CONFIG = YAML::load_file('./config.yaml')
 
-require './modules/startup.rb'
-require './modules/registration.rb'
-require './modules/rooms.rb'
-require './modules/games.rb'
-require './modules/quotes.rb'
-require './modules/voicechannels.rb'
-require './modules/utils.rb'
-require './modules/courses.rb'
-require './modules/nicknames.rb'
-require './modules/groups.rb'
+# Auto requires all modules
+Dir["#{File.dirname(__FILE__)}/modules/*.rb"].each { |file| require file }
 
 Mail.defaults do
   delivery_method :smtp, address: 'smtp.gmail.com',
@@ -41,7 +33,10 @@ end
 
 $db = Mysql2::Client.new(host: $CONFIG["auth"]["mysql"]["host"], username: $CONFIG["auth"]["mysql"]["username"], password: $CONFIG["auth"]["mysql"]["password"], database: $CONFIG["auth"]["mysql"]["database"])
 
-bot = Discordrb::Commands::CommandBot.new advanced_functionality: true, token: $CONFIG["auth"]["discord"]["token"], application_id: $CONFIG["auth"]["discord"]["application_id"], prefix: $CONFIG["options"]["bot"]["prefix"]
+bot = Discordrb::Commands::CommandBot.new(advanced_functionality: true, 
+										  token: $CONFIG["auth"]["discord"]["token"], 
+										  application_id: $CONFIG["auth"]["discord"]["application_id"], 
+										  prefix: $CONFIG["options"]["bot"]["prefix"])
 
 bot.bucket :abusable, limit: 3, time_span: 60, delay: 10
 bot.bucket :study, limit: 10, time_span: 60, delay: 5
