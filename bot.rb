@@ -38,8 +38,38 @@ bot = Discordrb::Commands::CommandBot.new(advanced_functionality: true,
 										  application_id: $CONFIG["auth"]["discord"]["application_id"], 
 										  prefix: $CONFIG["options"]["bot"]["prefix"])
 
+$token = bot.token
+
 bot.bucket :abusable, limit: 3, time_span: 60, delay: 10
 bot.bucket :study, limit: 10, time_span: 60, delay: 5
+
+def handle_group_voice_channels(server)
+	$db.query("SELECT * FROM groups WHERE creator != 'server'").each do |row|
+		group_role = server.roles.find{|r| r.id==Integer(row['role_id'])}
+		if !group_role.nil?
+			# Get count of online group members
+			count = server.online_members.find_all{|m| m.role? group_role}.length
+			channel = server.voice_channels.find{|c| c.name == "Group #{row['name']}"}
+			
+			perms = Discordrb::Permissions.new
+			perms.can_connect = true
+			
+			if count > 5
+				puts "Over 5 online members in #{row['name']}"
+				if channel.nil? and server.voice_channels.find{|c| c.name==row['name']}.nil?
+					channel = server.create_channel("Group #{row['name']}", type='voice')
+					Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
+					channel.define_overwrite(group_role, perms, 0)
+				end
+			else
+				if !channel.nil?
+					channel.delete
+				end
+				puts "Less than 5 online members in #{row['name']}"
+			end
+		end
+	end
+end
 
 def replace_mentions(message)
 	message.strip!
@@ -86,6 +116,7 @@ bot.include! StartupEvents
 bot.include! RegistrationEvents
 bot.include! RegistrationCommands
 bot.include! RoomCommands
+bot.include! RoomEvents
 bot.include! GameEvents
 bot.include! VoiceChannelEvents
 bot.include! UtilityEvents
@@ -93,7 +124,6 @@ bot.include! UtilityCommands
 bot.include! QuoteCommands
 bot.include! Suppressor
 bot.include! CourseCommands
-bot.include! GroupCommands
 #bot.include! NicknameEvents
 
 bot.run :async

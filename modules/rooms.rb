@@ -1,6 +1,9 @@
 module RoomEvents
     extend Discordrb::EventContainer
-
+	
+	presence do |event|
+		handle_group_voice_channels(event.server)
+	end
 end
 
 module RoomCommands
@@ -91,7 +94,8 @@ module RoomCommands
         $db.query("INSERT INTO groups (creator, name, private, room_id, role_id, description) VALUES ('#{username}', '#{full_name}', 0, '#{group_room.id}', '#{group_role.id}', '#{description}')")
         
         user.pm "You have created **#{full_name}!** Others can join with `!join \"#{full_name}\"` \n Change the description of the group with `!description \"New Description\"`.\nDelete the group with `!deletegroup`."
-    end
+    	handle_group_voice_channels(server)
+	end
 	
 	command(:deletegroup, description: "Delete a group that you started.") do |event|
 		if !event.channel.private?
@@ -103,6 +107,10 @@ module RoomCommands
 		$db.query("SELECT * FROM groups JOIN students ON students.username=groups.creator WHERE students.discord_id=#{event.user.id}").each do |row|
 			server.roles.find{|r| r.id==Integer(row['role_id'])}.delete
 			server.text_channels.find{|r| r.id==Integer(row['room_id'])}.delete
+			begin
+				server.voice_channels.find{|c| c.name == "Group #{row['name']}"}.delete
+			rescue
+			end
 		end
 		
 		$db.query("DELETE groups FROM groups JOIN students ON groups.creator=students.username WHERE students.discord_id=#{event.user.id}")
@@ -133,6 +141,7 @@ module RoomCommands
 			event.message.delete
 		end
 		
+		handle_group_voice_channels(server)
 		nil
 	end
 	
@@ -156,6 +165,8 @@ module RoomCommands
 		if !event.channel.private?
 			event.message.delete
 		end
+		
+		handle_group_voice_channels(server)
         nil
     end
 	

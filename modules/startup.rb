@@ -64,6 +64,10 @@ module StartupEvents
                 end
             end
         end
+        
+        # Doing group voice channels
+        puts "Doing group voice channels"
+        handle_group_voice_channels(server)
         puts "Done"
     end
 end
