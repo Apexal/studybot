@@ -17,12 +17,15 @@ module RoomCommands
 		
 		messages = []
 		messages << "**Open Groups**"
+		
 		$db.query("SELECT * FROM groups").each do |row|
+			group_role = server.roles.find{|r| r.id==Integer(row['role_id'])}
+			count = server.members.find_all{|m| m.role? group_role}.length
 			owner = ""
 			if row['creator'] != "server"
 				owner = "**#{row['creator']}**"
 			end
-			messages << "`#{row['name']}` *#{row['description']}* #{owner}"
+			messages << "`#{row['name']}` *#{row['description']}* #{owner} (#{count} members)"
 		end
 		messages << "\n *Use `!join group` to join.\n Use `!creategroup \"Name Here\" \"Description here.\"` to start a group.*"
 		
