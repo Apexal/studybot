@@ -95,6 +95,8 @@ module RoomCommands
         
         user.pm "You have created **#{full_name}!** Others can join with `!join \"#{full_name}\"` \n Change the description of the group with `!description \"New Description\"`.\nDelete the group with `!deletegroup`."
     	handle_group_voice_channels(server)
+		
+		nil
 	end
 	
 	command(:deletegroup, description: "Delete a group that you started.") do |event|
