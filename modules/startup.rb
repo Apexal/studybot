@@ -51,20 +51,6 @@ module StartupEvents
         end
         puts "Done"
         
-        # Create game rooms
-        puts "Creating game voice channels"
-        server.online_members.each do |u|
-            if !!u.game
-                $playing[u.id] = u.game
-                #puts "#{u.name} is playing #{u.game}"
-                game_channel = server.voice_channels.find {|c| c.name == $playing[u.id]}
-                if game_channel.nil? && $playing.values.count(u.game) >= 2
-                    puts "Creating Room for #{u.game}"
-                    server.create_channel($playing[u.id], 'voice')
-                end
-            end
-        end
-        
         # Doing group voice channels
         puts "Doing group voice channels"
         handle_group_voice_channels(server)
