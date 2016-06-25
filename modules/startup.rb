@@ -11,7 +11,6 @@ module StartupEvents
         perms.can_read_message_history = true
         perms.can_read_messages = true
         perms.can_send_messages = true
-        djrole = server.roles.find{|r| r.name == "dj"}
         
         # Removing #voice-channel's
         puts "Removing #voice-channels"
@@ -19,9 +18,6 @@ module StartupEvents
             if c.name == "voice-channel"
                 puts "Deleting ##{c.name}"
                 c.delete
-            else
-                #Discordrb::API.update_user_overrides(event.bot.token, c.id, djrole.id, 0, perms.bits)
-                c.define_overwrite(djrole, 0, perms)
             end
         end
         puts "Done"

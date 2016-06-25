@@ -23,10 +23,6 @@ module VoiceChannelEvents
                 text_channel.topic = (c_name == "voice_channel") ? "Private chat for all those in your voice channel." : "Private channel for DJ commands"
                 
                 # Give the current user and BOTS access to it, restrict @everyone
-                if c_name == "Music"
-                    text_channel.define_overwrite(server.roles.find{|r| r.name=="dj"}, perms, 0)
-                    #Discordrb::API.update_user_overrides(event.bot.token, text_channel.id, djrole.id, perms.bits, 0)
-                end
                 
                 Discordrb::API.update_user_overrides(event.bot.token, text_channel.id, event.user.id, perms.bits, 0)
                 Discordrb::API.update_role_overrides(event.bot.token, text_channel.id, server.roles.find{|r| r.name == "bots"}.id, perms.bits, 0)
