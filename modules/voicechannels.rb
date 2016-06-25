@@ -77,7 +77,7 @@ module VoiceChannelEvents
                 text_channel = event.server.create_channel c_name
                 text_channel.topic = "Private chat for all those in the voice channel '#{event.channel.name}'."
                 
-                text_channel.send_message "Welcome to the text-channel for **#{event.channel.name}**!"
+                text_channel.send_message "Welcome to the text-channel for **#{event.channel.name}**! 🎙"
                 
                 # Give the current user and BOTS access to it, restrict @everyone
                 Discordrb::API.update_user_overrides(event.bot.token, text_channel.id, event.user.id, perms.bits, 0)

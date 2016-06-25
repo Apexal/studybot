@@ -31,7 +31,7 @@ module StartupEvents
             text_channel = server.text_channels.find{|t| t.name=="music"}
             if c.name != "Music"
                 text_channel = server.create_channel "voice-channel"
-                text_channel.topic = "Private chat for all those in the voice channel '#{c.name}'."
+                text_channel.topic = "Private chat for all those in the voice channel '#{c.name}'"
             end
             
             # Give the current user and BOTS access to it, restrict @everyone
