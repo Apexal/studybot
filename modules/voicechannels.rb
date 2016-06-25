@@ -1,9 +1,9 @@
 module VoiceChannelEvents
     extend Discordrb::EventContainer
     $hierarchy = Hash.new
-        $user_teachers = Hash.new
-        OPEN_ROOM_NAME = "[New Room]"
-        def self.handle_room(event, r)
+    $user_teachers = Hash.new
+    OPEN_ROOM_NAME = "[New Room]"
+    def self.handle_room(event, r)
         server = event.server
         if r.users.empty? and r.name != OPEN_ROOM_NAME
             # Delete associated 'voice-channel' and unlink it
@@ -19,10 +19,10 @@ module VoiceChannelEvents
             # 'Open Room's with users in them
             if r.name == OPEN_ROOM_NAME and !r.users.empty?
                 puts "Renaming open room"
-                                # Get random teacher name
+                # Get random teacher name
                 teachers = if $user_teachers[event.user.id].nil? then $db.query("SELECT staffs.last_name FROM staffs JOIN courses ON courses.teacher_id=staffs.id JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id WHERE students.discord_id=#{event.user.id}").map { |t| t['last_name'] }.uniq else $user_teachers[event.user.id] end
                 $user_teachers[event.user.id] = teachers
-                                randteacher = teachers.sample
+                randteacher = teachers.sample
                 while !server.voice_channels.find { |c| c.name == "Room #{randteacher}" }.nil?
                     puts "ALREADY EXISTS!!!!"
                     randteacher = teachers.sample
@@ -32,14 +32,14 @@ module VoiceChannelEvents
             end
         end
     end
-        voice_state_update do |event|
+    voice_state_update do |event|
         puts "Voice state update"
         server = event.server
         perms = Discordrb::Permissions.new
         perms.can_read_message_history = true
         perms.can_read_messages = true
         perms.can_send_messages = true
-                # ------------------------------
+        # ------------------------------
         # Room Naming/Open Room Handling
         if !event.channel.nil?
             handle_room event, event.channel
@@ -54,7 +54,7 @@ module VoiceChannelEvents
         end
         # END ROOM NAMING/OPEN ROOM HANDLING
         # ----------------------------------
-                # HANDLE ASSOCIATED #voice-channel TEXT CHANNEL
+        # HANDLE ASSOCIATED #voice-channel TEXT CHANNEL
         if event.channel != nil and event.channel.name != "AFK"
             # voice-channel associated with this voice channel
             text_channel = server.text_channels.find { |c| c.id == $hierarchy[event.channel.id] }
@@ -62,12 +62,12 @@ module VoiceChannelEvents
             if text_channel.nil?
                 puts "Creating #voice-channel for #{event.channel.name}"
                 # Name it 'voice-channel' or 'Music'
-                                c_name = "voice-channel"
+                c_name = "voice-channel"
                 c_name = event.channel.name unless event.channel.name != "Music"
-                                text_channel = event.server.create_channel c_name
+                text_channel = event.server.create_channel c_name
                 text_channel.topic = "Private chat for all those in the voice channel '#{event.channel.name}'."
-                                text_channel.send_message "Welcome to the text-channel for **#{event.channel.name}**! 🎙"
-                                # Give the current user and BOTS access to it, restrict @everyone
+                text_channel.send_message "Welcome to the text-channel for **#{event.channel.name}**! 🎙"
+                # Give the current user and BOTS access to it, restrict @everyone
                 Discordrb::API.update_user_overrides(event.bot.token, text_channel.id, event.user.id, perms.bits, 0)
                 Discordrb::API.update_role_overrides(event.bot.token, text_channel.id, server.roles.find{|r| r.name == "bots"}.id, perms.bits, 0)
                 Discordrb::API.update_role_overrides(event.bot.token, text_channel.id, server.id, 0, perms.bits)

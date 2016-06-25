@@ -8,25 +8,25 @@ module UtilityCommands
         event.channel.send_file(File.open('./flag.png', 'rb'))
         'Designed by *Liam Quinn*'
     end
-        grades = ['freshmen', 'sophomores', 'juniors', 'seniors']
+    grades = ['freshmen', 'sophomores', 'juniors', 'seniors']
     special = {"memes" => "memer", "testing" => "tester", "gaming" => "gamer"}
-        command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study) do |event|
+    command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study) do |event|
         if !event.message.channel.private?
             event.message.delete
         end
-                                server = event.bot.server(150739077757403137)
+        server = event.bot.server(150739077757403137)
         studyrole = server.roles.find{|r| r.name=="studying"}
-                user = event.user.on(server)
+        user = event.user.on(server)
         clean_name = user.display_name
         clean_name.sub! "[S] ", ""
-                perms = Discordrb::Permissions.new
+        perms = Discordrb::Permissions.new
         perms.can_read_messages = true
         perms.can_read_message_history = true
         perms.can_send_messages = true
-                if user.role? studyrole
+        if user.role? studyrole
             user.nickname = clean_name
             user.remove_role studyrole
-                        # Issue for grade channels
+            # Issue for grade channels
             grades.each do |g|
                 role = server.roles.find{|r| r.name==g}
                 if role.nil? == false and user.role? role
@@ -34,19 +34,19 @@ module UtilityCommands
                     Discordrb::API.update_user_overrides(event.bot.token, grade_channel.id, user.id, 0, 0)
                 end
             end
-                        # For the special channels
+            # For the special channels
             special.each do |c_name, r_name|
                 role = server.roles.find{|r| r.name==r_name}
                 channel = server.text_channels.find{|c| c.name==c_name}
-                                if user.role? role
+                if user.role? role
                     Discordrb::API.update_user_overrides(event.bot.token, channel.id, user.id, 0, 0)
                 end
             end
         else
             # GOING INTO STUDYMODE
-                        user.nickname = "[S] #{clean_name}"
+            user.nickname = "[S] #{clean_name}"
             user.add_role studyrole
-                        # Issue for grade channels
+            # Issue for grade channels
             grades.each do |g|
                 role = server.roles.find{|r| r.name==g}
                 if role.nil? == false and user.role? role
@@ -54,18 +54,18 @@ module UtilityCommands
                     Discordrb::API.update_user_overrides(event.bot.token, grade_channel.id, user.id, 0, perms.bits)
                 end
             end
-                        # For the special channels
+            # For the special channels
             special.each do |c_name, r_name|
                 role = server.roles.find{|r| r.name==r_name}
                 channel = server.text_channels.find{|c| c.name==c_name}
-                                if user.role? role
+                if user.role? role
                     Discordrb::API.update_user_overrides(event.bot.token, channel.id, user.id, 0, perms.bits)
                 end
             end
         end
-                                nil
+        nil
     end
-        command(:color, description: 'Set your color! Usage: `!color colorname`') do |event, color|
+    command(:color, description: 'Set your color! Usage: `!color colorname`') do |event, color|
         server = event.server
         colors = %w(red orange yellow dark pink purple blue green)
         if colors.include?(color) || color == 'default'
@@ -79,7 +79,7 @@ module UtilityCommands
             "The available colors are **#{colors.join ', '}, and default**."
         end
     end
-            command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user or !whois regisusername`') do |event, username|
+    command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user or !whois regisusername`') do |event, username|
         # Get user mentioned or default to sender of command
         if username != nil and !username.start_with?("<@")
             # Prevent nasty SQL injection
@@ -145,7 +145,7 @@ module UtilityCommands
         end
         return ''
     end
-        command(:rules, description: 'Show the rules of the server') do |event|
+    command(:rules, description: 'Show the rules of the server') do |event|
         event << "__***Server Rules***__ :bookmark_tabs:"
         event << "`1` Don't be a jerk."
         event << "`2` Report any and all abuse directly to the Owner <@152621041976344577>."

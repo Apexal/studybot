@@ -1,13 +1,13 @@
 module RegistrationEvents
     extend Discordrb::EventContainer
-        member_leave do |event|
+    member_leave do |event|
         event.server.owner.pm "#{event.user.mention} has left!"
     end
-        member_join do |event|
+    member_join do |event|
         event.bot.find_channel('meta').first.send_message "#{event.server.owner.mention} #{event.user.name} just joined the server!"
-                sleep 10
+        sleep 10
         m = event.bot.find_channel('welcome').first.send_message "#{event.user.mention} Hello! Please check your Direct Messages (top left) to get started!"
-                event.user.pm "Welcome! Please type `!register yourregisusername` to get started. *You will not be able to participate in the server until you do this.*"
+        event.user.pm "Welcome! Please type `!register yourregisusername` to get started. *You will not be able to participate in the server until you do this.*"
         sleep 100
         m.delete
     end
@@ -168,7 +168,7 @@ module RegistrationCommands
                     sleep 1
                 end
                 user.add_role roles_to_add
-                                user.pm "You can choose to join #gaming, #memes, and/or #testing with `!join channnel`"
+                user.pm "You can choose to join #gaming, #memes, and/or #testing with `!join channnel`"
                 sleep 1
                 user.pm "For example, `!join #gaming"
             else
