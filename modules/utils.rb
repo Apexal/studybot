@@ -10,7 +10,7 @@ module UtilityCommands
     end
     
     grades = ['freshmen', 'sophomores', 'juniors', 'seniors']
-    special = {"memes" => "memer", "testing" => "tester", "gaming" => "gamer"}
+    special = {"memes" => "Memes", "testing" => "Testing", "gaming" => "Gaming"}
    
     command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study) do |event|
         if !event.message.channel.private?
