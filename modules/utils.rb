@@ -8,8 +8,10 @@ module UtilityCommands
         event.channel.send_file(File.open('./flag.png', 'rb'))
         'Designed by *Liam Quinn*'
     end
+    
     grades = ['freshmen', 'sophomores', 'juniors', 'seniors']
     special = {"memes" => "memer", "testing" => "tester", "gaming" => "gamer"}
+   
     command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study) do |event|
         if !event.message.channel.private?
             event.message.delete
@@ -44,7 +46,7 @@ module UtilityCommands
             end
         else
             # GOING INTO STUDYMODE
-            user.nickname = "[S] #{clean_name}"
+            user.nickname = "[S] #{clean_name}"[0..30]
             user.add_role studyrole
             # Issue for grade channels
             grades.each do |g|
