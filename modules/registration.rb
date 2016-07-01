@@ -2,6 +2,7 @@ module RegistrationEvents
     extend Discordrb::EventContainer
     member_leave do |event|
         event.server.owner.pm "#{event.user.mention} has left!"
+        $db.query("UPDATE students SET verified=0 WHERE discord_id='#{event.user.id}'")
     end
     member_join do |event|
         event.bot.find_channel('meta').first.send_message "#{event.server.owner.mention} #{event.user.name} just joined the server!"
@@ -126,7 +127,6 @@ module RegistrationCommands
                         puts "Creating channel"
                         adv_channel = server.create_channel(a)
                         adv_channel.topic = "Private chat for Advisement #{a}"
-                        channel_id = adv_channel.id
                         puts "Updating perms"
                         Discordrb::API.update_role_overrides(token, adv_channel.id, server.id, 0, perms.bits) # @everyone
                         Discordrb::API.update_role_overrides(token, adv_channel.id, advrole.id, perms.bits, 0) # advisement role
