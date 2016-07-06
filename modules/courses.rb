@@ -35,7 +35,7 @@ module CourseCommands
         $db.query("SELECT room_id FROM course_rooms").each do |row|
             begin
                 event.server.text_channels.find{|c| c.id==row['room_id']}.delete
-                sleep 1
+                sleep 0.5
             rescue
                 puts "No room #{row['room_id']}"
             end

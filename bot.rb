@@ -61,7 +61,7 @@ def handle_group_voice_channels(server)
         if !channel.nil?
           channel.delete
         end
-        puts "Less than 5 online members in #{row['name']}"
+        #puts "Less than 5 online members in #{row['name']}"
       end
     end
   end

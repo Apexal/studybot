@@ -18,7 +18,21 @@ module StartupEvents
             end
         end
         puts "Done"
-        # Create #voice-channel's for all voice channels used right now
+        
+		puts "Deleting extra [New Room]'s"
+		newrooms = server.voice_channels.find_all{|c| c.name == "[New Room]"}
+		count = newrooms.length
+		if count > 1
+			newrooms.each do |c|
+				if count > 1
+					c.delete
+				end
+				count -= 1
+				sleep 0.5
+			end
+		end
+		puts "Done"
+		# Create #voice-channel's for all voice channels used right now
         puts "Creating all necessary #voice-channel's and adding users to them"
         server.voice_channels.find_all{|r| r.name != "AFK" and r.name != "[New Room]"}.each do |c|
             puts c.name

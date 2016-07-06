@@ -43,15 +43,16 @@ module VoiceChannelEvents
         # Room Naming/Open Room Handling
         if !event.channel.nil?
             handle_room event, event.channel
-        end
+		end
         rooms = server.voice_channels.find_all { |c| c.name.downcase.include?('room') }
-        rooms.each do |r|
-            # Empty Room ____'s
-            if !event.channel.nil? and r.id == event.channel.id
-                next
-            end
-            handle_room event, r
-        end
+		rooms.each do |r|
+			# Empty Room ____'s
+			if !event.channel.nil? and r.id == event.channel.id
+				next
+			end
+			handle_room event, r
+		end
+			
         # END ROOM NAMING/OPEN ROOM HANDLING
         # ----------------------------------
         # HANDLE ASSOCIATED #voice-channel TEXT CHANNEL
