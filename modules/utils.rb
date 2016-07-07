@@ -104,9 +104,12 @@ module UtilityCommands
         who = event.user
         who = event.message.mentions.first unless event.message.mentions.empty?
 
-        # SuperUser shenanigans
+        # Shenanigans
         if who.name == 'studybot'
-            event << '*I am who I am.*'
+            event << '**I am the bot that automates every single part of the Discord server!** Made by Frank Matranga https://github.com/Apexal/studybot'
+            return
+        elsif who.id == event.server.owner.id
+            event << "#{event.server.owner.mention} is the **Owner** of the server."
             return
         end
 
@@ -154,7 +157,7 @@ module UtilityCommands
         event << "__***Server Rules***__ :bookmark_tabs:"
         event << "`1` Don't be a jerk."
         event << "`2` Report any and all abuse directly to the Owner <@152621041976344577>."
-        event << "`3` Do not post any sexual content."
+        event << "`3` No NSFW content."
     end
 end
 
