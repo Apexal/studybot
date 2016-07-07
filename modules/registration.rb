@@ -69,9 +69,9 @@ module RegistrationCommands
                 result = result.first
                 roles_to_add = []
 
-                # Add 'verified' role
-                puts "Adding 'verified' role"
-                vrole = server.roles.find{|r| r.name == "verified"}
+                # Add 'Verified' role
+                puts "Adding 'Verified' role"
+                vrole = server.roles.find{|r| r.name == "Verified"}
                 roles_to_add << vrole
                 # Decide grade for role
                 digit = result['advisement'][0].to_i
