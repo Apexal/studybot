@@ -83,7 +83,7 @@ module RegistrationCommands
                 digit = result['advisement'][0].to_i
                 rolename = 'freshmen'
                 if digit == 2
-                    rolename = 'sophomores'
+                    rolename = 'Sophomores'
                 elsif digit == 3
                     rolename = 'juniors'
                 elsif digit == 4

@@ -9,8 +9,7 @@ module UtilityCommands
         'Designed by *Liam Quinn*'
     end
     
-    grades = ['freshmen', 'sophomores', 'juniors', 'seniors']
-    special = {"memes" => "Memes", "testing" => "Testing", "gaming" => "Gaming"}
+    grades = ['freshmen', 'Sophomores', 'juniors', 'seniors']
    
     command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study) do |event|
         if !event.message.channel.private?
@@ -21,49 +20,54 @@ module UtilityCommands
         user = event.user.on(server)
         clean_name = user.display_name
         clean_name.sub! "[S] ", ""
+		
+		# Permissions
         perms = Discordrb::Permissions.new
         perms.can_read_messages = true
         perms.can_read_message_history = true
         perms.can_send_messages = true
+		
         if user.role? studyrole
             user.nickname = clean_name
             user.remove_role studyrole
             # Issue for grade channels
             grades.each do |g|
-                role = server.roles.find{|r| r.name==g}
-                if role.nil? == false and user.role? role
-                    grade_channel = server.text_channels.find{|c| c.name==g}
+				gname = g.downcase
+				puts gname
+                role = server.roles.find{|r| r.name==g }
+                if !role.nil? and user.role? role
+                    grade_channel = server.text_channels.find{|c| c.name==gname }
                     Discordrb::API.update_user_overrides(event.bot.token, grade_channel.id, user.id, 0, 0)
                 end
             end
-            # For the special channels
-            special.each do |c_name, r_name|
-                role = server.roles.find{|r| r.name==r_name}
-                channel = server.text_channels.find{|c| c.name==c_name}
-                if user.role? role
-                    Discordrb::API.update_user_overrides(event.bot.token, channel.id, user.id, 0, 0)
-                end
-            end
+			$db.query("SELECT * FROM groups").each do |row|
+				group_role = server.roles.find{|r| r.id==Integer(row['role_id']) }
+				if !group_role.nil? and user.role? group_role 
+					group_channel = server.text_channels.find{|c| c.id==Integer(row['room_id']) }
+					Discordrb::API.update_user_overrides(event.bot.token, group_channel.id, user.id, 0, 0)
+				end
+			end
         else
             # GOING INTO STUDYMODE
             user.nickname = "[S] #{clean_name}"[0..30]
             user.add_role studyrole
             # Issue for grade channels
             grades.each do |g|
+				gname = g.downcase
                 role = server.roles.find{|r| r.name==g}
-                if role.nil? == false and user.role? role
-                    grade_channel = server.text_channels.find{|c| c.name==g}
+                if !role.nil? and user.role? role
+                    grade_channel = server.text_channels.find{|c| c.name==gname}
                     Discordrb::API.update_user_overrides(event.bot.token, grade_channel.id, user.id, 0, perms.bits)
                 end
             end
-            # For the special channels
-            special.each do |c_name, r_name|
-                role = server.roles.find{|r| r.name==r_name}
-                channel = server.text_channels.find{|c| c.name==c_name}
-                if user.role? role
-                    Discordrb::API.update_user_overrides(event.bot.token, channel.id, user.id, 0, perms.bits)
-                end
-            end
+			
+			$db.query("SELECT * FROM groups").each do |row|
+				group_role = server.roles.find{|r| r.id==Integer(row['role_id']) }
+				if !group_role.nil? and user.role? group_role 
+					group_channel = server.text_channels.find{|c| c.id==Integer(row['room_id']) }
+					Discordrb::API.update_user_overrides(event.bot.token, group_channel.id, user.id, 0, perms.bits)
+				end
+			end
         end
         nil
     end
