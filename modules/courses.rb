@@ -46,7 +46,7 @@ module CourseCommands
             r.delete
             sleep 1
         end
-        restricted = ['announcements', 'welcome', 'work', 'recreation', 'gaming', 'memes', 'meta', 'testing', 'freshmen', 'sophomores', 'freshmen', 'juniors', 'seniors', 'voice-channel']
+        #restricted = ['announcements', 'welcome', 'work', 'recreation', 'gaming', 'memes', 'meta', 'testing', 'Freshmen', 'Sophomores', 'Juniors', 'Seniors', 'voice-channel']
         #event.server.text_channels.each do |c|
         #	if !c.name.start_with?("1") and !c.name.start_with?("2") and !restricted.include?(c.name)
         #		c.delete

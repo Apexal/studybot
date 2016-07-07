@@ -81,13 +81,13 @@ module RegistrationCommands
                 roles_to_add << vrole
                 # Decide grade for role
                 digit = result['advisement'][0].to_i
-                rolename = 'freshmen'
+                rolename = 'Freshmen'
                 if digit == 2
                     rolename = 'Sophomores'
                 elsif digit == 3
-                    rolename = 'juniors'
+                    rolename = 'Juniors'
                 elsif digit == 4
-                    rolename = 'seniors'
+                    rolename = 'Seniors'
                 end
                 puts "Adding '#{rolename}' role"
                 # Add grade role
@@ -165,7 +165,7 @@ module RegistrationCommands
                         Discordrb::API.update_role_overrides(event.bot.token, course_room.id, bots_role_id, perms.bits, 0) # bots
                         Discordrb::API.update_role_overrides(event.bot.token, course_room.id, server.id, 0, perms.bits) # @everyone
                     end
-                    sleep 1
+                    sleep 0.5
                 end
                 user.add_role roles_to_add
                 user.pm "You can choose to join #gaming, #memes, and/or #testing with `!join channnel`"

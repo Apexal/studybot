@@ -9,7 +9,7 @@ module UtilityCommands
         'Designed by *Liam Quinn*'
     end
     
-    grades = ['freshmen', 'Sophomores', 'juniors', 'seniors']
+    grades = ['Freshmen', 'Sophomores', 'Juniors', 'Seniors']
    
     command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study) do |event|
         if !event.message.channel.private?
@@ -33,7 +33,6 @@ module UtilityCommands
             # Issue for grade channels
             grades.each do |g|
 				gname = g.downcase
-				puts gname
                 role = server.roles.find{|r| r.name==g }
                 if !role.nil? and user.role? role
                     grade_channel = server.text_channels.find{|c| c.name==gname }
