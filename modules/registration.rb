@@ -93,7 +93,7 @@ module RegistrationCommands
                 # Add grade role
                 grole = server.roles.find { |r| r.name == rolename }
                 roles_to_add << grole
-                sleep 1
+                sleep 0.5
                 bots_role_id = server.roles.find { |r| r.name == 'bots' }.id
 
                 # Advisement channel handling
@@ -134,9 +134,11 @@ module RegistrationCommands
                     end
                     sleep 1
                 end
+
+
                 # THE GOOD STUFF
                 # Get all classes for this student
-                query = "SELECT courses.id, courses.title, staffs.last_name FROM courses JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id JOIN staffs ON staffs.id=courses.teacher_id WHERE students.discord_id=#{event.user.id} AND courses.is_class=1"
+                query = "SELECT courses.id, courses.title, courses.room_id, staffs.last_name FROM courses JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id JOIN staffs ON staffs.id=courses.teacher_id WHERE students.discord_id=#{event.user.id} AND courses.is_class=1"
                 $db.query(query).each do |course|
                     # Ignore unnecessary classes
                     if course['title'].include? "Phys " or course['title'].include? "Guidance " or course['title'].include? "Speech " or course['title'].include? "Advisement " or course['title'].include? "Health " or course['title'].include? "Amer "
@@ -145,31 +147,42 @@ module RegistrationCommands
                     # Turn something like 'Math II (Alg 2)' into 'math'
                     course_name = course['title'].split(" (")[0].split(" ").join("-")
                     ['IV', 'III', 'II', 'I', '9', '10', '11', '12'].each {|i| course_name.gsub!("-#{i}", "") }
-                    # Create course role if not exist
-                    course_role = server.roles.find{|r| r.name == "course-#{course['id']}"}
-                    if course_role.nil?
-                        course_role = server.create_role
-                        course_role.name = "course-#{course['id']}"
-                    end
-                    # Add that lovely course role m8
-                    roles_to_add << course_role
-                    bots_role_id = server.roles.find { |r| r.name == 'bots' }.id
-                    # Create the text-channel for the course if it doesn't exist
-                    course_rooms = $db.query("SELECT room_id FROM course_rooms WHERE course_id=#{course['id']}")
-                    if course_rooms.count == 0
+                    
+                    puts "Handling course room for #{course['title']}"
+                    course_room = nil
+                    begin
+                        course_room = server.roles.find{|c| c.id==Integer(course['room_id']) }
+                        if course_room.nil?
+                            # Course room doesn't exist
+                            puts "Missing room! Creating."
+                            course_room = server.create_channel course_name
+                            course_room.topic = "Disscussion room for #{course['title']} with #{course['last_name']}."
+                            Discordrb::API.update_role_overrides(event.bot.token, course_room.id, server.id, 0, perms.bits) # @everyone
+                        end
+                    rescue ArgumentError
+                        puts "Doesn't exist. Creating.'"
                         course_room = server.create_channel course_name
-                        $db.query("insert into course_rooms (course_id, room_id) values (#{course['id']}, #{course_room.id})")
-
                         course_room.topic = "Disscussion room for #{course['title']} with #{course['last_name']}."
-                        course_room.define_overwrite(course_role, perms, 0)
-                        Discordrb::API.update_role_overrides(event.bot.token, course_room.id, bots_role_id, perms.bits, 0) # bots
                         Discordrb::API.update_role_overrides(event.bot.token, course_room.id, server.id, 0, perms.bits) # @everyone
                     end
+                    course_room.define_overwrite(user, perms, 0)
+                    
+                    $db.query("UPDATE courses SET room_id='#{course_room.id}' WHERE id=#{course['id']}")
+
                     sleep 0.5
                 end
+
+                # Default groups
+                $db.query("SELECT room_id, role_id FROM groups WHERE default_group=1").each do |group|
+                    group_role = server.roles.find{|r| r.id==Integer(group['role_id']) }
+                    if !group_role.nil?
+                        roles_to_add << group_role
+                    end
+                end
+
                 user.add_role roles_to_add
                 user.pm "You can choose to join #gaming, #memes, and/or #testing with `!join channnel`"
-                sleep 1
+                sleep 2
                 user.pm "For example, `!join #gaming"
             else
                 user.pm('Incorrect code!')

@@ -2,6 +2,8 @@ module CourseCommands
     extend Discordrb::Commands::CommandContainer
     skippable = ['phys', 'guidance', 'speech', 'advisement', 'health', 'amer']
     command(:fixcourses) do |event|
+        event << "Not done."
+        return
         server = event.bot.server(150739077757403137)
         user = if event.message.mentions.empty? then event.user else event.message.mentions.first end
         user = user.on(server)
@@ -32,7 +34,7 @@ module CourseCommands
         puts "Ending the year. Deleting course rooms and channels."
         #event.bot.find_channel('announcements').first.send_message "@everyone Removing all traces of school so you can enjoy the summer."
         # Remove course rooms
-        $db.query("SELECT room_id FROM course_rooms").each do |row|
+        $db.query("SELECT room_id FROM courses WHERE room_id IS NOT NULL").each do |row|
             begin
                 event.server.text_channels.find{|c| c.id==row['room_id']}.delete
                 sleep 0.5
@@ -40,12 +42,8 @@ module CourseCommands
                 puts "No room #{row['room_id']}"
             end
         end
-        $db.query("DELETE FROM course_rooms")
-        # Remove course roles
-        event.server.roles.find_all{|r| r.name.start_with?("course-")}.each do |r|
-            r.delete
-            sleep 1
-        end
+        $db.query("UPDATE courses SET room_id=NULL WHERE room_id IS NOT NULL")
+
         #restricted = ['announcements', 'welcome', 'work', 'recreation', 'gaming', 'memes', 'meta', 'testing', 'Freshmen', 'Sophomores', 'Juniors', 'Seniors', 'voice-channel']
         #event.server.text_channels.each do |c|
         #	if !c.name.start_with?("1") and !c.name.start_with?("2") and !restricted.include?(c.name)
