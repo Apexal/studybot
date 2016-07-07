@@ -48,9 +48,9 @@ def handle_group_voice_channels(server)
       # Get count of online group members
       count = server.online_members.find_all{|m| m.role? group_role}.length
       channel = server.voice_channels.find{|c| c.name == "Group #{row['name']}"}
-            perms = Discordrb::Permissions.new
+      perms = Discordrb::Permissions.new
       perms.can_connect = true
-            if count > 5
+      if count > 5
         puts "Over 5 online members in #{row['name']}"
         if channel.nil? and server.voice_channels.find{|c| c.name==row['name']}.nil?
           channel = server.create_channel("Group #{row['name']}", type='voice')

@@ -80,13 +80,21 @@ module VoiceChannelEvents
             # Remove the user's perms in all other 'voice-channel'
             $hierarchy.each do |voice_id, text_id|
                 if text_channel.id != text_id
-                    Discordrb::API.update_user_overrides(event.bot.token, text_id, event.user.id, 0, 0)
+                    begin
+                        Discordrb::API.update_user_overrides(event.bot.token, text_id, event.user.id, 0, 0)
+                    rescue
+                        puts "Failed to update user overrides"
+                    end
                 end
             end
         else
             # Remove the user's perms in all other 'voice-channel'
             $hierarchy.each do |voice_id, text_id|
-                Discordrb::API.update_user_overrides(event.bot.token, text_id, event.user.id, 0, 0)
+                begin
+                    Discordrb::API.update_user_overrides(event.bot.token, text_id, event.user.id, 0, 0)
+                rescue
+                    puts "Failed to update overrides"
+                end
             end
         end
     end
