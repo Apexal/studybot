@@ -36,7 +36,7 @@ module CourseCommands
         # Remove course rooms
         $db.query("SELECT room_id FROM courses WHERE room_id IS NOT NULL").each do |row|
             begin
-                event.server.text_channels.find{|c| c.id==row['room_id']}.delete
+                event.server.text_channels.find{|c| c.id==Integer(row['room_id'])}.delete
                 sleep 0.5
             rescue
                 puts "No room #{row['room_id']}"
