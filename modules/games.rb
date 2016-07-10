@@ -21,7 +21,7 @@ module GameEvents
             end
 
             user_id = event.user.id
-            game_channel = server.voice_channels.find {|c| c.name == $playing[event.user.id]}
+            game_channel = server.voice_channels.find {|c| c.name == $playing[user_id]}
 
             if joining
                 if game_channel.nil? && $playing.values.count(game) >= 2
