@@ -44,6 +44,7 @@ module StartupEvents
             end
             # Give the current user and BOTS access to it, restrict @everyone
             c.users.each do |u|
+                $user_status[u.id] = c.id
                 Discordrb::API.update_user_overrides(bot.token, text_channel.id, u.id, perms.bits, 0)
             end
             Discordrb::API.update_role_overrides(bot.token, text_channel.id, server.roles.find{|r| r.name == "bots"}.id, 0, perms.bits)

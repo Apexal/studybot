@@ -3,6 +3,9 @@ module VoiceChannelEvents
     $hierarchy = Hash.new
     $user_teachers = Hash.new
     OPEN_ROOM_NAME = "[New Room]"
+    
+    $user_status = Hash.new # Stores voice status of users to compare
+
     def self.handle_room(event, r)
         server = event.server
         if r.users.empty? and r.name != OPEN_ROOM_NAME
@@ -32,8 +35,16 @@ module VoiceChannelEvents
             end
         end
     end
+
+    def self.update_channel_cache(channels)
+
+    end
+
     voice_state_update do |event|
         puts "Voice state update"
+        
+        old_status = $user_status[event.user.id]
+
         server = event.server
         perms = Discordrb::Permissions.new
         perms.can_read_message_history = true
@@ -97,5 +108,23 @@ module VoiceChannelEvents
                 end
             end
         end
+
+        member = event.user.on(server)
+
+        channel_id = if event.channel.nil? then nil else event.channel.id end
+        if old_status.nil? and !channel_id.nil?
+            # Joined a voice channel
+            server.text_channels.find{|c| c.id==$hierarchy[channel_id]}.send_message("**#{member.display_name}** *has joined the voice channel.*", true) # Message new #voice-channel about joining
+        elsif !old_status.nil? and channel_id.nil?
+            # Disconnected from voice
+            server.text_channels.find{|c| c.id==$hierarchy[old_status]}.send_message("**#{member.display_name}** *has left the voice channel.*", true) # Message old #voice-channel about leaving
+        elsif old_status != channel_id
+            # Left one channel for another
+            server.text_channels.find{|c| c.id==$hierarchy[old_status]}.send_message("**#{member.display_name}** *has left the voice channel.*", true) # Message old #voice-channel about leaving
+            server.text_channels.find{|c| c.id==$hierarchy[channel_id]}.send_message("**#{member.display_name}** *has joined the voice channel.*", true) # Message new #voice-channel about joining
+        end
+
+    	$user_status[event.user.id] = if event.channel.nil? then nil else event.channel.id end
+        #puts $user_status
     end
 end
