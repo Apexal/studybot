@@ -184,7 +184,7 @@ module RegistrationCommands
                 # PM him a congratulatory message
                 status_message.edit("Congratulations, **#{result['first_name']}**. You are now a verified Regis Discord User!")
                 # Make an announcement welcoming him to everyone
-                #event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
+                event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
 
                 user.pm "You can choose to join default or user-made groups with `!groups`. Try it out here!"
 

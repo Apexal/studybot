@@ -19,6 +19,12 @@ module StartupEvents
         end
         puts "Done"
         
+        puts "Setting user statuses"
+        server.online_members.each do |m|
+            $user_status[m.id] = nil
+        end
+        puts "Done"
+
 		puts "Deleting extra [New Room]'s"
 		newrooms = server.voice_channels.find_all{|c| c.name == "[New Room]"}
 		count = newrooms.length

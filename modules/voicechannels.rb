@@ -111,20 +111,21 @@ module VoiceChannelEvents
 
         member = event.user.on(server)
 
-        channel_id = if event.channel.nil? then nil else event.channel.id end
-        if old_status.nil? and !channel_id.nil?
-            # Joined a voice channel
-            server.text_channels.find{|c| c.id==$hierarchy[channel_id]}.send_message("**#{member.display_name}** *has joined the voice channel.*", true) # Message new #voice-channel about joining
-        elsif !old_status.nil? and channel_id.nil?
-            # Disconnected from voice
-            server.text_channels.find{|c| c.id==$hierarchy[old_status]}.send_message("**#{member.display_name}** *has left the voice channel.*", true) # Message old #voice-channel about leaving
-        elsif old_status != channel_id
-            # Left one channel for another
-            server.text_channels.find{|c| c.id==$hierarchy[old_status]}.send_message("**#{member.display_name}** *has left the voice channel.*", true) # Message old #voice-channel about leaving
-            server.text_channels.find{|c| c.id==$hierarchy[channel_id]}.send_message("**#{member.display_name}** *has joined the voice channel.*", true) # Message new #voice-channel about joining
+        current_status = if event.channel.nil? then nil else event.channel.id end
+        if old_status != current_status
+            # There was a change
+            if !current_status.nil?
+                # In new voice channel
+                server.text_channels.find{|c| c.id==$hierarchy[current_status]}.send_message("**#{member.display_name}** *has joined the voice channel.*", true) # Message new #voice-channel about joining
+            end
+            if !old_status.nil?
+                # Left a voice channel
+                server.text_channels.find{|c| c.id==$hierarchy[old_status]}.send_message("**#{member.display_name}** *has left the voice channel.*", true) # Message old #voice-channel about leaving
+            end
+
         end
 
-    	$user_status[event.user.id] = if event.channel.nil? then nil else event.channel.id end
+    	$user_status[event.user.id] = current_status
         #puts $user_status
     end
 end
