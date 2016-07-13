@@ -8,37 +8,37 @@ module UtilityCommands
     event.channel.send_file(File.open('./flag.png', 'rb'))
     'Designed by *Liam Quinn*'
   end
-    grades = ['Freshmen', 'Sophomores', 'Juniors', 'Seniors']
-    command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study) do |event|
-    if !event.message.channel.private?
-      event.message.delete
-    end
-    server = event.bot.server(150739077757403137)
-    studyrole = server.roles.find{|r| r.name=="studying"}
+
+  grades = %w(Freshmen Sophomores Juniors Seniors)
+  command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study) do |event|
+    event.message.delete unless event.message.channel.private?
+
+    server = event.bot.server(150_739_077_757_403_137)
+    studyrole = server.roles.find { |r| r.name == 'studying' }
     user = event.user.on(server)
     clean_name = user.display_name
-    clean_name.sub! "[S] ", ""
-        # Permissions
+    clean_name.sub! '[S] ', ''
+    # Permissions
     perms = Discordrb::Permissions.new
     perms.can_read_messages = true
     perms.can_read_message_history = true
     perms.can_send_messages = true
-        if user.role? studyrole
+    if user.role? studyrole
       user.nickname = clean_name
       user.remove_role studyrole
       # Issue for grade channels
       grades.each do |g|
         gname = g.downcase
-        role = server.roles.find{|r| r.name==g }
+        role = server.roles.find { |r| r.name == g }
         if !role.nil? and user.role? role
-          grade_channel = server.text_channels.find{|c| c.name==gname }
+          grade_channel = server.text_channels.find { |c| c.name == gname }
           Discordrb::API.update_user_overrides(event.bot.token, grade_channel.id, user.id, 0, 0)
         end
       end
-      $db.query("SELECT * FROM groups").each do |row|
-        group_role = server.roles.find{|r| r.id==Integer(row['role_id']) }
-        if !group_role.nil? and user.role? group_role 
-          group_channel = server.text_channels.find{|c| c.id==Integer(row['room_id']) }
+      $db.query('SELECT * FROM groups').each do |row|
+        group_role = server.roles.find { |r| r.id == Integer(row['role_id']) }
+        if !group_role.nil? and user.role? group_role
+          group_channel = server.text_channels.find{ |c| c.id == Integer(row['room_id']) }
           Discordrb::API.update_user_overrides(event.bot.token, group_channel.id, user.id, 0, 0)
         end
       end
@@ -49,39 +49,40 @@ module UtilityCommands
       # Issue for grade channels
       grades.each do |g|
         gname = g.downcase
-        role = server.roles.find{|r| r.name==g}
+        role = server.roles.find { |r| r.name == g }
         if !role.nil? and user.role? role
-          grade_channel = server.text_channels.find{|c| c.name==gname}
+          grade_channel = server.text_channels.find { |c| c.name == gname }
           Discordrb::API.update_user_overrides(event.bot.token, grade_channel.id, user.id, 0, perms.bits)
         end
       end
-            $db.query("SELECT * FROM groups").each do |row|
-        group_role = server.roles.find{|r| r.id==Integer(row['role_id']) }
+      $db.query("SELECT * FROM groups").each do |row|
+        group_role = server.roles.find{ |r| r.id == Integer(row['role_id']) }
         if !group_role.nil? and user.role? group_role 
-          group_channel = server.text_channels.find{|c| c.id==Integer(row['room_id']) }
+          group_channel = server.text_channels.find { |c| c.id == Integer(row['room_id']) }
           Discordrb::API.update_user_overrides(event.bot.token, group_channel.id, user.id, 0, perms.bits)
         end
       end
     end
     nil
   end
+
   command(:color, description: 'Set your color! Usage: `!color colorname`') do |event, color|
     server = event.server
     colors = %w(red orange yellow dark pink purple blue green)
     if colors.include?(color) || color == 'default'
       croles = server.roles.find_all { |r| colors.include? r.name }
       event.user.remove_role croles
-      if color != "default"
-        event.user.add_role croles.find{ |r| r.name == color}
+      if color != 'default'
+        event.user.add_role croles.find { |r| r.name == color}
       end
-      "Successfully changed user color!"
+      'Successfully changed user color!'
     else
       "The available colors are **#{colors.join ', '}, and default**."
     end
   end
   command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user or !whois regisusername`') do |event, username|
     # Get user mentioned or default to sender of command
-    if username != nil and !username.start_with?("<@")
+    if !username.nil? and !username.start_with?('<@')
       # Prevent nasty SQL injection
       username = $db.escape(username)
       result = $db.query("SELECT * FROM students WHERE username='#{username}'")
@@ -149,19 +150,17 @@ module UtilityCommands
     return ''
   end
   command(:rules, description: 'Show the rules of the server') do |event|
-    event << "__***Server Rules***__ :bookmark_tabs:"
-    event << "`1` Don't be a jerk."
-    event << "`2` Report any and all abuse directly to the Owner <@152621041976344577>."
-    event << "`3` No NSFW content."
+    event << '__***Server Rules***__ :bookmark_tabs:'
+    event << '`1` Don\'t be a jerk.'
+    event << '`2` Report any and all abuse directly to the Owner <@152621041976344577>.'
+    event << '`3` No NSFW content.'
   end
 end
 
 module Suppressor
   extend Discordrb::EventContainer
 
-  message(containing: not!("google.com/"), in: "#finals") do |event|
-    if event.message.author != event.server.owner
-      event.message.delete
-    end
+  message(containing: not!('google.com/'), in: '#finals') do |event|
+    event.message.delete if event.message.author != event.server.owner
   end
 end
