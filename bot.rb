@@ -7,9 +7,9 @@ require 'date'
 
 require 'pry'
 
-$events = Nokogiri::HTML(open('calendar.html')).xpath('//div[@id='main']//a[contains(text(), ';')]').map do |e|
+$events = Nokogiri::HTML(open('calendar.html')).xpath('//div[@id="main"]//a[contains(text(), ";")]').map do |e|
   parts = e.text.gsub(';', '').gsub(',', '').split(' ')
-  day = e.xpath('./../../../../../../..//tr[@class='hb']//strong').text.gsub(/[^0-9]/, '')
+  day = e.xpath('./../../../../../../..//tr[@class="hb"]//strong').text.gsub(/[^0-9]/, '')
   now = Time.now
   date = DateTime.new(now.year, now.month, Integer(day))
   {:date => date, :adv => parts[0], :course => parts[1...-1].join(' '), :teacher => parts[-1]}
@@ -18,7 +18,7 @@ end
 $CONFIG = YAML::load_file('./config.yaml')
 
 # Auto requires all modules
-Dir['#{File.dirname(__FILE__)}/modules/*.rb'].each { |file| require file }
+Dir["#{File.dirname(__FILE__)}/modules/*.rb"].each { |file| require file }
 
 Mail.defaults do
   delivery_method :smtp, address: 'smtp.gmail.com',
@@ -45,18 +45,18 @@ bot.bucket :abusable, limit: 3, time_span: 60, delay: 10
 bot.bucket :study, limit: 10, time_span: 60, delay: 5
 
 def handle_group_voice_channels(server)
-  $db.query('SELECT * FROM groups WHERE creator != 'server'').each do |row|
+  $db.query('SELECT * FROM groups WHERE creator != "server"').each do |row|
     group_role = server.roles.find{|r| r.id==Integer(row['role_id'])}
     unless group_role.nil?
       # Get count of online group members
       count = server.online_members.find_all { |m| m.role? group_role }.length
-      channel = server.voice_channels.find { |c| c.name == 'Group #{row['name']}' }
+      channel = server.voice_channels.find { |c| c.name == "Group #{row['name']}" }
       perms = Discordrb::Permissions.new
       perms.can_connect = true
       if count > 5
-        puts 'Over 5 online members in #{row['name']}'
+        puts "Over 5 online members in #{row['name']}"
         if channel.nil? and server.voice_channels.find { |c| c.name == row['name'] }.nil?
-          channel = server.create_channel('Group #{row['name']}', 'voice')
+          channel = server.create_channel("Group #{row['name']}", 'voice')
           Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
           channel.define_overwrite(group_role, perms, 0)
         end
@@ -93,10 +93,10 @@ def replace_mentions(message)
       end
     end
   end
-    if words.length == 1 and done == 1
-    return message.sub('@', '')
-  end
-    return message
+
+  return message.sub('@', '') if words.length == 1 and done == 1
+
+  return message
 end
 
 bot.include! StartupEvents
