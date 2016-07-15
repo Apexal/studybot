@@ -137,7 +137,7 @@ module RegistrationCommands
         $db.query(query).each do |course|
           # Ignore unnecessary classes
           $unallowed.each do |s|
-            next if course['title'].downcase.include? s
+            next if course['title'].include? s
           end
           # Turn something like 'Math II (Alg 2)' into 'math'
           course_name = course['title'].split(' (')[0].split(' ').join('-')
