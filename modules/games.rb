@@ -8,6 +8,8 @@ module GameEvents
     server = event.server
     game = event.game
 	
+	to_delete = []
+	
     # DiscordDJ says it plays whatever song it is on
     if event.user.name != 'DiscordDJ'
       joining = (!!game ? true : false)
@@ -15,20 +17,21 @@ module GameEvents
       if joining == false
         # Leaving game
         game = $playing[event.user.id]
-		event.bot.find_channel('gaming').first.send_message "**#{event.user.on(server).display_name}** is no longer playing **#{game}**"
+		#to_delete << event.bot.find_channel('gaming').first.send_message("**#{event.user.on(server).display_name}** is no longer playing **#{game}**")
       else
         # Joining game
         $playing[event.user.id] = game
-		event.bot.find_channel('gaming').first.send_message "**#{event.user.on(server).display_name}** is now playing **#{game}**"
+		#to_delete << event.bot.find_channel('gaming').first.send_message("**#{event.user.on(server).display_name}** is now playing **#{game}**")
       end
 
       user_id = event.user.id
       game_channel = server.voice_channels.find {|c| c.name == $playing[user_id]}
 
       if joining
-        if game_channel.nil? && $playing.values.count(game) >= 3
+        if game_channel.nil? && $playing.values.count(game) >= 4
           puts "Creating Room for #{event.user.game}"
           game_channel = server.create_channel($playing[event.user.id], 'voice')
+		  to_delete << event.bot.find_channel('gaming').first.send_message("@everyone Looks like a **#{$playing[event.user.id]}** party is starting! Join it!")
         end
       else
         puts "Deleting rooms for #{$playing[event.user.id]}"
@@ -55,5 +58,8 @@ module GameEvents
         end
       end
     end
+	
+	sleep 60 * 5 # 5 minutes
+	to_delete.each(&:delete)
   end
 end
