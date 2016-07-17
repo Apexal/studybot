@@ -42,33 +42,6 @@ module VoiceChannelEvents
     old_status = $user_status[event.user.id]
     server = event.server
 	
-	  # Guest Room
-	  guest_role = server.roles.find { |r| r.name == 'Guests' }
-	  unless server.online_members.find_all { |m| m.role? guest_role }.empty?
-		if server.voice_channels.find { |c| c.name == 'Guest Room' }.nil?
-		  guest_room = server.create_channel('Guest Room', 'voice')
-		  guest_room.position = 0
-		  perms = Discordrb::Permissions.new
-		  perms.can_connect = true
-		  perms.can_speak = true
-		  perms.can_use_voice_activity = true
-		  Discordrb::API.update_role_overrides($token, guest_room.id, server.id, perms.bits, 0)
-		end
-	  else
-		begin
-		  guest_room = server.voice_channels.find { |c| c.name == 'Guest Room' }
-		  begin
-			server.text_channels.find { |t| t.id == $hierarchy[guest_room.id] }.delete
-			$hierarchy.delete guest_room.id
-		  rescue
-			puts 'Failed to find/delete associated #voice-channel'
-		  end
-		  guest_room.delete
-		rescue
-		  puts 'Guest Room didn\'t exist so can\'t delete'
-		end
-	  end
-	
     perms = Discordrb::Permissions.new
     perms.can_read_message_history = true
     perms.can_read_messages = true

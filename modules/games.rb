@@ -7,9 +7,8 @@ module GameEvents
   playing do |event|
     server = event.server
     game = event.game
-	
-	to_delete = []
-	
+    to_delete = []
+
     # DiscordDJ says it plays whatever song it is on
     if event.user.name != 'DiscordDJ'
       joining = (!!game ? true : false)
@@ -17,11 +16,11 @@ module GameEvents
       if joining == false
         # Leaving game
         game = $playing[event.user.id]
-		#to_delete << event.bot.find_channel('gaming').first.send_message("**#{event.user.on(server).display_name}** is no longer playing **#{game}**")
+        #to_delete << event.bot.find_channel('gaming').first.send_message("**#{event.user.on(server).display_name}** is no longer playing **#{game}**")
       else
         # Joining game
         $playing[event.user.id] = game
-		#to_delete << event.bot.find_channel('gaming').first.send_message("**#{event.user.on(server).display_name}** is now playing **#{game}**")
+        #to_delete << event.bot.find_channel('gaming').first.send_message("**#{event.user.on(server).display_name}** is now playing **#{game}**")
       end
 
       user_id = event.user.id
@@ -31,20 +30,24 @@ module GameEvents
         if game_channel.nil? && $playing.values.count(game) >= 4
           puts "Creating Room for #{event.user.game}"
           game_channel = server.create_channel($playing[event.user.id], 'voice')
-		  to_delete << event.bot.find_channel('gaming').first.send_message("@everyone Looks like a **#{$playing[event.user.id]}** party is starting! Join it!")
+          to_delete << event.bot.find_channel('gaming').first.send_message("@everyone Looks like a **#{$playing[event.user.id]}** party is starting! Join it!")
         end
       else
-        puts "Deleting rooms for #{$playing[event.user.id]}"
+        
         gname = $playing[event.user.id]
         $playing.delete(event.user.id)
 
         # If nobody is playing the game anymore
         if $playing.count(gname) < 1
-          # Move all people inside to the Music channel
+          puts "Deleting rooms for #{$playing[event.user.id]}"
+          # Move all people inside to a new room
           unless game_channel.nil?
-            puts 'Move everyone to #music'
-            musicchannel = server.voice_channels.find { |c| c.name == 'Music' }
-            game_channel.users.each { |u| event.server.move(u, musicchannel) }
+            puts 'Move everyone to a new room'
+            newchannel = server.voice_channels.find { |c| c.name == '[New Room]' }
+            game_channel.users.each do |u|
+              event.server.move(u, newchannel)
+              sleep 0.5
+            end
             game_channel.delete
             # Unlink text channel to voice channel
             puts 'Unlinking voice and text channels'
@@ -58,8 +61,7 @@ module GameEvents
         end
       end
     end
-	
-	sleep 60 * 20 # 20 minutes
-	to_delete.each(&:delete)
+    sleep(60 * 20) # 20 minutes
+    to_delete.each(&:delete)
   end
 end
