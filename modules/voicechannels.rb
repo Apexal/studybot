@@ -3,7 +3,7 @@ module VoiceChannelEvents
   $hierarchy = Hash.new
   $user_teachers = Hash.new
   OPEN_ROOM_NAME = '[New Room]'
-  $user_status = {} # Stores voice status of users to compare
+  $user_voice_channel = {} # Stores user voice-channels to compare
   def self.handle_room(event, r)
     server = event.server
     if r.users.empty? and r.name != OPEN_ROOM_NAME
@@ -39,7 +39,7 @@ module VoiceChannelEvents
 
   voice_state_update do |event|
     puts 'Voice state update'
-    old_status = $user_status[event.user.id]
+    old_voice_channel = $user_voice_channel[event.user.id]
     server = event.server
 	
     perms = Discordrb::Permissions.new
@@ -103,23 +103,23 @@ module VoiceChannelEvents
       end
     end
     member = event.user.on(server)
-    current_status = event.channel.nil? ? nil : event.channel.id
-    if old_status != current_status
+    current_voice_channel = event.channel.nil? ? nil : event.channel.id
+    if old_voice_channel != current_voice_channel
       # There was a change
-      unless current_status.nil?
+      unless current_voice_channel.nil?
         # In new voice channel
-        server.text_channels.find { |c| c.id == $hierarchy[current_status] }.send_message("**#{member.display_name}** *has joined the voice channel.*", true) # Message new #voice-channel about joining
+        server.text_channels.find { |c| c.id == $hierarchy[current_voice_channel] }.send_message("**#{member.display_name}** *has joined the voice channel.*", true) # Message new #voice-channel about joining
       end
-      unless old_status.nil?
+      unless old_voice_channel.nil?
         # Left a voice channel
         begin
-          server.text_channels.find { |c| c.id == $hierarchy[old_status] }.send_message("**#{member.display_name}** *has left the voice channel.*", true) # Message old #voice-channel about leaving
+          server.text_channels.find { |c| c.id == $hierarchy[old_voice_channel] }.send_message("**#{member.display_name}** *has left the voice channel.*", true) # Message old #voice-channel about leaving
         rescue
           puts 'Failed to send leave message'
         end
       end
     end
-    $user_status[event.user.id] = current_status
-    #puts $user_status
+    $user_voice_channel[event.user.id] = current_voice_channel
+    #puts $user_voice_channel
   end
 end

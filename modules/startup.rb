@@ -21,7 +21,7 @@ module StartupEvents
     puts 'Setting user statuses'
     server.online_members.each do |m|
 	  $playing[m.id] = m.game if !!m.game
-      $user_status[m.id] = nil
+      $user_voice_channel[m.id] = nil
     end
     puts 'Done.'
     puts "Deleting extra [New Room]'s"
@@ -47,7 +47,7 @@ module StartupEvents
       end
       # Give the current user and BOTS access to it, restrict @everyone
       c.users.each do |u|
-        $user_status[u.id] = c.id
+        $user_voice_channel[u.id] = c.id
         Discordrb::API.update_user_overrides(bot.token, text_channel.id, u.id, perms.bits, 0)
       end
       Discordrb::API.update_role_overrides(bot.token, text_channel.id, server.roles.find { |r| r.name == "bots" }.id, 0, perms.bits)

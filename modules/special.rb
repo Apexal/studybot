@@ -40,7 +40,7 @@ module SpecialRoomEvents
       .each do |role, channel|
         next if role.nil?
         online_count = server.online_members.count { |m| m.role? role}
-        if online_count > 1
+        if online_count >= 2
           if channel.nil?
             puts "Creating voice-channel for #{role.name}"
             channel = server.create_channel(role.name, 'voice')
@@ -54,7 +54,7 @@ module SpecialRoomEvents
             Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
           end
         else
-          # Noone online
+          # 1 or 0 online
           unless channel.nil?
             puts "Removing voice-channel for #{role.name}"
             begin
