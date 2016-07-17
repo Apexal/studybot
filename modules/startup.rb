@@ -20,6 +20,7 @@ module StartupEvents
     puts 'Done.'
     puts 'Setting user statuses'
     server.online_members.each do |m|
+	  $playing[m.id] = m.game if !!m.game
       $user_status[m.id] = nil
     end
     puts 'Done.'
