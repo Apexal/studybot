@@ -20,7 +20,7 @@ module RoomCommands
 
       messages << "`#{row['name']}` *#{row['description']}* #{owner} (#{count} members)"
     end
-    messages << "\n *Use `!join group` to join.\n Use `!creategroup \"Name Here\" \"Description here.\"` to start a group.*"
+    messages << "\n *Use `!join \"group\"` to join.\n Use `!creategroup \"Name Here\" \"Description here.\"` to start a group.*"
     to_delete << event.channel.send_message(messages.join("\n"))
     sleep 60
     to_delete.each(&:delete)
@@ -103,9 +103,10 @@ module RoomCommands
   end
 
   # List of special channels
-  command(:join, description: 'Join a group. Usage: `!join group`') do |event, group_name|
+  command(:join, description: 'Join a group. Usage: `!join "group"`') do |event, group_name|
     event.message.delete unless event.channel.private?
-
+	return if group_name.nil?
+	
     server = event.bot.server(150_739_077_757_403_137)
     user = event.user.on(server)
 

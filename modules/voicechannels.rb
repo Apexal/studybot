@@ -41,6 +41,26 @@ module VoiceChannelEvents
     puts 'Voice state update'
     old_status = $user_status[event.user.id]
     server = event.server
+	
+	  # Guest Room
+	  guest_role = server.roles.find { |r| r.name == 'Guests' }
+	  unless server.online_members.find_all { |m| m.role? guest_role }.empty?
+		if server.voice_channels.find { |c| c.name == 'Guest Room' }.nil?
+		  guest_room = server.create_channel('Guest Room', 'voice')
+		  perms = Discordrb::Permissions.new
+		  perms.can_connect = true
+		  perms.can_speak = true
+		  perms.can_use_voice_activity = true
+		  Discordrb::API.update_role_overrides($token, guest_room.id, server.id, perms.bits, 0)
+		end
+	  else
+		begin
+		  server.voice_channels.find { |c| c.name == 'Guest Room' }.delete  
+		rescue
+		  puts 'Guest Room didn\'t exist so can\'t delete'
+		end
+	  end
+	
     perms = Discordrb::Permissions.new
     perms.can_read_message_history = true
     perms.can_read_messages = true
@@ -50,7 +70,7 @@ module VoiceChannelEvents
 
     handle_room event, event.channel unless event.channel.nil?
 
-    rooms = server.voice_channels.find_all { |c| c.name.downcase.include?('room') }
+    rooms = server.voice_channels.find_all { |c| c.name.downcase.include?('room ') }
     rooms.each do |r|
       # Empty Room ____'s
       next if !event.channel.nil? and r.id == event.channel.id
