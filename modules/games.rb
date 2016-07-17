@@ -59,7 +59,7 @@ module GameEvents
       end
     end
 	
-	sleep 60 * 5 # 5 minutes
+	sleep 60 * 20 # 20 minutes
 	to_delete.each(&:delete)
   end
 end

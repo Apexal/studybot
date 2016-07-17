@@ -47,6 +47,7 @@ module VoiceChannelEvents
 	  unless server.online_members.find_all { |m| m.role? guest_role }.empty?
 		if server.voice_channels.find { |c| c.name == 'Guest Room' }.nil?
 		  guest_room = server.create_channel('Guest Room', 'voice')
+		  guest_room.position = 0
 		  perms = Discordrb::Permissions.new
 		  perms.can_connect = true
 		  perms.can_speak = true
@@ -55,7 +56,14 @@ module VoiceChannelEvents
 		end
 	  else
 		begin
-		  server.voice_channels.find { |c| c.name == 'Guest Room' }.delete  
+		  guest_room = server.voice_channels.find { |c| c.name == 'Guest Room' }
+		  begin
+			server.text_channels.find { |t| t.id == $hierarchy[guest_room.id] }.delete
+			$hierarchy.delete guest_room.id
+		  rescue
+			puts 'Failed to find/delete associated #voice-channel'
+		  end
+		  guest_room.delete
 		rescue
 		  puts 'Guest Room didn\'t exist so can\'t delete'
 		end
