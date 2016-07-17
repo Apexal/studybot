@@ -104,7 +104,7 @@ bot.include! RegistrationEvents
 bot.include! RegistrationCommands
 bot.include! RoomCommands
 bot.include! RoomEvents
-#bot.include! GameEvents
+bot.include! GameEvents
 bot.include! VoiceChannelEvents
 bot.include! UtilityEvents
 bot.include! UtilityCommands
