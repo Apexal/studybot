@@ -3,19 +3,18 @@ module SpecialRoomEvents
 
   presence do |event|
     server = event.server
-    puts "Presence update"
-    
+
     # Guest Rooms
     guest_role = server.roles.find { |r| r.name == 'Guests' }
     unless server.online_members.find_all { |m| m.role? guest_role }.empty?
       if server.voice_channels.find { |c| c.name == 'Guest Room' }.nil?
         guest_room = server.create_channel('Guest Room', 'voice')
-        guest_room.position = 0
+        guest_room.position = 1
         perms = Discordrb::Permissions.new
         perms.can_connect = true
         perms.can_speak = true
         perms.can_use_voice_activity = true
-        
+
         Discordrb::API.update_role_overrides($token, guest_room.id, server.id, perms.bits, 0)
       end
     else
@@ -32,8 +31,7 @@ module SpecialRoomEvents
         puts 'Guest Room didn\'t exist so can\'t delete'
       end
     end
-    
-    
+
     # Grade Voice Channels
     grades = %w(Freshmen Sophomores Juniors Seniors)
     Hash[grades.map { |g| [server.roles.find { |r| r.name == g }, server.voice_channels.find { |c| c.name == g } ] }]
@@ -44,12 +42,12 @@ module SpecialRoomEvents
           if channel.nil?
             puts "Creating voice-channel for #{role.name}"
             channel = server.create_channel(role.name, 'voice')
-            channel.position = server.voice_channels.find { |c| c.name == 'Guest Room' }.nil? ? 0 : 1 # Since Guest Room is always the first room
+            channel.position = server.voice_channels.find { |c| c.name == 'Guest Room' }.nil? ? 1 : 2 # Since Guest Room is always the first room
             perms = Discordrb::Permissions.new
             perms.can_connect = true
             perms.can_speak = true
             perms.can_use_voice_activity = true
-            
+
             channel.define_overwrite(role, perms, 0)
             Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
           end

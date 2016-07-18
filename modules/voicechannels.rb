@@ -24,6 +24,9 @@ module VoiceChannelEvents
         teachers = $user_teachers[event.user.id].nil? ? $db.query("SELECT staffs.last_name FROM staffs JOIN courses ON courses.teacher_id=staffs.id JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id WHERE students.discord_id=#{event.user.id}").map { |t| t['last_name'] }.uniq : $user_teachers[event.user.id]
         $user_teachers[event.user.id] = teachers
         randteacher = teachers.sample
+
+        randteacher = 'Zero' if event.user.id == event.server.owner.id
+
         until server.voice_channels.find { |c| c.name == "Room #{randteacher}" }.nil?
           puts 'ALREADY EXISTS!'
           randteacher = teachers.sample
@@ -38,10 +41,10 @@ module VoiceChannelEvents
   end
 
   voice_state_update do |event|
-    puts 'Voice state update'
+    #puts 'Voice state update'
     old_voice_channel = $user_voice_channel[event.user.id]
     server = event.server
-	
+
     perms = Discordrb::Permissions.new
     perms.can_read_message_history = true
     perms.can_read_messages = true
@@ -108,14 +111,18 @@ module VoiceChannelEvents
       # There was a change
       unless current_voice_channel.nil?
         # In new voice channel
-        server.text_channels.find { |c| c.id == $hierarchy[current_voice_channel] }.send_message("**#{member.display_name}** *has joined the voice channel.*", true) # Message new #voice-channel about joining
+        begin
+          server.text_channels.find { |c| c.id == $hierarchy[current_voice_channel] }.send_message("**#{member.display_name}** *has joined the voice channel.*", true) # Message new #voice-channel about joining
+        rescue
+          puts 'Failed to send join message. Perhaps AFK channel?'
+        end
       end
       unless old_voice_channel.nil?
         # Left a voice channel
         begin
           server.text_channels.find { |c| c.id == $hierarchy[old_voice_channel] }.send_message("**#{member.display_name}** *has left the voice channel.*", true) # Message old #voice-channel about leaving
         rescue
-          puts 'Failed to send leave message'
+          puts 'Failed to send leave message. Perhaps AFK channel?'
         end
       end
     end
