@@ -9,6 +9,24 @@ module UtilityCommands
     'Designed by *Liam Quinn*'
   end
 
+  command(:newname, description: 'Get a new teacher name for your current voice channel.') do |event, name|
+    return if event.channel.name != 'voice-channel'
+
+    voice_channel = event.server.voice_channels.find { |c| c.id == $hierarchy.key(event.channel.id) }
+    return if voice_channel.nil?
+
+    teachers = $user_teachers[event.user.id]
+    teacher = teachers.include?(name) ? name : teachers.sample
+
+    until event.server.voice_channels.find { |c| c.name == "Room #{teacher}" }.nil?
+      teacher = teachers.sample
+    end
+
+    voice_channel.name = "Room #{teacher}"
+
+    "Renamed voice-channel to **Room #{teacher}**!"
+  end
+
   grades = %w(Freshmen Sophomores Juniors Seniors)
   command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study) do |event|
     event.message.delete unless event.message.channel.private?
