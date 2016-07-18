@@ -9,11 +9,25 @@ module UtilityCommands
     'Designed by *Liam Quinn*'
   end
 
-  command(:newname, description: 'Get a new teacher name for your current voice channel.') do |event, name|
-    return if event.channel.name != 'voice-channel'
+  command(:rename, description: 'Set a new name for your current voice room or get a random one. Usage: `!rename "Teacher Last Name"` or just `!rename`') do |event, name|
+    if event.channel.name != 'voice-channel'
+      event.message.delete unless event.channel.private?
+      event.user.pm 'You can only use `!rename` in a #voice-channel text channel.'
+      return
+    end
+
+    to_delete = []
 
     voice_channel = event.server.voice_channels.find { |c| c.id == $hierarchy.key(event.channel.id) }
     return if voice_channel.nil?
+
+    unless voice_channel.name.start_with? "Room "
+      event.message.delete
+      event.user.pm "`!rename` can only be used for a **Room [TEACHER NAME]** voice channel."
+      return
+    end
+
+    old_teacher = voice_channel.name.split("Room ")[1]
 
     teachers = $user_teachers[event.user.id]
     teacher = teachers.include?(name) ? name : teachers.sample
@@ -23,8 +37,15 @@ module UtilityCommands
     end
 
     voice_channel.name = "Room #{teacher}"
+    event.channel.topic = "Private chat for all those in the voice channel 'Room #{teacher}'."
 
-    "Renamed voice-channel to **Room #{teacher}**!"
+    to_delete << event.message
+    to_delete << event.channel.send_message("Renamed voice-channel to **Room #{teacher}**!")
+    
+    sleep 30
+    to_delete.map(&:delete)
+
+    nil
   end
 
   grades = %w(Freshmen Sophomores Juniors Seniors)
