@@ -15,15 +15,18 @@ module RoomCommands
     messages << '**Open Groups**'
     $db.query('SELECT * FROM groups').each do |row|
       group_role = server.roles.find { |r| r.id == Integer(row['role_id']) }
-      count = server.members.find_all{|m| m.role? group_role}.length
-      owner = row['creator'] != 'server' ? "**#{row['creator']}**" : '' 
+      count = server.members.find_all { |m| m.role? group_role }.length
+      owner = row['creator'] != 'server' ? "**#{row['creator']}**" : ''
 
       messages << "`#{row['name']}` *#{row['description']}* #{owner} (#{count} members)"
     end
-    messages << "\n *Use `!join \"group\"` to join.\n Use `!creategroup \"Name Here\" \"Description here.\"` to start a group.*"
+    messages << "\n *Use `!join \"group\"` to join."
+    messages << 'Use `!creategroup "Name Here" "Description here."` to start a group.*'
+
     to_delete << event.channel.send_message(messages.join("\n"))
     sleep 60
     to_delete.each(&:delete)
+
     nil
   end
 
@@ -81,6 +84,7 @@ module RoomCommands
     handle_group_voice_channels(server)
     # Announce to #meta
     server.text_channels.find{|c| c.name == 'meta'}.send_message "@everyone #{user.mention} has just created the group **#{full_name}**. Join with `!join \"#{full_name}\"`"
+    
     nil
   end
 
@@ -105,8 +109,8 @@ module RoomCommands
   # List of special channels
   command(:join, description: 'Join a group. Usage: `!join "group"`') do |event, group_name|
     event.message.delete unless event.channel.private?
-	return if group_name.nil?
-	
+    return if group_name.nil?
+
     server = event.bot.server(150_739_077_757_403_137)
     user = event.user.on(server)
 
@@ -125,8 +129,8 @@ module RoomCommands
     handle_group_voice_channels(server)
     nil
   end
-  
-  command(:leave, description: 'Leave a group. Usage: `!leave group') do |event, group_name|
+
+  command(:leave, description: 'Leave a group. Usage: `!leave group`') do |event, group_name|
     event.message.delete unless event.channel.private?
 
     server = event.bot.server(150_739_077_757_403_137)

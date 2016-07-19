@@ -1,31 +1,6 @@
 module CourseCommands
   extend Discordrb::Commands::CommandContainer
 
-  command(:fixcourses) do |event|
-    event << 'Not done.'
-    return
-    server = event.bot.server(150739077757403137)
-    user = event.message.mentions.empty? ? event.user : event.message.mentions.first
-    user = user.on(server)
-    # Get all classes for this student
-    query = "SELECT courses.id, courses.title, staffs.last_name FROM courses JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id JOIN staffs ON staffs.id=courses.teacher_id WHERE students.discord_id=#{user.id} AND courses.is_class=1"
-    course_roles = []
-    $db.query(query).each do |course|
-      # Ignore unnecessary classes
-      $unallowed.each do |s|
-        next if course['title'].downcase.include? s
-      end
-      # Create course role if not exist
-      course_role = server.roles.find { |r| r.name == "course-#{course['id']}" }
-      if course_role.nil?
-        course_role = server.create_role
-        course_role.name = "course-#{course['id']}"
-      end
-      # Add that lovely course role m8
-      course_roles << course_role
-    end
-    user.add_role(course_roles)
-  end
   # END OF YEAR COMMAND
   command(:endyear) do |event|
     return if event.user.id != event.server.owner.id
@@ -140,7 +115,7 @@ module CourseCommands
       %w(Freshmen Sophomores Juniors Seniors).each do |grade|
         grole = server.roles.find{ |r| r.name == grade }
 
-        next if grole.nil?
+        next if grole.nil? # Should never happen
 
         if grade == rolename
           user.add_role grole
@@ -183,15 +158,10 @@ module CourseCommands
         Discordrb::API.update_user_overrides(event.bot.token, course_room.id, user.id, perms.bits, 0)
 
         $db.query("UPDATE courses SET room_id='#{course_room.id}' WHERE id=#{course['id']}")
-
         sleep 0.5
       end
     end
-    nil
-  end
 
-  command(:startyear) do |event|
-    return if event.user.id != event.server.owner.id
-    # event.bot.find_channel('announcements').first.send_message "It's that time again. Opening course and advisement channels."
+    nil
   end
 end

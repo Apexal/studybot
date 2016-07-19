@@ -30,10 +30,9 @@ module GameEvents
         if game_channel.nil? && $playing.values.count(game) >= 4
           puts "Creating Room for #{event.user.game}"
           game_channel = server.create_channel($playing[event.user.id], 'voice')
-          to_delete << event.bot.find_channel('gaming').first.send_message("@everyone Looks like a **#{$playing[event.user.id]}** party is starting! Join it!")
+          to_delete << event.bot.find_channel('gaming').first.send_message("@everyone Looks like a **#{$playing[event.user.id]}** party is starting! Join the voice channel!")
         end
       else
-        
         gname = $playing[event.user.id]
         $playing.delete(event.user.id)
 
