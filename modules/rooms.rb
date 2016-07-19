@@ -84,7 +84,7 @@ module RoomCommands
     handle_group_voice_channels(server)
     # Announce to #meta
     server.text_channels.find{|c| c.name == 'meta'}.send_message "@everyone #{user.mention} has just created the group **#{full_name}**. Join with `!join \"#{full_name}\"`"
-    
+
     nil
   end
 
@@ -105,7 +105,7 @@ module RoomCommands
     end
     $db.query("DELETE groups FROM groups JOIN students ON groups.creator=students.username WHERE students.discord_id=#{event.user.id}")
     event.user.pm 'Successfully deleted group!'
-    
+
     nil
   end
 

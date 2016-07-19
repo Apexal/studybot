@@ -31,6 +31,10 @@ module GameEvents
           puts "Creating Room for #{event.user.game}"
           game_channel = server.create_channel($playing[event.user.id], 'voice')
           to_delete << event.bot.find_channel('gaming').first.send_message("@everyone Looks like a **#{$playing[event.user.id]}** party is starting! Join the voice channel!")
+          # Annoyingly DMing each person playing the game
+          server.online_members.find_all { |m| m.game == game }.each do |m|
+            m.pm "Playing **#{game}** with others? Join the designated voice channel for your game!"
+          end
         end
       else
         gname = $playing[event.user.id]
