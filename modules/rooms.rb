@@ -98,11 +98,14 @@ module RoomCommands
       server.text_channels.find { |r| r.id == Integer(row['room_id']) }.delete
       begin
         server.voice_channels.find { |c| c.name == "Group #{row['name']}" }.delete
+        server.roles.find { |r| r.name == row['name'] }.delete
       rescue
+        puts 'Failed to remove group channel and/or role'
       end
     end
     $db.query("DELETE groups FROM groups JOIN students ON groups.creator=students.username WHERE students.discord_id=#{event.user.id}")
     event.user.pm 'Successfully deleted group!'
+    
     nil
   end
 
