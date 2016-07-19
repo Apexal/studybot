@@ -25,7 +25,7 @@ module RoomCommands
 
     to_delete << event.channel.send_message(messages.join("\n"))
     sleep 60
-    to_delete.each(&:delete)
+    to_delete.each(&:delete) unless event.channel.private?
 
     nil
   end

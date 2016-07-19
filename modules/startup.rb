@@ -20,7 +20,7 @@ module StartupEvents
     puts 'Done.'
     puts 'Setting user statuses'
     server.online_members.each do |m|
-	  $playing[m.id] = m.game if !!m.game
+      $playing[m.id] = m.game if !!m.game
       $user_voice_channel[m.id] = nil
     end
     puts 'Done.'
@@ -28,7 +28,7 @@ module StartupEvents
     newrooms = server.voice_channels.find_all { |c| c.name == '[New Room]' }
     count = newrooms.length
     if count > 1
-      newrooms.each do |c| 
+      newrooms.each do |c|
         c.delete if count > 1
         count -= 1
         sleep 0.5
@@ -61,6 +61,6 @@ module StartupEvents
     handle_group_voice_channels(server)
     puts 'Done.'
 
-    puts '------------------------------------------------\nFINISHED STARTUP'
+    puts "FINISHED STARTUP\n------------------------------------------------\n"
   end
 end
