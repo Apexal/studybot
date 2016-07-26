@@ -38,7 +38,7 @@ module SpecialRoomEvents
       .each do |role, channel|
         next if role.nil?
         online_count = server.online_members.count { |m| m.role? role}
-        if online_count >= 2
+        if online_count >= 3
           if channel.nil?
             puts "Creating voice-channel for #{role.name}"
             channel = server.create_channel(role.name, 'voice')
@@ -66,4 +66,6 @@ module SpecialRoomEvents
         end
       end
   end
+
+  sleep 30
 end

@@ -29,6 +29,7 @@ Mail.defaults do
   enable_starttls_auto: true
 end
 
+puts 'Connecting to DB'
 $db = Mysql2::Client.new(host: $CONFIG['auth']['mysql']['host'], username: $CONFIG['auth']['mysql']['username'], password: $CONFIG['auth']['mysql']['password'], database: $CONFIG['auth']['mysql']['database'])
 
 bot = Discordrb::Commands::CommandBot.new(

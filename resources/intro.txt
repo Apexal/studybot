@@ -1,0 +1,7 @@
+This Discord server is totally automated by me, a bot created by the **Founder Frank Matranga**.
+This allows the server to be totally customized to Regis High School.
+You have access to **text channels** for each of your main **school courses**, *which are only available to those in that class.*
+You can join user-made groups (or create your own) with `!groups`.
+Use `!help` and `!help commandname` to see more options!
+
+If you have any questions, ask <@152621041976344577> directly. 

@@ -21,6 +21,7 @@ module StartupEvents
     puts 'Setting user statuses'
     server.online_members.each do |m|
       $playing[m.id] = m.game if !!m.game
+      puts("#{m.display_name} is playing #{m.game}") if !!m.game
       $user_voice_channel[m.id] = nil
     end
     puts 'Done.'
@@ -60,7 +61,7 @@ module StartupEvents
     puts 'Doing group voice channels'
     handle_group_voice_channels(server)
     puts 'Done.'
-
+    puts($playing)
     puts "FINISHED STARTUP\n------------------------------------------------\n"
   end
 end

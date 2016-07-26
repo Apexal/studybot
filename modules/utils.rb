@@ -8,7 +8,14 @@ module UtilityCommands
     event.channel.send_file(File.open('./flag.png', 'rb'))
     'Designed by *Liam Quinn*'
   end
-
+  
+  command(:eval) do |event, code|
+    event.message.delete unless event.channel.private?
+    return unless event.server.owner.id == event.user.id
+    
+    eval(code) # not the safest...
+  end
+  
   command(:rename, description: 'Set a new name for your current voice room or get a random one. Usage: `!rename "Teacher Last Name"` or just `!rename`') do |event, name|
     if event.channel.name != 'voice-channel'
       event.message.delete unless event.channel.private?
@@ -28,8 +35,9 @@ module UtilityCommands
     end
 
     old_teacher = voice_channel.name.split("Room ")[1]
-
-    teachers = $user_teachers[event.user.id]
+    
+    teachers = $user_teachers[event.user.id].nil? ? $db.query("SELECT staffs.last_name FROM staffs JOIN courses ON courses.teacher_id=staffs.id JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id WHERE students.discord_id=#{event.user.id}").map { |t| t['last_name'] }.uniq : $user_teachers[event.user.id]
+    $user_teachers[event.user.id] = teachers
     teacher = teachers.include?(name) ? name : teachers.sample
 
     until event.server.voice_channels.find { |c| c.name == "Room #{teacher}" }.nil?
@@ -119,6 +127,7 @@ module UtilityCommands
       "The available colors are **#{colors.join ', '}, and default**."
     end
   end
+
   command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user or !whois regisusername`') do |event, username|
     # Get user mentioned or default to sender of command
     if !username.nil? and !username.start_with?('<@')
@@ -188,11 +197,21 @@ module UtilityCommands
     end
     return ''
   end
+
   command(:rules, description: 'Show the rules of the server') do |event|
     event << '__***Server Rules***__ :bookmark_tabs:'
     event << '`1` Don\'t be a jerk.'
     event << '`2` Report any and all abuse directly to the Owner <@152621041976344577>.'
     event << '`3` No NSFW content.'
+  end
+
+  command(:shutdown) do |event|
+    event.message.delete unless event.channel.private?
+    return unless event.user.id == event.server.owner.id
+
+    puts 'Shutting down!'
+    event.user.pm 'See ya!'
+    event.bot.stop
   end
 end
 

@@ -8,7 +8,7 @@ module RegistrationEvents
     event.bot.find_channel('meta').first.send_message "#{event.server.owner.mention} #{event.user.name} just joined the server!"
     sleep 3
     m = event.bot.find_channel('welcome').first.send_message "#{event.user.mention} Hello! Please check your Direct Messages (top left) to get started!"
-    event.user.pm 'Welcome! Please type `!register yourregisusername` to get started. Or if you already have your code use `!verify code`. *You will not be able to participate in the server until you do this.*'
+    event.user.pm 'Welcome! Please type `!register yourregisusername` to get started. *You will not be able to participate in the server until you do this.*'
     sleep 100
     m.delete
   end
@@ -16,6 +16,8 @@ end
 
 module RegistrationCommands
   extend Discordrb::Commands::CommandContainer
+
+  welcome_info = File.open('./resources/intro.txt', 'r')
 
   command(:register, description: 'Connect your account to your Regis account. Usage: `!register regisusername`') do |event, username|
     # Check if username was passed and that its not a teacher's email
@@ -45,6 +47,7 @@ module RegistrationCommands
     else
       event.user.pm('Invalid username! Please use your Regis username.')
     end
+
     nil
   end
 
@@ -176,11 +179,14 @@ module RegistrationCommands
         user.add_role roles_to_add
 
         # PM him a congratulatory message
-        status_message.edit("Congratulations, **#{result['first_name']}**. You are now a verified Regis Discord User!")
+        status_message.edit("**Congratulations, #{result['first_name']}. You are now a verified Regis Discord User!**")
         # Make an announcement welcoming him to everyone
-        event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
+        # event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
 
-        user.pm 'You can choose to join default or user-made groups with `!groups`. Try it out here!'
+        welcome_info.each_line do |line|
+          user.pm line
+          sleep 4
+        end
 
         # Set his discord_id and make him verified in the db
         $db.query("UPDATE students SET discord_id='#{user.id}', verified=1 WHERE username='#{escaped}'")
