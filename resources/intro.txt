@@ -1,7 +1,10 @@
 This Discord server is totally automated by me, a bot created by the **Founder Frank Matranga**.
 This allows the server to be totally customized to Regis High School.
-You have access to **text channels** for each of your main **school courses**, *which are only available to those in that class.*
-You can join user-made groups (or create your own) with `!groups`.
+You have access to **private advisement text-channels** to replace the old-school annoying advisement email chain.
+You also have access to **private course text-channels** for each of your main classes.
+You can join user-made groups (or create your own) by typing `!groups`.
+For example, interested in gaming with your schoolmates? Type `!join 'Gaming'` right now!
+Or, want to create a group (and associated text-channel) for a club? Type `!creategroup "Name" "Description"`.
 Use `!help` and `!help commandname` to see more options!
 
-If you have any questions, ask <@152621041976344577> directly. 
+If you have any questions, direct message Frank (<@152621041976344577>).
