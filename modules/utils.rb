@@ -4,18 +4,31 @@ end
 
 module UtilityCommands
   extend Discordrb::Commands::CommandContainer
+
+  pokemon_theme = File.open('./resources/pokemon.txt', 'r')
+
   command(:flag, description: 'Show the official Regis Discord flag!') do |event|
     event.channel.send_file(File.open('./flag.png', 'rb'))
     'Designed by *Liam Quinn*'
   end
-  
+
   command(:eval) do |event, code|
     event.message.delete unless event.channel.private?
     return unless event.server.owner.id == event.user.id
-    
+
     eval(code) # not the safest...
   end
-  
+
+  command(:theverybest) do |event|
+    return unless event.user.id == event.server.owner.id
+    pokemon_theme.each_line do |line|
+      event.channel.send line
+      sleep 1.5
+    end
+
+    nil
+  end
+
   command(:rename, description: 'Set a new name for your current voice room or get a random one. Usage: `!rename "Teacher Last Name"` or just `!rename`') do |event, name|
     if event.channel.name != 'voice-channel'
       event.message.delete unless event.channel.private?
@@ -35,7 +48,7 @@ module UtilityCommands
     end
 
     old_teacher = voice_channel.name.split("Room ")[1]
-    
+
     teachers = $user_teachers[event.user.id].nil? ? $db.query("SELECT staffs.last_name FROM staffs JOIN courses ON courses.teacher_id=staffs.id JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id WHERE students.discord_id=#{event.user.id}").map { |t| t['last_name'] }.uniq : $user_teachers[event.user.id]
     $user_teachers[event.user.id] = teachers
     teacher = teachers.include?(name) ? name : teachers.sample
