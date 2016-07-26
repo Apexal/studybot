@@ -139,9 +139,8 @@ module RegistrationCommands
         query = "SELECT courses.id, courses.title, courses.room_id, staffs.last_name FROM courses JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id JOIN staffs ON staffs.id=courses.teacher_id WHERE students.discord_id=#{event.user.id} AND courses.is_class=1"
         $db.query(query).each do |course|
           # Ignore unnecessary classes
-          $unallowed.each do |s|
-            next if course['title'].include? s
-          end
+          next if $unallowed.any? { |w| course['title'].include? w } # Honestly Ruby is great
+
           # Turn something like 'Math II (Alg 2)' into 'math'
           course_name = course['title'].split(' (')[0].split(' ').join('-')
           %w(IV III II I 9 10 11 12).each { |i| course_name.gsub!("-#{i}", '') }
@@ -181,7 +180,7 @@ module RegistrationCommands
         # PM him a congratulatory message
         status_message.edit("**Congratulations, #{result['first_name']}. You are now a verified Regis Discord User!**")
         # Make an announcement welcoming him to everyone
-        # event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
+        event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
 
         welcome_info.each_line do |line|
           user.pm line
