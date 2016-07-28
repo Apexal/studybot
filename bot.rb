@@ -109,6 +109,7 @@ bot.include! GameEvents
 bot.include! VoiceChannelEvents
 bot.include! UtilityEvents
 bot.include! UtilityCommands
+bot.include! WorkCommands
 bot.include! QuoteCommands
 bot.include! Suppressor
 bot.include! CourseCommands
