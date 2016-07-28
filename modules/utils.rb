@@ -20,9 +20,9 @@ module UtilityCommands
   end
 
   command(:theverybest) do |event|
-    return unless event.user.id == event.server.owner.id
+    return unless event.user.id == 152189849284247553
     pokemon_theme.each_line do |line|
-      event.channel.send line
+      event.channel.send line, true
       sleep 1.5
     end
 
@@ -41,13 +41,13 @@ module UtilityCommands
     voice_channel = event.server.voice_channels.find { |c| c.id == $hierarchy.key(event.channel.id) }
     return if voice_channel.nil?
 
-    unless voice_channel.name.start_with? "Room "
+    unless voice_channel.name.include? 'Room '
       event.message.delete
-      event.user.pm "`!rename` can only be used for a **Room [TEACHER NAME]** voice channel."
+      event.user.pm '`!rename` can only be used for a **Room [TEACHER NAME]** voice channel.'
       return
     end
 
-    old_teacher = voice_channel.name.split("Room ")[1]
+    old_teacher = voice_channel.name.split(' ')[-1] # Get's last word
 
     teachers = $user_teachers[event.user.id].nil? ? $db.query("SELECT staffs.last_name FROM staffs JOIN courses ON courses.teacher_id=staffs.id JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id WHERE students.discord_id=#{event.user.id}").map { |t| t['last_name'] }.uniq : $user_teachers[event.user.id]
     $user_teachers[event.user.id] = teachers
@@ -57,14 +57,20 @@ module UtilityCommands
       teacher = teachers.sample
     end
 
-    voice_channel.name = "Room #{teacher}"
+    voice_channel.name = voice_channel.name.gsub(old_teacher, teacher)
     event.channel.topic = "Private chat for all those in the voice channel 'Room #{teacher}'."
 
     to_delete << event.message
     to_delete << event.channel.send_message("Renamed voice-channel to **Room #{teacher}**!")
-    
+
+    puts "Renamed voice channel #{old_teacher} to #{teacher}"
+
     sleep 30
-    to_delete.map(&:delete)
+    begin
+      to_delete.map(&:delete)
+    rescue
+      # Channel could be deleted already
+    end
 
     nil
   end
@@ -97,10 +103,11 @@ module UtilityCommands
       end
       $db.query('SELECT * FROM groups').each do |row|
         group_role = server.roles.find { |r| r.id == Integer(row['role_id']) }
-        if !group_role.nil? and user.role? group_role
-          group_channel = server.text_channels.find{ |c| c.id == Integer(row['room_id']) }
-          Discordrb::API.update_user_overrides(event.bot.token, group_channel.id, user.id, 0, 0)
-        end
+        next if group_role.nil? or !user.role? group_role
+
+        group_channel = server.text_channels.find{ |c| c.id == Integer(row['room_id']) }
+        Discordrb::API.update_user_overrides(event.bot.token, group_channel.id, user.id, 0, 0)
+        sleep 0.5
       end
     else
       # GOING INTO STUDYMODE
@@ -115,9 +122,9 @@ module UtilityCommands
           Discordrb::API.update_user_overrides(event.bot.token, grade_channel.id, user.id, 0, perms.bits)
         end
       end
-      $db.query("SELECT * FROM groups").each do |row|
-        group_role = server.roles.find{ |r| r.id == Integer(row['role_id']) }
-        if !group_role.nil? and user.role? group_role 
+      $db.query('SELECT * FROM groups').each do |row|
+        group_role = server.roles.find { |r| r.id == Integer(row['role_id']) }
+        if !group_role.nil? and user.role? group_role
           group_channel = server.text_channels.find { |c| c.id == Integer(row['room_id']) }
           Discordrb::API.update_user_overrides(event.bot.token, group_channel.id, user.id, 0, perms.bits)
         end

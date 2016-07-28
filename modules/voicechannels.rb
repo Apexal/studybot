@@ -32,6 +32,20 @@ module VoiceChannelEvents
           randteacher = teachers.sample
         end
         r.name = "Room #{randteacher}"
+
+        perms = Discordrb::Permissions.new
+        perms.can_connect = true
+
+        study_role = event.server.roles.find { |r| r.name == 'studying' }
+
+        # If user is in studymode make the voice channel open to studying students only
+        if event.user.on(event.server).role? study_role
+          r.name = "[S] #{r.name}"
+          r.define_overwrite(study_role, perms, 0)
+          Discordrb::API.update_role_overrides(event.bot.token, r.id, server.id, 0, perms.bits)
+        else
+          r.define_overwrite(study_role, 0, perms)
+        end
         c = event.server.create_channel(OPEN_ROOM_NAME, 'voice')
       end
     end
