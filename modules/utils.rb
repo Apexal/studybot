@@ -8,7 +8,7 @@ module UtilityCommands
   pokemon_theme = File.open('./resources/pokemon.txt', 'r')
 
   command(:flag, description: 'Show the official Regis Discord flag!') do |event|
-    event.channel.send_file(File.open('./flag.png', 'rb'))
+    event.channel.send_file(File.open('./resources/flag.png', 'rb'))
     'Designed by *Liam Quinn*'
   end
 

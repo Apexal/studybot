@@ -116,8 +116,8 @@ bot.include! CourseCommands
 bot.include! SpecialRoomEvents
 #bot.include! NicknameEvents
 
-bot.run :async
+bot.run #:async
 
-bot.profile.avatar = File.open('./Regis_crest.jpeg', 'rb')
+#bot.profile.avatar = File.open('./resources/Regis_crest.jpeg', 'rb')
 
-bot.sync
+#bot.sync

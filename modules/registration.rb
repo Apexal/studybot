@@ -126,6 +126,7 @@ module RegistrationCommands
             puts 'Creating channel'
             adv_channel = server.create_channel(a)
             adv_channel.topic = "Private chat for Advisement #{a}"
+            adv_channel.position = 30 # This keeps advisement channels above group channels
             puts 'Updating perms'
             Discordrb::API.update_role_overrides(token, adv_channel.id, server.id, 0, perms.bits) # @everyone
             Discordrb::API.update_role_overrides(token, adv_channel.id, advrole.id, perms.bits, 0) # advisement role
