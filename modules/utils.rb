@@ -19,6 +19,24 @@ module UtilityCommands
     eval(code) # not the safest...
   end
 
+  command(:addall) do |event, group|
+    return unless event.user.id == event.server.owner.id
+
+    puts "Adding all users to Group #{group}"
+    role = event.server.roles.find { |r| r.name == group }
+    verified = event.server.roles.find { |r| r.name == 'Verified' }
+
+    event.server.members.each do |m|
+      next unless m.role? verified or m.role? role
+      m.add_role role
+
+      sleep 0.5
+    end
+    puts 'Done.'
+
+    nil
+  end
+
   command(:theverybest) do |event|
     return unless event.user.id == 152189849284247553
     pokemon_theme.each_line do |line|

@@ -118,13 +118,18 @@ module RoomCommands
     user = event.user.on(server)
 
     role = nil
+    channel = nil
     group_name = $db.escape(group_name)
-    $db.query("SELECT role_id FROM groups WHERE name='#{group_name}'").each do |row|
+    $db.query("SELECT role_id, room_id FROM groups WHERE name='#{group_name}'").each do |row|
       role = server.roles.find { |r| r.id == Integer(row['role_id']) }
+      channel = server.text_channels.find { |c| c.id == Integer(row['room_id']) }
     end
     if !role.nil?
       user.add_role role
       user.pm 'Joined group!'
+      unless channel.nil?
+        channel.send_message "*#{user.mention} joined the group.*"
+      end
     else
       user.pm 'Invalid group! For a list of availble groups type `!groups`.'
     end
@@ -140,12 +145,18 @@ module RoomCommands
     user = event.user.on(server)
     group_name = $db.escape(group_name)
     role = nil
-    $db.query("SELECT role_id FROM groups WHERE name='#{group_name}'").each do |row|
+    channel = nil
+    $db.query("SELECT role_id, room_id FROM groups WHERE name='#{group_name}'").each do |row|
       role = server.roles.find { |r| r.id == Integer(row['role_id']) }
+      channel = server.text_channels.find { |c| c.id == Integer(row['room_id']) }
     end
+
     if !role.nil?
       user.remove_role role
       user.pm 'Left group!'
+      unless channel.nil?
+        channel.send_message "*#{user.mention} left the group.*"
+      end
     else
       user.pm 'Invalid group!'
     end
