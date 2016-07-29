@@ -56,7 +56,7 @@ module CourseCommands
     discord_id = !event.message.mentions.empty? ? " AND discord_id='#{event.message.mentions.first.id}'" : ''
 
     $db.query("SELECT username, discord_id, advisement FROM students WHERE verified=1#{discord_id}").each do |row|
-      puts "\n ---------- [HANDLING #{username}] ----------"
+      puts "\n ---------- [HANDLING #{row['username']}] ----------"
       user = server.member(row['discord_id'])
       next if user.nil?
 
@@ -119,8 +119,10 @@ module CourseCommands
 
         if grade == rolename
           user.add_role grole
+          puts 'Added #{grade} role'
         else
-          user.remove_role(grole) if user.role?(role)
+          user.remove_role(grole) if user.role?(grole)
+          puts "Removing #{grade} role"
         end
       end
 
@@ -130,9 +132,8 @@ module CourseCommands
 
       $db.query(query).each do |course|
         # Ignore unnecessary classes
-        $unallowed.each do |u|
-          next if course['title'].include? "#{u} "
-        end
+        next if $unallowed.any? { |w| course['title'].include? w } # Honestly Ruby is great
+
         # Turn something like 'Math II (Alg 2)' into 'math'
         course_name = course['title'].split(' (')[0].split(' ').join('-')
         %w(IV III II I 9 10 11 12).each { |i| course_name.gsub!("-#{i}", '') }
