@@ -205,6 +205,7 @@ module RoomCommands
           user.add_role role
           unless channel.nil?
             channel.send_message "*#{user.mention} joined the group.*"
+            puts "#{user.display_name} joined Group #{group_name}"
           end
           
           invites.delete user.id
@@ -217,6 +218,7 @@ module RoomCommands
         unless channel.nil?
           channel.send_message "*#{user.mention} joined the group.*"
         end
+        puts "#{user.display_name} joined Group #{group_name}"
       end
     end
 

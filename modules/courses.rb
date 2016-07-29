@@ -42,7 +42,7 @@ module CourseCommands
   command(:updatecourses) do |event|
     return if event.user.id != event.server.owner.id
 
-    server = event.server
+    server = event.bot.server(150_739_077_757_403_137)
 
     # Perms for course text-channels
     perms = Discordrb::Permissions.new

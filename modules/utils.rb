@@ -94,7 +94,7 @@ module UtilityCommands
   end
 
   command(:color, description: 'Set your color! Usage: `!color colorname`') do |event, color|
-    server = event.server
+    server = event.bot.server(150_739_077_757_403_137)
     colors = %w(red orange yellow dark pink purple blue green)
     if colors.include?(color) || color == 'default'
       croles = server.roles.find_all { |r| colors.include? r.name }
