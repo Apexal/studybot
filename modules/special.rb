@@ -77,8 +77,9 @@ module SpecialRoomEvents
     Hash[grades.map { |g| [server.roles.find { |r| r.name == g }, server.voice_channels.find { |c| c.name == g } ] }]
       .each do |role, channel|
         next if role.nil?
+        channel = server.voice_channels.find { |v| v.name == role.name }
         online_count = server.online_members.count { |m| m.role? role}
-        if online_count >= 3
+        if online_count >= 7
           if channel.nil?
             puts "Creating voice-channel for #{role.name}"
             channel = server.create_channel(role.name, 'voice')
@@ -87,7 +88,6 @@ module SpecialRoomEvents
             Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
           end
         else
-          channel = server.voice_channels.find { |v| v.name == role.name }
           # 1 or 0 online
           unless channel.nil?
             puts "Removing voice-channel for #{role.name}"

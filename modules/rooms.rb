@@ -19,7 +19,7 @@ module RoomCommands
       count = server.members.find_all { |m| m.role? group_role }.length
       owner = row['creator'] != 'server' ? "**#{row['creator']}**" : ''
 
-      messages << "#{row['default'] == 1 ? '*' : ''}`#{row['name']}` *#{row['description']}* (#{count} members) #{owner}"
+      messages << "#{row['default_group'] == 1 ? '*' : ''}`#{row['name']}` *#{row['description']}* (#{count} members) #{owner}"
     end
     messages << '*Private groups are not listed. You must be invited to these to join.*'
     messages << "\n *Use `!join \"group\"` to join."

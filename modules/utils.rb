@@ -109,6 +109,7 @@ module UtilityCommands
   end
 
   command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user or !whois regisusername`') do |event, username|
+    server = event.bot.server(150_739_077_757_403_137)
     # Get user mentioned or default to sender of command
     if !username.nil? and !username.start_with?('<@')
       # Prevent nasty SQL injection
@@ -127,7 +128,8 @@ module UtilityCommands
     # Otherwise go off of mentions
     who = event.user
     who = event.message.mentions.first unless event.message.mentions.empty?
-
+    who = who.on(server)
+    
     # Shenanigans
     if who.name == 'studybot'
       event << '**I am the bot that automates every single part of the Discord server!** Made by Frank Matranga https://github.com/Apexal/studybot'
@@ -141,9 +143,9 @@ module UtilityCommands
     result = $db.query("SELECT * FROM students WHERE discord_id=#{who.id}")
     if result.count > 0
       result = result.first
-      event << "*#{who.name}* is **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}**!"
+      event << "*#{who.display_name}* is **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}**!"
     else
-      "*#{who.name}* is not yet registered!"
+      "*#{who.display_name}* is not yet registered!"
     end
   end
 
