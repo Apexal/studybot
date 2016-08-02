@@ -8,14 +8,7 @@ module VoiceChannelEvents
     server = event.server
     if r.users.empty? and r.name != OPEN_ROOM_NAME
       # Delete associated 'voice-channel' and unlink it
-      puts "Voice channel #{r.name} is empty and will be deleted"
-      begin
-        server.text_channels.find{|t| t.id == $hierarchy[r.id]}.delete
-        $hierarchy.delete r.id
-      rescue
-        puts 'Failed to find/delete associated #voice-channel'
-      end
-      r.delete
+      delete_channel(server, r)
     else
       # 'Open Room's with users in them
       if r.name == OPEN_ROOM_NAME and !r.users.empty?
@@ -24,12 +17,17 @@ module VoiceChannelEvents
         teachers = $user_teachers[event.user.id].nil? ? $db.query("SELECT staffs.last_name FROM staffs JOIN courses ON courses.teacher_id=staffs.id JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id WHERE students.discord_id=#{event.user.id}").map { |t| t['last_name'] }.uniq : $user_teachers[event.user.id]
         $user_teachers[event.user.id] = teachers
         randteacher = teachers.sample
-
         randteacher = 'Zero' if event.user.id == event.server.owner.id
-
+        
+        count = 0
         until server.voice_channels.find { |c| c.name == "Room #{randteacher}" }.nil?
-          puts 'ALREADY EXISTS!'
           randteacher = teachers.sample
+          count += 1
+          
+          if count == teachers.length
+            randteacher += " II"
+            break
+          end
         end
         r.name = "Room #{randteacher}"
 
@@ -85,29 +83,43 @@ module VoiceChannelEvents
         puts "Creating #voice-channel for #{event.channel.name}"
         # Name it 'voice-channel' or 'Music'
         c_name = 'voice-channel'
-        c_name = event.channel.name unless event.channel.name != 'Music'
+        c_name = event.channel.name if event.channel.name == 'Music' # not really needed anymore
         text_channel = event.server.create_channel c_name
         text_channel.topic = "Private chat for all those in the voice channel '#{event.channel.name}'."
         text_channel.send_message "Welcome to the text-channel for **#{event.channel.name}**! 🎙"
         # Give the current user and BOTS access to it, restrict @everyone
-        Discordrb::API.update_user_overrides(event.bot.token, text_channel.id, event.user.id, perms.bits, 0)
+        
         Discordrb::API.update_role_overrides(event.bot.token, text_channel.id, server.roles.find{|r| r.name == "bots"}.id, perms.bits, 0)
+        Discordrb::API.update_user_overrides(event.bot.token, text_channel.id, event.user.id, perms.bits, 0)
         Discordrb::API.update_role_overrides(event.bot.token, text_channel.id, server.id, 0, perms.bits)
         # Link the id's of both channels together
-        $hierarchy[event.channel.id] = text_channel.id
-      else
-        Discordrb::API.update_user_overrides(event.bot.token, text_channel.id, event.user.id, perms.bits, 0)
-      end
-      # Remove the user's perms in all other 'voice-channel'
-      $hierarchy.each do |_, text_id|
-        next unless text_channel.id != text_id
-
         begin
-          Discordrb::API.update_user_overrides(event.bot.token, text_id, event.user.id, 0, 0)
-        rescue
-          puts 'Failed to update user overrides'
+          $hierarchy[event.channel.id] = text_channel.id
+        rescue RuntimeError
+          sleep 1
+          $hierarchy[event.channel.id] = text_channel.id
         end
-
+        
+        # Remove the user's perms in all other 'voice-channel'
+        $hierarchy.each do |_, text_id|
+          next if text_channel.id == text_id
+          begin
+            Discordrb::API.update_user_overrides(event.bot.token, text_id, event.user.id, 0, 0)
+          rescue
+            puts 'Failed to update user overrides'
+          end
+        end
+      else
+        # Remove the user's perms in all other 'voice-channel'
+        $hierarchy.each do |_, text_id|
+          next if text_channel.id == text_id
+          begin
+            Discordrb::API.update_user_overrides(event.bot.token, text_id, event.user.id, 0, 0)
+          rescue
+            puts 'Failed to update user overrides'
+          end
+        end
+        Discordrb::API.update_user_overrides(event.bot.token, text_channel.id, event.user.id, perms.bits, 0)
       end
     else
       # Remove the user's perms in all other 'voice-channel'
@@ -119,6 +131,7 @@ module VoiceChannelEvents
         end
       end
     end
+    
     member = event.user.on(server)
     current_voice_channel = event.channel.nil? ? nil : event.channel.id
     if old_voice_channel != current_voice_channel
@@ -141,6 +154,5 @@ module VoiceChannelEvents
       end
     end
     $user_voice_channel[event.user.id] = current_voice_channel
-    #puts $user_voice_channel
   end
 end

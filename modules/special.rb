@@ -25,14 +25,7 @@ module SpecialRoomEvents
         public_room.position = 1
         Discordrb::API.update_role_overrides($token, public_room.id, server.id, perms.bits, 0)
       elsif online_count == 0 and !public_room.nil?
-        puts "Removing Public Room"
-        begin
-          server.text_channels.find { |t| t.id == $hierarchy[public_room.id] }.delete
-          $hierarchy.delete public_room.id
-        rescue
-          puts 'Failed to find/delete associated #voice-channel'
-        end
-        public_room.delete
+        delete_channel(server, public_room)
       end
     end
     
@@ -59,16 +52,7 @@ module SpecialRoomEvents
         end
       elsif online_count <= 2
         # 1 or 0 online
-        unless channel.nil?
-          puts "Removing voice-channel for Advisement #{advisement}"
-          begin
-            server.text_channels.find { |t| t.id == $hierarchy[channel.id] }.delete
-            $hierarchy.delete channel.id
-          rescue
-            puts 'Failed to find/delete associated #voice-channel'
-          end
-          channel.delete
-        end
+        delete_channel(server, channel) unless channel.nil?
       end
     end
 
@@ -89,16 +73,7 @@ module SpecialRoomEvents
           end
         else
           # 1 or 0 online
-          unless channel.nil?
-            puts "Removing voice-channel for #{role.name}"
-            begin
-              server.text_channels.find { |t| t.id == $hierarchy[channel.id] }.delete
-              $hierarchy.delete channel.id
-            rescue
-              puts 'Failed to find/delete associated #voice-channel'
-            end
-            channel.delete
-          end
+          delete_channel(server, channel) unless channel.nil?
         end
       end
   end

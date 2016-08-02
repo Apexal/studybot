@@ -2,23 +2,18 @@ require 'discordrb'
 require 'mysql2'
 require 'mail'
 require 'yaml'
-require 'nokogiri'
 require 'date'
 
 require 'pry'
 
-$events = Nokogiri::HTML(open('calendar.html')).xpath('//div[@id="main"]//a[contains(text(), ";")]').map do |e|
-  parts = e.text.gsub(';', '').gsub(',', '').split(' ')
-  day = e.xpath('./../../../../../../..//tr[@class="hb"]//strong').text.gsub(/[^0-9]/, '')
-  now = Time.now
-  date = DateTime.new(now.year, now.month, Integer(day))
-  {:date => date, :adv => parts[0], :course => parts[1...-1].join(' '), :teacher => parts[-1]}
-end
+puts 'STARTING UP'
 
 $CONFIG = YAML::load_file('./config.yaml')
+puts 'Loaded Config'
 
 # Auto requires all modules
 Dir["#{File.dirname(__FILE__)}/modules/*.rb"].each { |file| require file }
+puts 'Loaded modules'
 
 Mail.defaults do
   delivery_method :smtp, address: 'smtp.gmail.com',
@@ -28,9 +23,10 @@ Mail.defaults do
   authentication: :plain,
   enable_starttls_auto: true
 end
+puts 'Loaded mail'
 
-puts 'Connecting to DB'
 $db = Mysql2::Client.new(host: $CONFIG['auth']['mysql']['host'], username: $CONFIG['auth']['mysql']['username'], password: $CONFIG['auth']['mysql']['password'], database: $CONFIG['auth']['mysql']['database'])
+puts 'Connected to DB'
 
 bot = Discordrb::Commands::CommandBot.new(
   advanced_functionality: true,
@@ -45,24 +41,55 @@ $unallowed = %w(Phys Guidance Speech Advisement Health Amer)
 bot.bucket :abusable, limit: 3, time_span: 60, delay: 10
 bot.bucket :study, limit: 10, time_span: 60, delay: 5
 
+def delete_channel(server, channel, count=1)
+  return if channel.nil?
+  
+  puts "Deleting voice-channel #{channel.name} and associated #voice-channel"
+  begin
+    channel.delete
+  rescue
+    puts 'Failed to delete voice-channel'
+  end
+  begin
+    server.text_channels.find{|t| t.id == $hierarchy[channel.id]}.delete
+    $hierarchy.delete channel.id
+  rescue => e
+    puts 'Failed to find/delete associated #voice-channel'
+    puts e
+    if count < 2
+      sleep 1.1
+      delete_channel(server, channel, count + 1)
+    end
+  end
+end
+
+$groups = nil
 def handle_group_voice_channels(server)
-  $db.query('SELECT * FROM groups WHERE creator != "server"').each do |row|
+  if $groups.nil?
+    $groups = $db.query('SELECT * FROM groups WHERE creator != "server"')
+  end
+  
+  $groups.each do |row|
     group_role = server.roles.find{|r| r.id==Integer(row['role_id'])}
     unless group_role.nil?
       # Get count of online group members
+      total_count = server.members.find_all { |m| m.role? group_role }.length
       count = server.online_members.find_all { |m| m.role? group_role }.length
       channel = server.voice_channels.find { |c| c.name == "Group #{row['name']}" }
       perms = Discordrb::Permissions.new
       perms.can_connect = true
-      if count > 5
-        puts "Over 5 online members in #{row['name']}"
+      
+      minimum = (total_count * 0.25).floor > 5 ? (total_count * 0.25).floor > minimum : 5 
+      
+      if count > minimum
+        #puts "Over #{minimum} online members in #{row['name']}"
         if channel.nil? and server.voice_channels.find { |c| c.name == row['name'] }.nil?
           channel = server.create_channel("Group #{row['name']}", 'voice')
-          Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
           channel.define_overwrite(group_role, perms, 0)
+          Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
         end
       else
-        channel.delete unless channel.nil?
+        delete_channel(server, channel) unless channel.nil?
         # puts 'Less than 5 online members in #{row['name']}'
       end
     end

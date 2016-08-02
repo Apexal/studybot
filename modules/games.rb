@@ -51,15 +51,7 @@ module GameEvents
               event.server.move(u, newchannel)
               sleep 0.5
             end
-            game_channel.delete
-            # Unlink text channel to voice channel
-            puts 'Unlinking voice and text channels'
-            begin
-              server.text_channels.find{|t| t.id == $hierarchy[game_channel.id]}.delete
-              $hierarchy.delete game_channel.id
-            rescue
-
-            end
+            delete_channel(server, game_channel)
           end
         end
       end

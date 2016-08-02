@@ -61,7 +61,7 @@ module StartupEvents
     puts 'Doing group voice channels'
     handle_group_voice_channels(server)
     puts 'Done.'
-    puts($playing)
+    #puts($playing)
     puts "FINISHED STARTUP\n------------------------------------------------\n"
   end
 end
