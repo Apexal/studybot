@@ -65,7 +65,13 @@ module RegistrationCommands
 
       # Escape string since techinally anything can be in there
       escaped = $db.escape(username)
-
+      
+      # Check if user is already registered with another Discord account
+      if $db.query("SELECT verified FROM students WHERE username='#{escaped}' AND verified=1").count > 0
+        event.user.pm 'You are already registered on this server with another Discord account!\nAsk Frank (<@152621041976344577>) to reset this for you if you forgot the password for that account.'
+        return
+      end
+      
       # Find an unverified user with that username
       result = $db.query("SELECT * FROM students WHERE username='#{escaped}' AND verified=0")
 
