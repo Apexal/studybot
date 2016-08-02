@@ -49,9 +49,6 @@ module VoiceChannelEvents
     end
   end
 
-  def self.update_channel_cache(channels)
-  end
-
   voice_state_update do |event|
     #puts 'Voice state update'
     old_voice_channel = $user_voice_channel[event.user.id]
@@ -129,6 +126,16 @@ module VoiceChannelEvents
         rescue
           puts 'Failed to update overrides'
         end
+      end
+    end
+    
+    # Account for hierarchy mismatches
+    server.text_channels.find_all { |c| c.name == "voice-channel" }.each do |c|
+      begin
+        c.delete unless $hierarchy.has_value? c.id
+        c.delete if server.voice_channels.find { |v| v.id == $hierarchy.key(c.id) }.nil?
+      rescue
+        puts 'Already deleted channel.'
       end
     end
     
