@@ -68,7 +68,7 @@ def handle_group_voice_channels(server)
   if $groups.nil?
     $groups = $db.query('SELECT * FROM groups WHERE creator != "server"')
   end
-  
+
   $groups.each do |row|
     group_role = server.roles.find{|r| r.id==Integer(row['role_id'])}
     unless group_role.nil?
@@ -78,19 +78,19 @@ def handle_group_voice_channels(server)
       channel = server.voice_channels.find { |c| c.name == "Group #{row['name']}" }
       perms = Discordrb::Permissions.new
       perms.can_connect = true
-      
+
       minimum = (total_count * 0.25).floor > 5 ? (total_count * 0.25).floor > minimum : 5 
       minimum = 10 if minimum > 10
-      
+
       if count > minimum
-        #puts "Over #{minimum} online members in #{row['name']}"
         if channel.nil? and server.voice_channels.find { |c| c.name == row['name'] }.nil?
+          puts "Opening group voice channel for #{row['name']}"
           channel = server.create_channel("Group #{row['name']}", 'voice')
           study_role = server.roles.find { |r| r.name == "studying" }
           channel.define_overwrite(group_role, perms, 0)
           study_perms = perms
           study_perms.can_speak = true
-          channel.define_overwrite(group_role, 0, study_perms)
+          channel.define_overwrite(study_role, 0, study_perms)
           Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
         end
       else
@@ -128,7 +128,6 @@ def replace_mentions(message)
   end
 
   return message.sub('@', '') if words.length == 1 and done == 1
-
   return message
 end
 
