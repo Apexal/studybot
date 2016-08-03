@@ -38,7 +38,7 @@ module VoiceChannelEvents
 
         # If user is in studymode make the voice channel open to studying students only
         if event.user.on(event.server).role? study_role
-          r.name = "[S] #{r.name}"
+          r.name = "Study #{r.name}"
           r.define_overwrite(study_role, perms, 0)
           Discordrb::API.update_role_overrides(event.bot.token, r.id, server.id, 0, perms.bits)
         else

@@ -13,15 +13,15 @@ module SpecialRoomEvents
     perms.can_connect = true
     perms.can_speak = true
     perms.can_use_voice_activity = true
-    
+
     # Public Room
     guest_role = server.roles.find { |r| r.name == 'Guests' }
     if event.user.on(server).role? guest_role
       online_count = server.online_members.count { |m| m.role? guest_role }
-      public_room = server.voice_channels.find { |v| v.name == "Public Room" }
+      public_room = server.voice_channels.find { |v| v.name == 'Public Room' }
       if online_count > 0 and public_room.nil?
-        puts "Creating Public Room"
-        public_room = server.create_channel("Public Room", 'voice')
+        puts 'Creating Public Room'
+        public_room = server.create_channel('Public Room', 'voice')
         public_room.position = 1
         study_role = server.roles.find { |r| r.name == 'studying' }
         public_room.define_overwrite(study_role, 0, perms)
@@ -30,7 +30,7 @@ module SpecialRoomEvents
         delete_channel(server, public_room)
       end
     end
-    
+
     # Advisement Voice Channels
     if event.user.on(server).role? server.roles.find { |r| r.name == 'Verified' }
       advisement = advisements[event.user.id]
@@ -41,9 +41,9 @@ module SpecialRoomEvents
 
       advisement_role = server.roles.find { |r| r.name == advisement }
       online_count = server.online_members.count { |m| m.role? advisement_role }
-      
+
       channel = server.voice_channels.find { |v| v.name == advisement }
-      
+
       if online_count >= 7
         if channel.nil?
           puts "Creating voice-channel for Advisement #{advisement}"
@@ -75,10 +75,12 @@ module SpecialRoomEvents
           end
         else
           # 1 or 0 online
-          delete_channel(server, channel) unless channel.nil?
+          delete_channel(server, channel) unless channel.nil? or !channel.users.empty?
         end
       end
-  end
 
-  sleep 30
+    if event.user.status == :offline
+      $db.query("UPDATE students SET last_online='#{Time.new}' WHERE discord_id=#{event.user.id}")
+    end
+  end
 end
