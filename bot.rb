@@ -80,12 +80,17 @@ def handle_group_voice_channels(server)
       perms.can_connect = true
       
       minimum = (total_count * 0.25).floor > 5 ? (total_count * 0.25).floor > minimum : 5 
+      minimum = 10 if minimum > 10
       
       if count > minimum
         #puts "Over #{minimum} online members in #{row['name']}"
         if channel.nil? and server.voice_channels.find { |c| c.name == row['name'] }.nil?
           channel = server.create_channel("Group #{row['name']}", 'voice')
+          study_role = server.roles.find { |r| r.name == "studying" }
           channel.define_overwrite(group_role, perms, 0)
+          study_perms = perms
+          study_perms.can_speak = true
+          channel.define_overwrite(group_role, 0, study_perms)
           Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
         end
       else
