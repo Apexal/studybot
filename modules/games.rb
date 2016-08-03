@@ -81,6 +81,11 @@ module GameEvents
       end
     end
 
+    server.voice_channels.find_all { |v| v.name.end_with? " Party" and v.users.empty? }.each do |v|
+      v.delete
+      sleep 0.5
+    end
+
     sleep(60 * 20) # 20 minutes
     to_delete.each(&:delete)
   end
