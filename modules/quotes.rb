@@ -89,7 +89,16 @@ module QuoteCommands
       messages = []
     end
     event.send_message "#{index - 1} total"
-    sleep(30)
+
+    time = 30
+    if toDelete.length > 6
+      time = 60 * 3
+    elsif toDelete.length > 3
+      time = 60
+    end
+
+    sleep(time)
+
     toDelete.each(&:delete)
     nil
   end
