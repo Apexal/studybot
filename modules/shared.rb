@@ -111,7 +111,7 @@ def handle_game_parties(server)
       v.name = "#{game} Party"
       server.text_channels.find { |c| c.id == $hierarchy[v.id] }.topic = "Private chat for all those in the voice channel '#{game} Party'."
       puts "Started #{game} Party room"
-      event.bot.find_channel('gaming').first.send_message "@here A #{game} session has started. Join voice-channel **#{game} Party**!"
+      server.text_channels.find { |c| c.name == 'gaming' }.send_message "@here A #{game} session has started. Join voice-channel **#{game} Party**!"
       break
     end
   end
