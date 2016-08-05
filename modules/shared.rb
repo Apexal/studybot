@@ -88,8 +88,9 @@ def handle_group_voice_channels(server)
   end
 end
 
+
 def handle_game_parties(server)
-  server.voice_channels.find_all { |v| !v.name.include? 'Group ' and v.name.downcase.include? 'room ' }.each do |v|
+  server.voice_channels.find_all { |v| !v.name.include? 'Group ' and (v.name.end_with? ' Party' or v.name.include? 'Room ') }.each do |v|
     game_totals = Hash.new(0)
     user_count = v.users.length
     
@@ -101,23 +102,41 @@ def handle_game_parties(server)
     next if user_count < 4
     
     game_totals.each do |game, t|
-      next if t <= 2
+      next if v.name == "#{game} Party"
 
+      next if t <= 2
+      
       min = 0.75 # If only a few people are in the room, all must be playing the game
       percent = t / user_count.to_f
-
+      
       next if percent < min
-
+      
       v.name = "#{game} Party"
       server.text_channels.find { |c| c.id == $hierarchy[v.id] }.topic = "Private chat for all those in the voice channel '#{game} Party'."
       puts "Started #{game} Party room"
       server.text_channels.find { |c| c.name == 'gaming' }.send_message "@here A #{game} session has started. Join voice-channel **#{game} Party**!"
       break
     end
+    sleep 1
   end
 
-  server.voice_channels.find_all { |v| !v.name.include? 'Group ' and v.name.end_with? ' Party' and v.users.empty? }.each do |v|
-    v.delete
+  
+  
+  server.voice_channels.find_all { |v| !v.name.include? 'Group ' and v.name.end_with? ' Party'}.each do |v|
+    game_totals = Hash.new(0)
+    v.users.each do |u|
+      next if u.game.nil?
+      game_totals[u.game] += 1
+    end
+    
+    if v.users.empty?
+      v.delete
+    elsif v.users.length <= 2 or game_totals.max_by{ |k, v| v }[1] <= 2
+      teacher = 'Somebody'
+      v.name = "Room #{teacher}"
+      server.text_channels.find { |c| c.id == $hierarchy[v.id] }.topic = "Private chat for all those in the voice channel 'Room #{teacher}'."
+    else
+    end
     sleep 0.5
   end
 end

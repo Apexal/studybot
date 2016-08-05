@@ -160,6 +160,9 @@ module VoiceChannelEvents
         end
       end
     end
+    
+    handle_game_parties(server)
+    
     $user_voice_channel[event.user.id] = current_voice_channel
   end
 end
