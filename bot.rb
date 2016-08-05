@@ -31,6 +31,7 @@ puts 'Connected to DB'
 bot = Discordrb::Commands::CommandBot.new(
   advanced_functionality: true,
   token: $CONFIG['auth']['discord']['token'],
+  chain_args_delim: '}',
   application_id: $CONFIG['auth']['discord']['application_id'],
   prefix: $CONFIG['options']['bot']['prefix']
 )
@@ -55,6 +56,7 @@ bot.include! QuoteCommands
 bot.include! Suppressor
 bot.include! CourseCommands
 bot.include! SpecialRoomEvents
+bot.include! SteamCommands
 #bot.include! NicknameEvents
 
 bot.run #:async

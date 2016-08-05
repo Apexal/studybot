@@ -57,35 +57,7 @@ module GameEvents
       end
     end
 
-    server.voice_channels.find_all { |v| !v.name.include? 'Group ' and v.name.downcase.include? 'room ' and !v.users.empty? }.each do |v|
-      game_totals = Hash.new(0)
-      user_count = v.users.length
-
-      v.users.each do |u|
-        next if u.game.nil?
-        game_totals[u.game] += 1
-      end
-
-      game_totals.each do |game, t|
-        next if t <= 3
-
-        min = 0.8 # If only a few people are in the room, all must be playing the game
-        percent = t / user_count.to_f
-
-        next if percent < min
-
-        v.name = "#{game} Party"
-        server.text_channels.find { |c| c.id == $hierarchy[v.id] }.topic = "Private chat for all those in the voice channel '#{game} Party'."
-        puts "Started #{game} Party room"
-        event.bot.find_channel('announcements').first.send_message "@here A #{game} session has started. Join voice-channel *#{game} Party*!"
-        break
-      end
-    end
-
-    server.voice_channels.find_all { |v| !v.name.include? 'Group ' and v.name.end_with? ' Party' and v.users.empty? }.each do |v|
-      v.delete
-      sleep 0.5
-    end
+    handle_game_parties(server)
 
     sleep(60 * 20) # 20 minutes
     to_delete.each(&:delete)
