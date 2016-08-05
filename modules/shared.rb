@@ -52,6 +52,7 @@ end
 
 $groups = nil
 def handle_group_voice_channels(server)
+  return
   if $groups.nil?
     $groups = $db.query('SELECT * FROM groups WHERE creator != "server"')
   end
@@ -74,7 +75,7 @@ def handle_group_voice_channels(server)
       if channel.nil? and server.voice_channels.find { |c| c.name == row['name'] }.nil?
         puts "Opening group voice channel for #{row['name']}"
         channel = server.create_channel("Group #{row['name']}", 'voice')
-        study_role = server.roles.find { |r| r.name == "studying" }
+        study_role = server.roles.find { |r| r.name == 'studying' }
         channel.define_overwrite(group_role, perms, 0)
         Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
         study_perms = perms
