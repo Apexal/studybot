@@ -59,8 +59,6 @@ bot.include! SpecialRoomEvents
 bot.include! SteamCommands
 #bot.include! NicknameEvents
 
-bot.run #:async
-
-#bot.profile.avatar = File.open('./resources/Regis_crest.jpeg', 'rb')
-
-#bot.sync
+bot.run :async
+school_loop
+bot.sync

@@ -129,7 +129,7 @@ module UtilityCommands
     who = event.user
     who = event.message.mentions.first unless event.message.mentions.empty?
     who = who.on(server)
-    
+
     # Shenanigans
     if who.name == 'studybot'
       event << '**I am the bot that automates every single part of the Discord server!** Made by Frank Matranga https://github.com/Apexal/studybot'
