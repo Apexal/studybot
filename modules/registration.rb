@@ -65,13 +65,13 @@ module RegistrationCommands
 
       # Escape string since techinally anything can be in there
       escaped = $db.escape(username)
-      
+
       # Check if user is already registered with another Discord account
       if $db.query("SELECT verified FROM students WHERE username='#{escaped}' AND verified=1").count > 0
         event.user.pm 'You are already registered on this server with another Discord account!\nAsk Frank (<@152621041976344577>) to reset this for you if you forgot the password for that account.'
         return
       end
-      
+
       # Find an unverified user with that username
       result = $db.query("SELECT * FROM students WHERE username='#{escaped}' AND verified=0")
 
@@ -132,7 +132,9 @@ module RegistrationCommands
             puts 'Creating channel'
             adv_channel = server.create_channel(a)
             adv_channel.topic = "Private chat for Advisement #{a}"
-            adv_channel.position = 30 # This keeps advisement channels above group channels
+
+            pos = server.text_channels.find_all { |c| c.name.start_with? a[0] }.sort { |a, b| a.position <=> b.position }.last.position + 1
+            adv_channel.position = pos # This keeps advisement channels above group channels
             puts 'Updating perms'
             Discordrb::API.update_role_overrides(token, adv_channel.id, server.id, 0, perms.bits) # @everyone
             Discordrb::API.update_role_overrides(token, adv_channel.id, advrole.id, perms.bits, 0) # advisement role
@@ -200,6 +202,9 @@ module RegistrationCommands
         user.pm('Incorrect code!')
       end
     end
+
+    sort_channels(server)
+
     nil
   end
 end

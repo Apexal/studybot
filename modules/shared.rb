@@ -28,6 +28,24 @@ def replace_mentions(message)
   return message
 end
 
+def sort_channels(server)
+  start_pos = 14
+  %w(1 2 3 4).each do |g|
+    channels = server.text_channels.find_all { |c| c.name.start_with? g }
+      # channels.sort { |a, b| a.position <=> b.position }.first.position
+
+    pos = start_pos
+    channels.sort { |a, b| a.name <=> b.name }.each do |c|
+      c.position = pos
+      pos += 1
+      sleep 1
+    end
+
+    start_pos += channels.length
+    sleep 1
+  end
+end
+
 def delete_channel(server, channel, count=1)
   return if channel.nil?
 

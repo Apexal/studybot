@@ -4,8 +4,6 @@ require 'mail'
 require 'yaml'
 require 'date'
 
-require 'pry'
-
 puts 'STARTING UP'
 
 $CONFIG = YAML::load_file('./config.yaml')

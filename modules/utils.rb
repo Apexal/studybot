@@ -1,3 +1,5 @@
+require 'pry'
+
 module UtilityEvents
   extend Discordrb::EventContainer
 end
@@ -6,6 +8,18 @@ module UtilityCommands
   extend Discordrb::Commands::CommandContainer
 
   pokemon_theme = File.open('./resources/pokemon.txt', 'r')
+
+  command(:pry) do |event|
+    server = event.bot.server(150_739_077_757_403_137)
+    binding.pry
+  end
+
+  command(:sortchannels) do |event|
+    server = event.bot.server(150_739_077_757_403_137)
+    # Advisement channels
+    sort_channels(server)
+    nil
+  end
 
   command(:flag, description: 'Show the official Regis Discord flag!') do |event|
     event.channel.send_file(File.open('./resources/flag.png', 'rb'))
