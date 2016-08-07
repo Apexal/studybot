@@ -109,6 +109,8 @@ end
 
 
 def handle_game_parties(server)
+  game_role = server.roles.find { |r| r.name == 'Gaming' }
+  game_channel = server.text_channels.find { |c| c.name == 'gaming' }
   server.voice_channels.find_all { |v| !v.name.include? 'Group ' and (v.name.end_with? ' Party' or v.name.include? 'Room ') }.each do |v|
     game_totals = Hash.new(0)
     user_count = v.users.length
@@ -133,7 +135,10 @@ def handle_game_parties(server)
       v.name = "#{game} Party"
       server.text_channels.find { |c| c.id == $hierarchy[v.id] }.topic = "Private chat for all those in the voice channel '#{game} Party'."
       puts "Started #{game} Party room"
-      server.text_channels.find { |c| c.name == 'gaming' }.send_message "@here A #{game} session has started. Join voice-channel **#{game} Party**!"
+      
+      mentions = server.online_members.find_all { |u| u.role? game_role and !v.users.include? u }.map { |u| u.mention }
+      
+      game_channel.send_message "A #{game} session has started. Join voice-channel **#{game} Party**! #{mentions.join ' '}"
       break
     end
     sleep 1

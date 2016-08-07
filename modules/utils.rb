@@ -10,15 +10,10 @@ module UtilityCommands
   pokemon_theme = File.open('./resources/pokemon.txt', 'r')
 
   command(:pry) do |event|
+    event.message.delete unless event.channel.private?
     server = event.bot.server(150_739_077_757_403_137)
+    return unless event.user.id == server.owner.id
     binding.pry
-  end
-
-  command(:sortchannels) do |event|
-    server = event.bot.server(150_739_077_757_403_137)
-    # Advisement channels
-    sort_channels(server)
-    nil
   end
 
   command(:flag, description: 'Show the official Regis Discord flag!') do |event|
