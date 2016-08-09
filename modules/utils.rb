@@ -8,7 +8,7 @@ module UtilityCommands
   extend Discordrb::Commands::CommandContainer
 
   pokemon_theme = File.open('./resources/pokemon.txt', 'r')
-
+  
   command(:pry) do |event|
     event.message.delete unless event.channel.private?
     server = event.bot.server(150_739_077_757_403_137)
@@ -211,5 +211,30 @@ module Suppressor
 
   message(containing: not!('google.com/'), in: '#finals') do |event|
     event.message.delete if event.message.author != event.server.owner
+  end
+  
+  message(containing: '@') do |event|
+    server = event.bot.server(150_739_077_757_403_137)
+    mentions = []
+    
+    usernames = []
+    
+    words = event.message.content.split ' '
+    words.each do |w|
+      next if usernames.include? w
+      usernames << w
+      if w.start_with? '@'
+        username = w.tr('@', '')
+        next unless username.match(/^\w+[1-9]{2}$/)
+        
+        username = $db.escape(username)
+        $db.query("SELECT discord_id FROM students WHERE username='#{username}' AND verified=1").each do |row|
+          member = server.members.find { |m| m.id == Integer(row['discord_id']) }
+          mentions.append(member) unless member.nil?
+        end
+      end
+    end
+    
+    event.channel.send("^^^ #{mentions.map { |m| m.mention }.join(' ')}") unless mentions.empty?
   end
 end
