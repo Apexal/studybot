@@ -95,6 +95,7 @@ module RoomCommands
     # Create role
     group_role = server.create_role
     group_role.name = full_name
+    #group_role.mentionable = true
     user.add_role group_role
     # Create text-channel
     group_room = server.create_channel group_name
@@ -126,7 +127,7 @@ module RoomCommands
 
   command(:deletegroup, description: 'Delete a group that you started.') do |event|
     event.message.delete unless event.channel.private?
-
+    
     server = event.bot.server(150_739_077_757_403_137)
 
     $db.query("SELECT * FROM groups JOIN students ON students.username=groups.creator WHERE students.discord_id=#{event.user.id}").each do |row|
@@ -134,11 +135,14 @@ module RoomCommands
       server.text_channels.find { |r| r.id == Integer(row['room_id']) }.delete
       begin
         server.voice_channels.find { |c| c.name == "Group #{row['name']}" }.delete
-        server.roles.find { |r| r.name == row['name'] }.delete
+        g_role = server.roles.find { |r| r.name == row['name'] }.delete
+        #g_role.members.each { |m| m.pm "Creator #{event.user.mention} (#{row['creator']}) has deleted **Group #{row['name']}**!" }
+        g_role.delete
       rescue
         puts 'Failed to remove group channel and/or role'
       end
     end
+    
     $db.query("DELETE groups FROM groups JOIN students ON groups.creator=students.username WHERE students.discord_id=#{event.user.id}")
     event.user.pm 'Successfully deleted group!'
 
