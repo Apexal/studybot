@@ -5,6 +5,7 @@ You also have access to **private course text-channels** for each of your main c
 You can join user-made groups (or create your own) by typing `!groups`.
 For example, interested in gaming with your schoolmates? Type `!join 'Gaming'` right now!
 Or, want to create a group (and associated text-channel) for a club? Type `!creategroup "Name" "Description"`.
+Want to focus on studying/working? Use `!study` to toggle distractions.
 Use `!help` and `!help commandname` to see more options!
 
 If you have any questions, direct message Frank (<@152621041976344577>).

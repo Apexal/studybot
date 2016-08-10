@@ -28,6 +28,21 @@ def replace_mentions(message)
   return message
 end
 
+def handle_public_room(server)
+  online_count = server.online_members.count { |m| m.role? guest_role }
+  public_room = server.voice_channels.find { |v| v.name == 'Public Room' }
+  if online_count > 0 and public_room.nil?
+    puts 'Creating Public Room'
+    public_room = server.create_channel('Public Room', 'voice')
+    public_room.position = 1
+    study_role = server.roles.find { |r| r.name == 'studying' }
+    public_room.define_overwrite(study_role, 0, perms)
+    Discordrb::API.update_role_overrides($token, public_room.id, server.id, perms.bits, 0)
+  elsif online_count == 0 and !public_room.nil?
+    delete_channel(server, public_room)
+  end
+end
+
 def sort_channels(server)
   start_pos = 14
   %w(1 2 3 4).each do |g|

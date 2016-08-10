@@ -5,7 +5,7 @@ module VoiceChannelEvents
   OPEN_ROOM_NAME = '[New Room]'
   $user_voice_channel = {} # Stores user voice-channels to compare
   def self.handle_room(event, r)
-    puts "Handling room #{r.name} with #{r.users.length} users"
+    #puts "Handling room #{r.name} with #{r.users.length} users"
     server = event.server
     
     if r.users.empty? and r.name != OPEN_ROOM_NAME

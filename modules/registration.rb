@@ -6,6 +6,9 @@ module RegistrationEvents
   end
   member_join do |event|
     event.bot.find_channel('meta').first.send_message "#{event.server.owner.mention} #{event.user.name} just joined the server!"
+    event.user.on(event.server).add_role(event.server.roles.find { |r| r.name == 'Guests' } )
+    handle_public_room(event.server)
+    
     sleep 3
     m = event.bot.find_channel('welcome').first.send_message "#{event.user.mention} Hello! Please check your Direct Messages (top left) to get started!"
     event.user.pm 'Welcome! Please type `!register yourregisusername` to get started. *You will not be able to participate in the server until you do this.*'
@@ -185,7 +188,9 @@ module RegistrationCommands
         end
 
         user.add_role roles_to_add
-
+        
+        user.remove_role(server.roles.find { |r| r.name == 'Guests' })
+        
         # PM him a congratulatory message
         status_message.edit("**Congratulations, #{result['first_name']}. You are now a verified Regis Discord User!**")
         # Make an announcement welcoming him to everyone
