@@ -29,6 +29,7 @@ def replace_mentions(message)
 end
 
 def handle_public_room(server)
+  guest_role = server.roles.find { |r| r.name == 'Guests' }
   online_count = server.online_members.count { |m| m.role? guest_role }
   public_room = server.voice_channels.find { |v| v.name == 'Public Room' }
   if online_count > 0 and public_room.nil?
