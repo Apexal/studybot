@@ -29,6 +29,11 @@ def replace_mentions(message)
 end
 
 def handle_public_room(server)
+  perms = Discordrb::Permissions.new
+  perms.can_connect = true
+  perms.can_speak = true
+  perms.can_use_voice_activity = true
+
   guest_role = server.roles.find { |r| r.name == 'Guests' }
   online_count = server.online_members.count { |m| m.role? guest_role }
   public_room = server.voice_channels.find { |v| v.name == 'Public Room' }
@@ -152,7 +157,7 @@ def handle_game_parties(server)
       server.text_channels.find { |c| c.id == $hierarchy[v.id] }.topic = "Private chat for all those in the voice channel '#{game} Party'."
       puts "Started #{game} Party room"
       
-      mentions = server.online_members.find_all { |u| u.role? game_role and !v.users.include? u }.map { |u| u.mention }
+      mentions = server.online_members.find_all { |u| u.role? game_role and !v.users.include? u and u.game.nil? }.map { |u| u.mention }
       
       game_channel.send_message "A #{game} session has started. Join voice-channel **#{game} Party**! #{mentions.join ' '}"
       break
