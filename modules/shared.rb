@@ -167,9 +167,9 @@ def handle_game_parties(server)
       v.name = "#{game} Party"
       server.text_channels.find { |c| c.id == $hierarchy[v.id] }.topic = "Private chat for all those in the voice channel '#{game} Party'."
       puts "Started #{game} Party room"
-      
+
       mentions = server.online_members.find_all { |u| u.role? game_role and !v.users.include? u and u.game.nil? }.map { |u| u.mention }
-      
+
       game_channel.send_message "A #{game} session has started. Join voice-channel **#{game} Party**! #{mentions.join ' '}"
       break
     end
@@ -186,7 +186,7 @@ def handle_game_parties(server)
     if v.users.empty?
       v.delete
     elsif v.users.length <= 2 or game_totals.max_by{ |k, v| v }[1] <= 2
-      teacher = 'Somebody'
+      teacher = get_rand_teacher(v.users.first)
       v.name = "Room #{teacher}"
       server.text_channels.find { |c| c.id == $hierarchy[v.id] }.topic = "Private chat for all those in the voice channel 'Room #{teacher}'."
     else

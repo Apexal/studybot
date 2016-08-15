@@ -22,7 +22,7 @@ module StartupEvents
     server.online_members.each do |m|
       $playing[m.id] = m.game if !!m.game
       # puts("#{m.display_name} is playing #{m.game}") if !!m.game
-      $user_voice_channel[m.id] = nil
+      $voice_states[m.id] = nil
     end
     puts 'Done.'
     puts "Deleting extra [New Room]'s"
@@ -40,15 +40,13 @@ module StartupEvents
     puts "Creating all necessary #voice-channel's and adding users to them"
     server.voice_channels.find_all { |r| r.name != 'AFK' and r.name != '[New Room]' }.each do |c|
       puts c.name
-      # Assume music channel till proven wrong
-      text_channel = server.text_channels.find { |t| t.name == 'music' }
-      if c.name != 'Music'
-        text_channel = server.create_channel 'voice-channel'
-        text_channel.topic = "Private chat for all those in the voice channel '#{c.name}'"
-      end
+
+      text_channel = server.create_channel 'voice-channel'
+      text_channel.topic = "Private chat for all those in the voice channel '**#{c.name}**'"
+
       # Give the current user and BOTS access to it, restrict @everyone
       c.users.each do |u|
-        $user_voice_channel[u.id] = c.id
+        $voice_states[u.id] = c.id
         Discordrb::API.update_user_overrides(bot.token, text_channel.id, u.id, perms.bits, 0)
       end
       Discordrb::API.update_role_overrides(bot.token, text_channel.id, server.roles.find { |r| r.name == "bots" }.id, 0, perms.bits)
