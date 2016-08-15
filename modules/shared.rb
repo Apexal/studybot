@@ -71,6 +71,17 @@ def delete_channel(server, channel, count=1)
   return if channel.nil?
 
   puts "Deleting voice-channel #{channel.name} and associated #voice-channel"
+  unless channel.users.empty?
+    puts 'Moving users first'
+    begin
+      new_room = server.voice_channels.find { |r| r.name == '[New Room]' }
+      channel.users.each do |u|
+        server.move(u, new_room)
+      end
+    rescue => e
+      puts "Failed to move all users:\n#{e}"
+    end
+  end
   begin
     channel.delete
   rescue
@@ -84,7 +95,7 @@ def delete_channel(server, channel, count=1)
     puts e
     if count < 2
       sleep 1.1
-      delete_channel(server, channel, count + 1)
+      delete_channel(server, channel, count + 1) # Is this recursion?
     end
   end
 end
