@@ -7,7 +7,7 @@ end
 
 module RoomCommands
   extend Discordrb::Commands::CommandContainer
-  command(:groups, description: 'List availble groups.') do |event|
+  command(:groups, description: 'List availble groups.', permission_level: 1) do |event|
     server = event.bot.server(150_739_077_757_403_137)
     user = event.user.on(server)
     to_delete = [event.message]
@@ -31,36 +31,33 @@ module RoomCommands
 
     nil
   end
-  
-  command(:toggleprivate, description: 'Toggle your group\'s privacy status.') do |event|
+
+  command(:toggleprivate, description: 'Toggle your group\'s privacy status.', permission_level: 1) do |event|
     event.message.delete unless event.channel.private?
-    
+
     channel = nil
     server = event.bot.server(150_739_077_757_403_137)
     p_status = nil
-    
+
     $db.query("SELECT room_id, private FROM groups JOIN students ON students.username=groups.creator WHERE students.discord_id=#{event.user.id}").each do |row|
       p_status = row['private']
       channel = server.text_channels.find { |c| c.id == Integer(row['room_id']) }
     end
-    
+
     if p_status.nil?
       event.user.pm 'You don\'t have a group.'
     else
       p_status = p_status == 1 ? 0 : 1 # Flip
-      
       $db.query("UPDATE groups JOIN students ON students.username=groups.creator SET groups.private=#{p_status} WHERE students.discord_id=#{event.user.id}")
       unless channel.nil?
         channel.send_message "This group is now **#{p_status == 1 ? 'private' : 'public'}**."
       end
     end
-    
     puts 'Updated group privacy status.'
-    
     nil
   end
-  
-  command(:creategroup, description: 'Create a group to get your own role and text-channel. Usage: `!creategroup "Name" "Description" yes/no (private)`') do |event, full_name, description, private|
+
+  command(:creategroup, description: 'Create a group to get your own role and text-channel. Usage: `!creategroup "Name" "Description" yes/no (private)`', permission_level: 1) do |event, full_name, description, private|
     event.message.delete unless event.channel.private?
 
     full_name.strip!
@@ -125,7 +122,7 @@ module RoomCommands
     nil
   end
 
-  command(:deletegroup, description: 'Delete a group that you started.') do |event|
+  command(:deletegroup, description: 'Delete a group that you started.', permission_level: 1) do |event|
     event.message.delete unless event.channel.private?
     
     server = event.bot.server(150_739_077_757_403_137)
@@ -150,7 +147,7 @@ module RoomCommands
   end
   
   invites = {}
-  command(:invite, description: 'Invite a student to a private group. Usage: `!invite "Group" @user`') do |event, group_name|
+  command(:invite, description: 'Invite a student to a private group. Usage: `!invite "Group" @user`', permission_level: 1) do |event, group_name|
     event.message.delete unless event.channel.private?
     if group_name.nil? or event.message.mentions.empty?
       user.pm "Invalid syntax. `!invite 'Group' @user`"
@@ -183,7 +180,7 @@ module RoomCommands
   end
   
   # List of special channels
-  command(:join, description: 'Join a group. Usage: `!join "group"`') do |event, group_name|
+  command(:join, description: 'Join a group. Usage: `!join "group"`', permission_level: 1) do |event, group_name|
     event.message.delete unless event.channel.private?
     return if group_name.nil?
 
@@ -230,7 +227,7 @@ module RoomCommands
     nil
   end
 
-  command(:leave, description: 'Leave a group. Usage: `!leave group`') do |event, group_name|
+  command(:leave, description: 'Leave a group. Usage: `!leave group`', permission_level: 1) do |event, group_name|
     event.message.delete unless event.channel.private?
 
     server = event.bot.server(150_739_077_757_403_137)
@@ -257,7 +254,7 @@ module RoomCommands
     nil
   end
 
-  command(:description, description: 'Change the description of your group.') do |event, description|
+  command(:description, description: 'Change the description of your group.', permission_level: 1) do |event, description|
     event.message.delete unless event.channel.private?
 
     channel = nil
@@ -271,9 +268,7 @@ module RoomCommands
       $db.query("UPDATE groups JOIN students ON students.username=groups.creator SET groups.description='#{description}' WHERE students.discord_id=#{event.user.id}")
       event.user.pm 'Updated group description.'
     end
-    
     puts 'Updated group description.'
-    
     nil
   end
 end

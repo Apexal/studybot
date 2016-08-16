@@ -2,7 +2,7 @@ module WorkCommands
   extend Discordrb::Commands::CommandContainer
 
   grades = %w(Freshmen Sophomores Juniors Seniors)
-  command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study) do |event|
+  command(:study, description: 'Toggle your ability to see non-work text channels to focus!', bucket: :study, permission_level: 1) do |event|
     event.message.delete unless event.message.channel.private?
 
     server = event.bot.server(150_739_077_757_403_137)

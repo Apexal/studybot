@@ -2,7 +2,7 @@ module CourseCommands
   extend Discordrb::Commands::CommandContainer
 
   # END OF YEAR COMMAND
-  command(:endyear) do |event|
+  command(:endyear, permission_level: 2) do |event|
     return if event.user.id != event.server.owner.id
     puts 'Ending the year. Deleting course rooms and channels.'
     # event.bot.find_channel('announcements').first.send_message "@everyone Removing all traces of school so you can enjoy the summer."
@@ -19,17 +19,15 @@ module CourseCommands
 
     puts 'Removing advisement channels'
     $db.query("SELECT advisement FROM students WHERE verified=1 GROUP BY advisement").map{|result| result['advisement']}.each do |adv|
-      if adv[0..1] == "2B" # Happy, Liam?
-       next
-      end
+      next if adv[0..1] == '2B' # Happy, Liam?
       begin
         puts "Removing #{adv[0..1]}"
         #event.server.roles.find_all{|r| r.name == adv[0..1]}.delete
         #event.server.text_channels.find{|c| c.name == adv[0..1]}.delete
       rescue
-      
+
       end
-      
+
       begin
         puts "Removing #{adv}"
         #event.server.text_channels.find{|c| c.name == adv}.delete
@@ -41,9 +39,7 @@ module CourseCommands
     puts 'Done.'
   end
 
-  command(:updatecourses) do |event|
-    return if event.user.id != event.server.owner.id
-
+  command(:updatecourses, permission_level: 2) do |event|
     server = event.bot.server(150_739_077_757_403_137)
 
     # Perms for course text-channels

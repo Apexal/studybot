@@ -8,11 +8,10 @@ module UtilityCommands
   extend Discordrb::Commands::CommandContainer
 
   pokemon_theme = File.open('./resources/pokemon.txt', 'r')
-  
-  command(:pry) do |event|
+  command(:pry, permission_level: 2) do |event|
     event.message.delete unless event.channel.private?
     server = event.bot.server(150_739_077_757_403_137)
-    return unless event.user.id == server.owner.id
+
     binding.pry
   end
 
@@ -21,16 +20,15 @@ module UtilityCommands
     'Designed by *Liam Quinn*'
   end
 
-  command(:eval) do |event, code|
+  command(:eval, permission_level: 2) do |event, code|
     event.message.delete unless event.channel.private?
-    return unless event.server.owner.id == event.user.id
 
     eval(code) # not the safest...
+    puts "Evaluated code: #{code}"
+    "Successfully executed code."
   end
 
-  command(:addall) do |event, group|
-    return unless event.user.id == event.server.owner.id
-
+  command(:addall, permission_level: 2) do |event, group|
     puts "Adding all users to Group #{group}"
     role = event.server.roles.find { |r| r.name == group }
     verified = event.server.roles.find { |r| r.name == 'Verified' }
@@ -46,8 +44,7 @@ module UtilityCommands
     nil
   end
 
-  command(:theverybest) do |event|
-    return unless event.user.id == 152189849284247553
+  command(:theverybest, permission_level: 2) do |event|
     pokemon_theme.each_line do |line|
       event.channel.send line, true
       sleep 1.5
@@ -56,7 +53,7 @@ module UtilityCommands
     nil
   end
 
-  command(:rename, description: 'Set a new name for your current voice room or get a random one. Usage: `!rename "Teacher Last Name"` or just `!rename`') do |event, name|
+  command(:rename, description: 'Set a new name for your current voice room or get a random one. Usage: `!rename "Teacher Last Name"` or just `!rename`', permission_level: 1) do |event, name|
     if event.channel.name != 'voice-channel'
       event.message.delete unless event.channel.private?
       event.user.pm 'You can only use `!rename` in a #voice-channel text channel.'
@@ -102,7 +99,7 @@ module UtilityCommands
     nil
   end
 
-  command(:color, description: 'Set your color! Usage: `!color colorname`') do |event, color|
+  command(:color, description: 'Set your color! Usage: `!color colorname`', permission_level: 1) do |event, color|
     server = event.bot.server(150_739_077_757_403_137)
     colors = %w(red orange yellow dark pink purple blue green)
     if colors.include?(color) || color == 'default'
@@ -117,7 +114,7 @@ module UtilityCommands
     end
   end
 
-  command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user or !whois regisusername`') do |event, username|
+  command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user or !whois regisusername`', permission_level: 1) do |event, username|
     server = event.bot.server(150_739_077_757_403_137)
     # Get user mentioned or default to sender of command
     if !username.nil? and !username.start_with?('<@')
@@ -158,7 +155,7 @@ module UtilityCommands
     end
   end
 
-  command(:adv, description: 'List all users in an advisement. Usage: `!adv` or `!adv advisement`') do |event, adv|
+  command(:adv, description: 'List all users in an advisement. Usage: `!adv` or `!adv advisement`', permission_level: 1) do |event, adv|
     if adv
       adv = $db.escape(adv).upcase
       if event.message.mentions.length == 1
