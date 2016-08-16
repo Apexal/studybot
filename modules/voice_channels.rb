@@ -26,7 +26,7 @@ def set_voice_channel_name(server, user, room)
   while room_exists?(server, "Room #{randteacher}")
     randteacher = get_rand_teacher(user)
     count += 1
-    if count == teachers.length
+    if count == 7
       randteacher += ' II'
       break
     end
