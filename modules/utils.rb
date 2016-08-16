@@ -143,6 +143,9 @@ module UtilityCommands
     elsif who.id == event.server.owner.id
       event << "#{event.server.owner.mention} is the **Owner** of the server."
       return
+    elsif who.role? server.roles.find { |r| r.name == 'Guests' }
+       event << "*#{who.display_name}* is a **Guest** (Non-Regian)."
+      return
     end
 
     # Find a student with the correct discord id
@@ -233,5 +236,11 @@ module Suppressor
     end
     
     event.channel.send("^^^ #{mentions.map { |m| m.mention }.join(' ')}") unless mentions.empty?
+  end
+  
+  message(containing: '@here', in: '#public-room') do |event|
+    m = event.channel.send_message '@here'
+    sleep 0.5
+    delete m
   end
 end

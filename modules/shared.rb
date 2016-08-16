@@ -50,7 +50,7 @@ def handle_public_room(server)
 end
 
 def sort_channels(server)
-  start_pos = 14
+  start_pos = 16
   %w(1 2 3 4).each do |g|
     channels = server.text_channels.find_all { |c| c.name.start_with? g }
       # channels.sort { |a, b| a.position <=> b.position }.first.position
