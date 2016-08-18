@@ -61,6 +61,11 @@ bot.include! SpecialRoomEvents
 bot.include! SteamCommands
 #bot.include! NicknameEvents
 
-bot.run :async
-school_loop
-bot.sync
+begin
+  bot.run :async
+  school_loop
+  bot.sync
+rescue Interrupt
+  puts 'Shutting down...'
+  bot.stop
+end

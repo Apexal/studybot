@@ -85,6 +85,7 @@ def handle_associated_channel(server, user, voice_channel, perms)
 
     # Link the id's of both channels together
     begin
+	  puts 'Linking channels'
       $hierarchy[voice_channel.id] = text_channel.id
     rescue RuntimeError
       sleep 1
@@ -104,24 +105,18 @@ def handle_associated_channel(server, user, voice_channel, perms)
   else
     # Remove the user's perms in all other 'voice-channel'
     $hierarchy.each do |_, text_id|
+	  next if text_id == text_channel.id
       begin
         Discordrb::API.update_user_overrides($token, text_id, user.id, 0, 0)
       rescue
         puts 'Failed to update user overrides'
       end
     end
-    Discordrb::API.update_user_overrides($token, text_channel.id, user.id, perms.bits, 0)
+	# Give them view perms in the proper #voice-channel
+	text_channel.define_overwrite(user, perms, 0)
+    #Discordrb::API.update_user_overrides($token, text_channel.id, user.id, perms.bits, 0)
   end
 
-  # Account for hierarchy mismatches
-  server.text_channels.find_all { |c| c.name == 'voice-channel' }.each do |c|
-    begin
-      c.delete unless $hierarchy.has_value? c.id
-      c.delete if server.voice_channels.find { |v| v.id == $hierarchy.key(c.id) }.nil?
-    rescue
-      puts 'Already deleted channel.'
-    end
-  end
 end
 # ---------------
 
@@ -154,6 +149,7 @@ module VoiceChannelEvents
       # Remove the user's perms in all other 'voice-channel' since they are not in a voice channel anymore
       $hierarchy.each do |_, text_id|
         begin
+			puts "#{event.user.display_name} has disconnected from voice."
           Discordrb::API.update_user_overrides($token, text_id, event.user.id, 0, 0)
         rescue
           puts 'Failed to update overrides'
