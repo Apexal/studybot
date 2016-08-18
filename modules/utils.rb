@@ -241,6 +241,6 @@ module Suppressor
   message(containing: '@here', in: '#public-room') do |event|
     m = event.channel.send_message '@here'
     sleep 0.5
-    delete m
+    m.delete
   end
 end

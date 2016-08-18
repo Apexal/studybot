@@ -71,7 +71,7 @@ end
 def handle_associated_channel(server, user, voice_channel, perms)
   # Associated text-channel
   text_channel = server.text_channels.find { |c| c.id == $hierarchy[voice_channel.id] }
-
+  
   if text_channel.nil?
     # Doesn't have a associated text-channel!
     puts "Creating #voice-channel for #{voice_channel.name}"
@@ -88,6 +88,7 @@ def handle_associated_channel(server, user, voice_channel, perms)
 	  puts 'Linking channels'
       $hierarchy[voice_channel.id] = text_channel.id
     rescue RuntimeError
+	  puts 'Failed to link channels, retrying...'
       sleep 1
       $hierarchy[voice_channel.id] = text_channel.id
     end
@@ -97,24 +98,26 @@ def handle_associated_channel(server, user, voice_channel, perms)
       next if text_channel.id == text_id
 
       begin
-        Discordrb::API.update_user_overrides($token, text_id, user.id, 0, 0)
-      rescue
-        puts 'Failed to update user overrides'
+		#puts "2) Removing #{user.display_name} from #voice-channel for #{voice_channel.name}"
+	    Discordrb::API.update_user_overrides($token, text_id, user.id, 0, 0)
+      rescue => e
+        puts "1) Failed to update user overrides:\n#{e}"
       end
     end
   else
+    #puts "Adding #{user.display_name} to #voice-channel for #{voice_channel.name}."
     # Remove the user's perms in all other 'voice-channel'
     $hierarchy.each do |_, text_id|
 	  next if text_id == text_channel.id
       begin
-        Discordrb::API.update_user_overrides($token, text_id, user.id, 0, 0)
-      rescue
-        puts 'Failed to update user overrides'
+		#puts "2) Removing #{user.display_name} from #voice-channel for #{voice_channel.name}"
+		Discordrb::API.update_user_overrides($token, text_id, user.id, 0, 0)
+      rescue => e
+        puts "2) Failed to update user overrides:\n#{e}"
       end
     end
 	# Give them view perms in the proper #voice-channel
-	text_channel.define_overwrite(user, perms, 0)
-    #Discordrb::API.update_user_overrides($token, text_channel.id, user.id, perms.bits, 0)
+	Discordrb::API.update_user_overrides($token, text_channel.id, user.id, perms.bits, 0)
   end
 
 end
@@ -144,15 +147,15 @@ module VoiceChannelEvents
 
     # Associated voice-channels
     if !event.channel.nil? and event.channel.name != 'AFK'
-      handle_associated_channel(server, event.user, event.channel, perms)
+      handle_associated_channel(server, event.user.on(server), event.channel, perms)
     else
-      # Remove the user's perms in all other 'voice-channel' since they are not in a voice channel anymore
+	  # Remove the user's perms in all other 'voice-channel' since they are not in a voice channel anymore
       $hierarchy.each do |_, text_id|
-        begin
-			puts "#{event.user.display_name} has disconnected from voice."
-          Discordrb::API.update_user_overrides($token, text_id, event.user.id, 0, 0)
-        rescue
-          puts 'Failed to update overrides'
+        text_channel = server.text_channels.find { |t| t.id == text_id }
+		begin
+		  text_channel.define_overwrite(event.user, 0, 0)
+		rescue => e
+          puts "Failed to update overrides:\n#{e}"
         end
       end
     end
@@ -172,20 +175,22 @@ module VoiceChannelEvents
     current_voice_channel = event.channel.nil? ? nil : event.channel.id
     if old_voice_channel != current_voice_channel
       # There was a change
-      unless current_voice_channel.nil?
+      unless old_voice_channel.nil?
+        # Left a voice channel
+		puts "#{event.user.on(server).display_name} left voice-channel #{server.voice_channels.find { |v| v.id == old_voice_channel }.name}"
+        begin
+          server.text_channels.find { |c| c.id == $hierarchy[old_voice_channel] }.send_message("**#{member.display_name}** *has left the voice channel.*", true) # Message old #voice-channel about leaving
+        rescue
+          puts 'Failed to send leave message. Perhaps AFK channel?'
+        end
+      end
+	  unless current_voice_channel.nil?
+		puts "#{event.user.on(server).display_name} joined voice-channel #{server.voice_channels.find { |v| v.id == current_voice_channel }.name}"
         # In new voice channel
         begin
           server.text_channels.find { |c| c.id == $hierarchy[current_voice_channel] }.send_message("**#{member.display_name}** *has joined the voice channel.*", true) # Message new #voice-channel about joining
         rescue
           puts 'Failed to send join message. Perhaps AFK channel?'
-        end
-      end
-      unless old_voice_channel.nil?
-        # Left a voice channel
-        begin
-          server.text_channels.find { |c| c.id == $hierarchy[old_voice_channel] }.send_message("**#{member.display_name}** *has left the voice channel.*", true) # Message old #voice-channel about leaving
-        rescue
-          puts 'Failed to send leave message. Perhaps AFK channel?'
         end
       end
     end
