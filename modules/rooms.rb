@@ -131,7 +131,7 @@ module RoomCommands
       server.roles.find { |r| r.id == Integer(row['role_id']) }.delete
       server.text_channels.find { |r| r.id == Integer(row['room_id']) }.delete
       begin
-        server.voice_channels.find { |c| c.name == "Group #{row['name']}" }.delete
+        delete_channel(server, server.voice_channels.find { |c| c.name == "Group #{row['name']}" })
         g_role = server.roles.find { |r| r.name == row['name'] }.delete
         #g_role.members.each { |m| m.pm "Creator #{event.user.mention} (#{row['creator']}) has deleted **Group #{row['name']}**!" }
         g_role.delete
@@ -150,7 +150,7 @@ module RoomCommands
   command(:invite, description: 'Invite a student to a private group. Usage: `!invite "Group" @user`', permission_level: 1) do |event, group_name|
     event.message.delete unless event.channel.private?
     if group_name.nil? or event.message.mentions.empty?
-      user.pm "Invalid syntax. `!invite 'Group' @user`"
+      event.user.pm "Invalid syntax. `!invite 'Group' @user`"
       return
     end
     

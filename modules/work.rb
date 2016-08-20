@@ -1,3 +1,7 @@
+require 'date'
+
+DATE_FORMAT = '%Y-%m-%d'.freeze
+
 module WorkCommands
   extend Discordrb::Commands::CommandContainer
 
@@ -72,6 +76,43 @@ module WorkCommands
     end
 
     nil
+  end
+  
+  command(:school, description: "Get info on school.", permission_level: 1) do |event|
+	lines = []
+	lines << '__**:school: School Info :school_satchel:**__'
+	
+	now = Date.parse(Time.now.to_s)
+	today = now.strftime(DATE_FORMAT)
+	
+	# Before, or during school year?
+	if today < $sd.keys.sort.first
+	  # Before
+	  school_start = Date.strptime($sd.keys.sort.first, DATE_FORMAT)
+	  lines << "School starts on **#{school_start.strftime('%A, %B %-d')}**."
+	  lines << "**#{(school_start - now).to_i}** days left untill then."
+	else
+	  # During
+	  lines << "Today is #{school_day? ? "**" + get_sd + "-Day**" : 'not a school day'}."
+	
+	  # Get stats
+	  last_day = $sd.keys.sort.last
+	  days_left = 0
+	
+	  closest_day = Time.now.strftime(DATE_FORMAT)
+	  if $sd[closest_day].nil?
+	    closest_day = $sd.keys.sort.find_all { |date_str| date_str <= today }.last
+	  end
+	  class_days_left = $sd.keys.sort.index(last_day) - $sd.keys.sort.index(closest_day)
+	
+	  lines << "\nThe last day of school is #{last_day}."
+	  lines << "There are **#{class_days_left}** school days left."
+	  lines << "There are **#{}** days left."
+	
+	end
+	
+	message = event.channel.send_message(lines.join("\n"))
+	nil
   end
 end
 

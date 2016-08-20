@@ -6,7 +6,7 @@ module RegistrationEvents
   end
   member_join do |event|
     event.bot.find_channel('meta').first.send_message "#{event.server.owner.mention} #{event.user.name} just joined the server!"
-    event.user.on(event.server).add_role(event.server.roles.find { |r| r.name == 'Guests' } )
+    #event.user.on(event.server).add_role(event.server.roles.find { |r| r.name == 'Guests' } )
     handle_public_room(event.server)
     
     sleep 3

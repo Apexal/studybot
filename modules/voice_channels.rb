@@ -37,7 +37,7 @@ end
 
 def handle_room(event, r)
   server = event.server
-
+  puts "Handling voice-channel #{r.name} with #{r.users.length} users"
   if r.users.empty? and r.name != $OPEN_ROOM_NAME
     # Delete associated 'voice-channel' and unlink it
     delete_channel(server, r)
@@ -66,6 +66,7 @@ def handle_room(event, r)
       event.server.create_channel($OPEN_ROOM_NAME, 'voice')
     end
   end
+  puts "Done\n"
 end
 
 def handle_associated_channel(server, user, voice_channel, perms)
@@ -104,6 +105,7 @@ def handle_associated_channel(server, user, voice_channel, perms)
         puts "1) Failed to update user overrides:\n#{e}"
       end
     end
+	# User now only has perms for associated #voice-channel
   else
     #puts "Adding #{user.display_name} to #voice-channel for #{voice_channel.name}."
     # Remove the user's perms in all other 'voice-channel'
@@ -170,27 +172,24 @@ module VoiceChannelEvents
       end
     end
 
-
     member = event.user.on(server)
     current_voice_channel = event.channel.nil? ? nil : event.channel.id
     if old_voice_channel != current_voice_channel
       # There was a change
       unless old_voice_channel.nil?
         # Left a voice channel
-		puts "#{event.user.on(server).display_name} left voice-channel #{server.voice_channels.find { |v| v.id == old_voice_channel }.name}"
-        begin
+		begin
           server.text_channels.find { |c| c.id == $hierarchy[old_voice_channel] }.send_message("**#{member.display_name}** *has left the voice channel.*", true) # Message old #voice-channel about leaving
         rescue
-          puts 'Failed to send leave message. Perhaps AFK channel?'
+          #puts 'Failed to send leave message. Perhaps AFK channel?'
         end
       end
 	  unless current_voice_channel.nil?
-		puts "#{event.user.on(server).display_name} joined voice-channel #{server.voice_channels.find { |v| v.id == current_voice_channel }.name}"
-        # In new voice channel
+		# In new voice channel
         begin
           server.text_channels.find { |c| c.id == $hierarchy[current_voice_channel] }.send_message("**#{member.display_name}** *has joined the voice channel.*", true) # Message new #voice-channel about joining
         rescue
-          puts 'Failed to send join message. Perhaps AFK channel?'
+          #puts 'Failed to send join message. Perhaps AFK channel?'
         end
       end
     end

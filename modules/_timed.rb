@@ -1,10 +1,21 @@
 require 'json'
 require 'time'
+require 'date'
 
 DATE_FORMAT = '%Y-%m-%d'.freeze
 TIME_FORMAT = '%I:%M %p'.freeze
 
 $sd = JSON.parse(File.read('./resources/schedule_days.json'))
+
+def school_day?
+  now = Time.now
+  now_str = now.strftime(DATE_FORMAT)
+  return false if $sd[now_str].nil?
+end
+
+def get_sd
+  $sd[now_str]
+end
 
 def during_school?
   now = Time.now

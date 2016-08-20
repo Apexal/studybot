@@ -68,13 +68,13 @@ def sort_channels(server)
 end
 
 def delete_channel(server, channel, count=1)
-  return if channel.nil?
+  return if channel.nil? or channel.name == 'AFK'
 
   puts "Deleting voice-channel #{channel.name} and associated #voice-channel"
   unless channel.users.empty?
     puts 'Moving users first'
     begin
-      new_room = server.voice_channels.find { |r| r.name == '[New Room]' }
+      new_room = server.voice_channels.find { |r| r.name == $OPEN_ROOM_NAME }
       channel.users.each do |u|
         server.move(u, new_room)
       end
@@ -84,8 +84,8 @@ def delete_channel(server, channel, count=1)
   end
   begin
     channel.delete
-  rescue
-    puts 'Failed to delete voice-channel'
+  rescue => e
+    puts "Failed to delete voice-channel:\n#{e}"
   end
   begin
     server.text_channels.find{|t| t.id == $hierarchy[channel.id]}.delete
@@ -184,7 +184,7 @@ def handle_game_parties(server)
     end
 
     if v.users.empty?
-      v.delete
+      delete_channel(server, v)
     elsif v.users.length <= 2 or game_totals.max_by{ |k, v| v }[1] <= 2
       teacher = get_rand_teacher(v.users.first)
       v.name = "Room #{teacher}"
