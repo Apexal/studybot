@@ -87,8 +87,11 @@ def delete_channel(server, channel, count=1)
   rescue => e
     puts "Failed to delete voice-channel:\n#{e}"
   end
+
+  return if server.text_channels.find { |t| t.id == $hierarchy[channel.id] }.nil?
+
   begin
-    server.text_channels.find{|t| t.id == $hierarchy[channel.id]}.delete
+    server.text_channels.find { |t| t.id == $hierarchy[channel.id] }.delete
     $hierarchy.delete channel.id
   rescue => e
     puts 'Failed to find/delete associated #voice-channel'

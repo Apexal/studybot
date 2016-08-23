@@ -134,13 +134,18 @@ module VoiceChannelEvents
   perms.can_send_messages = true
 
   voice_state_update do |event|
-    server = event.server
+    puts 'VOICE STATE UPDATE: '
+	unless event.channel.nil?
+	  puts "| #{event.channel.name} | #{event.channel.users.length} users"
+	end
+	
+	server = event.server
 
     # The voice-channel the user was in at the last event
     old_voice_channel = $voice_states[event.user.id]
 
     handle_room(event, event.channel) unless event.channel.nil?
-    rooms = server.voice_channels.find_all { |c| c.name.include?('Room ') and !c.name.include?('Group ') }
+    rooms = server.voice_channels.find_all { |c| c.name.include?('Room ') and !c.name.include?('Group ') and c.users.empty? }
     rooms.each do |r|
       # Empty Room ____'s
       next if !event.channel.nil? and r.id == event.channel.id

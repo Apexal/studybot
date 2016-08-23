@@ -204,6 +204,12 @@ module UtilityCommands
     event.user.pm 'See ya!'
     event.bot.stop
   end
+
+  command(:restart, description: 'Restart the bot.') do |event|
+    puts 'Restarting!'
+    event.bot.stop
+    exec('./run')
+  end
 end
 
 module Suppressor
@@ -212,13 +218,13 @@ module Suppressor
   message(containing: not!('google.com/'), in: '#finals') do |event|
     event.message.delete if event.message.author != event.server.owner
   end
-  
+
   message(containing: '@') do |event|
     server = event.bot.server(150_739_077_757_403_137)
     mentions = []
-    
+
     usernames = []
-    
+
     words = event.message.content.split ' '
     words.each do |w|
       next if usernames.include? w
@@ -226,7 +232,7 @@ module Suppressor
       if w.start_with? '@'
         username = w.tr('@', '')
         next unless username.match(/^\w+[1-9]{2}$/)
-        
+
         username = $db.escape(username)
         $db.query("SELECT discord_id FROM students WHERE username='#{username}' AND verified=1").each do |row|
           member = server.members.find { |m| m.id == Integer(row['discord_id']) }
@@ -234,10 +240,10 @@ module Suppressor
         end
       end
     end
-    
+
     event.channel.send("^^^ #{mentions.map { |m| m.mention }.join(' ')}") unless mentions.empty?
   end
-  
+
   message(containing: '@here', in: '#public-room') do |event|
     m = event.channel.send_message '@here'
     sleep 0.5
