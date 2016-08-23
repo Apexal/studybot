@@ -114,7 +114,7 @@ module UtilityCommands
     end
   end
 
-  command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user or !whois regisusername`', permission_level: 1) do |event, username|
+  command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user or !whois regisusername`') do |event, username|
     server = event.bot.server(150_739_077_757_403_137)
     # Get user mentioned or default to sender of command
     if !username.nil? and !username.start_with?('<@')
@@ -144,7 +144,14 @@ module UtilityCommands
       event << "#{event.server.owner.mention} is the **Owner** of the server."
       return
     elsif who.role? server.roles.find { |r| r.name == 'Guests' }
-       event << "*#{who.display_name}* is a **Guest** (Non-Regian)."
+      #event << "*#{who.display_name}* is a **Guest** (Non-Regian)."
+      # GUEST INFO
+      $db.query("SELECT name, school FROM guests WHERE discord_id=#{who.id}").each do |result|
+        school = result['school'].nil? ? '' : " of **#{result['school']}**"
+        event << "*#{who.display_name}* is **#{result['name']}**#{school}!"
+        break
+      end
+
       return
     end
 
