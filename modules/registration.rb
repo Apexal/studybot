@@ -5,13 +5,16 @@ module RegistrationEvents
     $db.query("UPDATE students SET verified=0 WHERE discord_id='#{event.user.id}'")
   end
   member_join do |event|
-    event.bot.find_channel('meta').first.send_message "#{event.server.owner.mention} #{event.user.name} just joined the server!"
+    event.bot.find_channel('meta').first.send_message "#{event.server.owner.mention} #{event.user.mention} just joined the server!"
     #event.user.on(event.server).add_role(event.server.roles.find { |r| r.name == 'Guests' } )
     handle_public_room(event.server)
     
     sleep 3
     m = event.bot.find_channel('welcome').first.send_message "#{event.user.mention} Hello! Please check your Direct Messages (top left) to get started!"
-    event.user.pm 'Welcome! Please type `!register yourregisusername` to get started. *You will not be able to participate in the server until you do this.*'
+    sleep 1
+	event.user.pm '**I am an automated bot.** :robot:'
+	sleep 1
+	event.user.pm 'Please type `!register yourregisusername` to get started. *You will not be able to participate in the server until you do this.*'
     sleep 100
     m.delete
   end
