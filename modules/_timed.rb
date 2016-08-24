@@ -7,6 +7,14 @@ TIME_FORMAT = '%I:%M %p'.freeze
 
 $sd = JSON.parse(File.read('./resources/schedule_days.json'))
 
+def summer?
+  now = Date.parse(Time.now.to_s)
+  today = now.strftime(DATE_FORMAT)
+
+  # Before, or during school year?
+  return today < $sd.keys.sort.first
+end
+
 def school_day?
   now = Time.now
   now_str = now.strftime(DATE_FORMAT)

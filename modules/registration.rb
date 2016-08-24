@@ -12,9 +12,9 @@ module RegistrationEvents
     sleep 3
     m = event.bot.find_channel('welcome').first.send_message "#{event.user.mention} Hello! Please check your Direct Messages (top left) to get started!"
     sleep 1
-	event.user.pm '**I am an automated bot.** :robot:'
-	sleep 1
-	event.user.pm 'Please type `!register yourregisusername`. *You will not be able to participate in the server until you do this.*'
+		event.user.pm '**I am an automated bot for the Regis Discord server.** :robot:'
+		sleep 1
+		event.user.pm 'Please type `!register yourregisusername`. *You will not be able to participate in the server until you do this.*'
     sleep 60 * 3
     m.delete
   end
@@ -49,7 +49,7 @@ module RegistrationCommands
       mail.deliver!
 
       # Alert the user to the email
-      event.user.pm('Please check your Regis email for further instructions. https://owa.regis.org/owa/')
+      event.user.pm('**Great!** Please check your Regis email to finish. https://owa.regis.org/owa/')
     else
       event.user.pm('Invalid username! Please use your Regis username.')
     end
@@ -74,7 +74,7 @@ module RegistrationCommands
 
       # Check if user is already registered with another Discord account
       if $db.query("SELECT verified FROM students WHERE username='#{escaped}' AND verified=1").count > 0
-        event.user.pm 'You are already registered on this server with another Discord account!\nAsk Frank (<@152621041976344577>) to reset this for you if you forgot the password for that account.'
+        event.user.pm "You are already registered on this server with another Discord account!\nAsk Frank (<@152621041976344577>) to reset this for you if you forgot the password for that account."
         return
       end
 
@@ -148,60 +148,66 @@ module RegistrationCommands
           end
           sleep 1
         end
+				
+				unless summer?
+					# THE GOOD STUFF
+					# Get all classes for this student
+					query = "SELECT courses.id, courses.title, courses.room_id, staffs.last_name FROM courses JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id JOIN staffs ON staffs.id=courses.teacher_id WHERE students.discord_id=#{event.user.id} AND courses.is_class=1"
+					$db.query(query).each do |course|
+						# Ignore unnecessary classes
+						next if $unallowed.any? { |w| course['title'].include? w } # Honestly Ruby is great
 
-        # THE GOOD STUFF
-        # Get all classes for this student
-        query = "SELECT courses.id, courses.title, courses.room_id, staffs.last_name FROM courses JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id JOIN staffs ON staffs.id=courses.teacher_id WHERE students.discord_id=#{event.user.id} AND courses.is_class=1"
-        $db.query(query).each do |course|
-          # Ignore unnecessary classes
-          next if $unallowed.any? { |w| course['title'].include? w } # Honestly Ruby is great
+						# Turn something like 'Math II (Alg 2)' into 'math'
+						course_name = course['title'].split(' (')[0].split(' ').join('-')
+						%w(IV III II I 9 10 11 12).each { |i| course_name.gsub!("-#{i}", '') }
+						puts "Handling course room for #{course['title']}"
+						course_room = nil
+						begin
+							course_room = server.text_channels.find { |c| c.id == Integer(course['room_id']) }
+							if course_room.nil?
+								# Course room doesn't exist
+								puts 'Missing room! Creating.'
+								course_room = server.create_channel course_name
+								course_room.topic = "Disscussion room for #{course['title']} with #{course['last_name']}."
+								Discordrb::API.update_role_overrides(event.bot.token, course_room.id, server.id, 0, perms.bits) # @everyone
+							end
+						rescue
+							puts "Doesn't exist. Creating.'"
+							course_room = server.create_channel course_name
+							course_room.topic = "Disscussion room for #{course['title']} with #{course['last_name']}."
+							Discordrb::API.update_role_overrides(event.bot.token, course_room.id, server.id, 0, perms.bits) # @everyone
+						end
+						#course_room.define_overwrite(user, perms, 0)
+						Discordrb::API.update_user_overrides(event.bot.token, course_room.id, user.id, perms.bits, 0)
 
-          # Turn something like 'Math II (Alg 2)' into 'math'
-          course_name = course['title'].split(' (')[0].split(' ').join('-')
-          %w(IV III II I 9 10 11 12).each { |i| course_name.gsub!("-#{i}", '') }
-          puts "Handling course room for #{course['title']}"
-          course_room = nil
-          begin
-            course_room = server.text_channels.find { |c| c.id == Integer(course['room_id']) }
-            if course_room.nil?
-              # Course room doesn't exist
-              puts 'Missing room! Creating.'
-              course_room = server.create_channel course_name
-              course_room.topic = "Disscussion room for #{course['title']} with #{course['last_name']}."
-              Discordrb::API.update_role_overrides(event.bot.token, course_room.id, server.id, 0, perms.bits) # @everyone
-            end
-          rescue
-            puts "Doesn't exist. Creating.'"
-            course_room = server.create_channel course_name
-            course_room.topic = "Disscussion room for #{course['title']} with #{course['last_name']}."
-            Discordrb::API.update_role_overrides(event.bot.token, course_room.id, server.id, 0, perms.bits) # @everyone
-          end
-          #course_room.define_overwrite(user, perms, 0)
-          Discordrb::API.update_user_overrides(event.bot.token, course_room.id, user.id, perms.bits, 0)
+						$db.query("UPDATE courses SET room_id='#{course_room.id}' WHERE id=#{course['id']}")
 
-          $db.query("UPDATE courses SET room_id='#{course_room.id}' WHERE id=#{course['id']}")
-
-          sleep 0.5
-        end
-
+						sleep 0.5
+					end
+				end
+				
         # Default groups
         $db.query('SELECT room_id, role_id FROM groups WHERE default_group=1').each do |group|
           group_role = server.roles.find{ |r| r.id == Integer(group['role_id']) }
           roles_to_add << group_role unless group_role.nil?
         end
 
-        user.add_role roles_to_add
+        roles_to_add.each { |r| user.add_role(r); sleep 1 }
         
         user.remove_role(server.roles.find { |r| r.name == 'Guests' })
         
         # PM him a congratulatory message
         status_message.edit("**Congratulations, #{result['first_name']}. You are now a verified Regis Discord User!**")
         # Make an announcement welcoming him to everyone
-        event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
+        #event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
 
         welcome_info.each_line do |line|
-          user.pm line
-          sleep 4
+          begin
+						user.pm(line)
+          rescue
+						puts "Failed sending line: #{line}"
+					end
+					sleep 4
         end
 
         # Set his discord_id and make him verified in the db

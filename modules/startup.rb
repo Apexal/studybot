@@ -10,6 +10,12 @@ module StartupEvents
     perms.can_read_messages = true
     perms.can_send_messages = true
     # Removing #voice-channel's
+		puts 'Setting up user command perms'
+		vrole = server.roles.find { |r| r.name == 'Verified' }
+		server.members.each do |m|
+			event.bot.set_user_permission(m.id, 1) if m.role?(vrole)
+		end
+		puts 'Done.'
     puts 'Removing #voice-channels'
     server.text_channels.each do |c|
       if c.name == 'voice-channel'

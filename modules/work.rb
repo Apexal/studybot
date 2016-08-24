@@ -86,7 +86,7 @@ module WorkCommands
 	today = now.strftime(DATE_FORMAT)
 	
 	# Before, or during school year?
-	if today < $sd.keys.sort.first
+	if summer?
 	  # Before
 	  school_start = Date.strptime($sd.keys.sort.first, DATE_FORMAT)
 	  lines << "School starts on **#{school_start.strftime('%A, %B %-d')}**."
