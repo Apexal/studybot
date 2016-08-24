@@ -41,7 +41,7 @@ bot.bucket :abusable, limit: 3, time_span: 60, delay: 10
 bot.bucket :study, limit: 10, time_span: 60, delay: 5
 
 bot.set_role_permission(152956497679220736, 1)
-bot.set_role_permission(200261631974834176, 2)
+bot.set_user_permission(152621041976344577, 2)
 bot.set_user_permission(152189849284247553, 2)
 
 bot.include! StartupEvents

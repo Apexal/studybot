@@ -254,9 +254,14 @@ module Suppressor
     event.channel.send("^^^ #{mentions.map { |m| m.mention }.join(' ')}") unless mentions.empty?
   end
 
-  message(containing: '@here', in: '#public-room') do |event|
-    m = event.channel.send_message '@here'
-    sleep 0.5
-    m.delete
+  message(containing: '@here') do |event|
+    return if event.channel.private?
+		# Check if channel allows @everyone
+		
+		unless event.user.on(event.server).permission?(:mention_everyone, event.channel)
+			m = event.channel.send_message '^^^ @here'
+			puts 'Manually replace @here'
+			m.delete
+		end
   end
 end

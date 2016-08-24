@@ -22,7 +22,7 @@ module CourseCommands
 			begin
         puts "Removing #{adv[0..1]} role/text-channel"
         event.server.roles.find_all { |r| r.name.start_with?(adv[0..1]) }.map(&:delete)
-        event.server.text_channels.find_all { |c| c.name.downcase.start_with?(adv[0..1]) }.map(&:delete)
+        event.server.text_channels.find_all { |c| c.name.downcase.start_with?(adv[0..1].downcase) }.map(&:delete)
       rescue => e
 				puts "Error removing #{adv[0..1]}"
 				puts e

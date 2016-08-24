@@ -86,6 +86,15 @@ module RoomCommands
     perms.can_read_messages = true
     perms.can_read_message_history = true
     perms.can_send_messages = true
+		perms.can_mention_everyone = true
+		
+		# Fix for @here replacing
+		g_perms = perms.clone
+		g_perms.can_mention_everyone = false
+
+		other_p = Discordrb::Permissions.new
+		other_p.can_mention_everyone = true
+		
     # Permissions for group creator
     creator_perms = Discordrb::Permissions.new
     creator_perms.can_manage_messages = true
@@ -97,7 +106,7 @@ module RoomCommands
     # Create text-channel
     group_room = server.create_channel group_name
     group_room.topic = description
-    group_room.define_overwrite(group_role, perms, 0)
+    group_room.define_overwrite(group_role, g_perms, other_p)
     # group_room.define_overwrite(user, creator_perms, 0)
     Discordrb::API.update_user_overrides(event.bot.token, group_room.id, user.id, creator_perms.bits, 0)
     Discordrb::API.update_role_overrides(event.bot.token, group_room.id, server.id, 0, perms.bits)
@@ -114,10 +123,13 @@ module RoomCommands
     
     # Insert group in DB
     $db.query("INSERT INTO groups (creator, name, private, room_id, role_id, description) VALUES ('#{username}', '#{full_name}', #{p}, '#{group_room.id}', '#{group_role.id}', '#{description}')")
-    user.pm "You have created **#{full_name}!** Others can join with `!join \"#{full_name}\"` \n Change the description of the group with `!description \"New Description\"`.\nDelete the group with `!deletegroup`."
+    user.pm "You have created **#{full_name}!**"
+		user.pm "Others can join with `!join \"#{full_name}\"`" if p == 0
+		user.pm "Invite other users with `!invite '#{full_name}' @user`" if p == 1
+		user.pm "Change the description of the group with `!description \"New Description\"`.\nDelete the group with `!deletegroup`."
     handle_group_voice_channels(server)
     # Announce to #meta
-    server.text_channels.find{|c| c.name == 'meta'}.send_message "@everyone #{user.mention} has just created the group **#{full_name}**. Join with `!join \"#{full_name}\"`"
+    #server.text_channels.find{|c| c.name == 'meta'}.send_message "@everyone #{user.mention} has just created the group **#{full_name}**. Join with `!join \"#{full_name}\"`"
 		user.pm "*As group founder, you can manage (delete/pin) messages in your group's text-channel.*"
     nil
   end

@@ -13,6 +13,7 @@ module StartupEvents
 		puts 'Setting up user command perms'
 		vrole = server.roles.find { |r| r.name == 'Verified' }
 		server.members.each do |m|
+			next if m.id == 152621041976344577 or m.id == 152189849284247553
 			event.bot.set_user_permission(m.id, 1) if m.role?(vrole)
 		end
 		puts 'Done.'
