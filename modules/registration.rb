@@ -14,8 +14,8 @@ module RegistrationEvents
     sleep 1
 	event.user.pm '**I am an automated bot.** :robot:'
 	sleep 1
-	event.user.pm 'Please type `!register yourregisusername` to get started. *You will not be able to participate in the server until you do this.*'
-    sleep 100
+	event.user.pm 'Please type `!register yourregisusername`. *You will not be able to participate in the server until you do this.*'
+    sleep 60 * 3
     m.delete
   end
 end
