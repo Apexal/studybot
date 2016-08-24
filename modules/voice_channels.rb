@@ -38,6 +38,15 @@ end
 def handle_room(event, r)
   server = event.server
   puts "Handling voice-channel #{r.name} with #{r.users.length} users"
+  
+  # Temporary fix for stupid discordrb bug
+  if r.name == $OPEN_ROOM_NAME and r.users.empty?
+    puts 'Restarting due to users caching bug!'
+    event.bot.stop
+    exec('./run')
+	return
+  end
+
   if r.users.empty? and r.name != $OPEN_ROOM_NAME
     # Delete associated 'voice-channel' and unlink it
     delete_channel(server, r)
