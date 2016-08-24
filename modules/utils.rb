@@ -101,7 +101,7 @@ module UtilityCommands
 
   command(:color, description: 'Set your color! Usage: `!color colorname`', permission_level: 1) do |event, color|
     server = event.bot.server(150_739_077_757_403_137)
-    colors = %w(red orange yellow dark pink purple blue green)
+    colors = %w(red orange yellow pink purple blue green)
     if colors.include?(color) || color == 'default'
       croles = server.roles.find_all { |r| colors.include? r.name }
       event.user.remove_role croles
@@ -124,7 +124,10 @@ module UtilityCommands
       if result.count > 0
         result = result.first
         user = event.bot.user(result['discord_id'])
-        event << "**#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** is #{user.mention()}!"
+				
+				message = "**#{result['first_name']} #{result['last_name']}** #{summer? ? '' : "of **#{result['advisement']}** "}is #{user.mention()}!"
+				
+        event << message
       else
         event << "*#{username}* is not yet registered!"
       end
@@ -159,7 +162,7 @@ module UtilityCommands
     result = $db.query("SELECT * FROM students WHERE discord_id=#{who.id}")
     if result.count > 0
       result = result.first
-      event << "*#{who.display_name}* is **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}**!"
+      event << "*#{who.display_name}* is **#{result['first_name']} #{result['last_name']}**#{summer? ? '' :" of **#{result['advisement']}**!"}"
     else
       "*#{who.display_name}* is not yet registered!"
     end

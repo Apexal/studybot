@@ -3,9 +3,8 @@ module CourseCommands
 
   # END OF YEAR COMMAND
   command(:endyear, permission_level: 2) do |event|
-    return if event.user.id != event.server.owner.id
     puts 'Ending the year. Deleting course rooms and channels.'
-    event.bot.find_channel('announcements').first.send_message "@everyone Removing all outdated roles/text-channels."
+    #event.bot.find_channel('announcements').first.send_message "@everyone Removing all outdated roles/text-channels."
     # Remove course rooms
     $db.query('SELECT room_id FROM courses WHERE room_id IS NOT NULL').each do |row|
       begin
@@ -22,21 +21,26 @@ module CourseCommands
       
 			begin
         puts "Removing #{adv[0..1]} role/text-channel"
-        event.server.roles.find_all{|r| r.name == adv[0..1]}.delete
-        event.server.text_channels.find{|c| c.name == adv[0..1]}.delete
-      rescue
+        event.server.roles.find_all { |r| r.name.start_with?(adv[0..1]) }.map(&:delete)
+        event.server.text_channels.find_all { |c| c.name.downcase.start_with?(adv[0..1]) }.map(&:delete)
+      rescue => e
 				puts "Error removing #{adv[0..1]}"
-      end
-
-      begin
-        puts "Removing #{adv} role/text-channel"
-        event.server.text_channels.find{|c| c.name == adv}.delete
-        event.server.roles.find_all{|r| r.name == adv}.delete
-      rescue
-        puts "Error removing #{adv}"
-      end
+				puts e
+			end
     end
     puts 'Done.'
+		
+		puts 'Removing grade channels'
+		%w(Freshmen Sophomores Juniors Seniors).each do |g|
+			begin
+				event.server.roles.find { |r| r.name == g }.delete
+				event.server.text_channels.find { |t| t.name == g.downcase }.delete
+			rescue => e
+				puts "Failed for #{g}"
+				puts e
+			end
+			sleep 1
+		end
   end
 
   command(:updatecourses, permission_level: 2) do |event|

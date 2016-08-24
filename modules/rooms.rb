@@ -118,7 +118,7 @@ module RoomCommands
     handle_group_voice_channels(server)
     # Announce to #meta
     server.text_channels.find{|c| c.name == 'meta'}.send_message "@everyone #{user.mention} has just created the group **#{full_name}**. Join with `!join \"#{full_name}\"`"
-
+		user.pm "*As group founder, you can manage (delete/pin) messages in your group's text-channel.*"
     nil
   end
 
@@ -232,22 +232,29 @@ module RoomCommands
 
     server = event.bot.server(150_739_077_757_403_137)
     user = event.user.on(server)
-    group_name = $db.escape(group_name)
+		
+		condition = "room_id='#{event.channel.id}'"
+		unless group_name.nil?
+			group_name = $db.escape(group_name)
+			condition = "name='#{group_name}'"
+		end
+		
     role = nil
     channel = nil
-    $db.query("SELECT role_id, room_id FROM groups WHERE name='#{group_name}'").each do |row|
+    $db.query("SELECT role_id, room_id FROM groups WHERE #{condition}").each do |row|
       role = server.roles.find { |r| r.id == Integer(row['role_id']) }
       channel = server.text_channels.find { |c| c.id == Integer(row['room_id']) }
+			break
     end
 
-    if !role.nil?
+    if !role.nil? and user.role?(role)
       user.remove_role role
       user.pm 'Left group!'
       unless channel.nil?
         channel.send_message "*#{user.mention} left the group.*"
       end
     else
-      user.pm 'Invalid group!'
+      user.pm 'You aren\'t in that group!'
     end
 
     handle_group_voice_channels(server)
