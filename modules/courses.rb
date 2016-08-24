@@ -22,7 +22,7 @@ module CourseCommands
 			begin
         puts "Removing #{adv[0..1]} role/text-channel"
         event.server.roles.find_all { |r| r.name.start_with?(adv[0..1]) }.map(&:delete)
-        event.server.text_channels.find_all { |c| c.name.downcase.start_with?(adv[0..1].downcase) }.map(&:delete)
+				event.server.text_channels.find_all { |c| c.name.downcase.start_with?(adv[0..1].downcase) }.map(&:delete)
       rescue => e
 				puts "Error removing #{adv[0..1]}"
 				puts e
@@ -33,7 +33,13 @@ module CourseCommands
 		puts 'Removing grade channels'
 		%w(Freshmen Sophomores Juniors Seniors).each do |g|
 			begin
-				event.server.roles.find { |r| r.name == g }.delete
+				g_role = event.server.roles.find { |r| r.name == g }
+				event.server.members.each do |m|
+					next unless m.role? g_role
+					m.remove_role g_role
+					sleep 1
+				end
+				
 				event.server.text_channels.find { |t| t.name == g.downcase }.delete
 			rescue => e
 				puts "Failed for #{g}"

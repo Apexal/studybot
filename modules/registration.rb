@@ -87,69 +87,69 @@ module RegistrationCommands
         roles_to_add = []
 
         # Add 'Verified' role
-        puts "Adding 'Verified' role"
         vrole = server.roles.find{|r| r.name == 'Verified'}
         roles_to_add << vrole
-        # Decide grade for role
-        digit = result['advisement'][0].to_i
-        rolename = 'Freshmen'
-        if digit == 2
-          rolename = 'Sophomores'
-        elsif digit == 3
-          rolename = 'Juniors'
-        elsif digit == 4
-          rolename = 'Seniors'
-        end
-        puts "Adding '#{rolename}' role"
-        # Add grade role
-        grole = server.roles.find { |r| r.name == rolename }
-        roles_to_add << grole
-        sleep 0.5
-        bots_role_id = server.roles.find { |r| r.name == 'bots' }.id
-
-        # Advisement channel handling
-        token = event.bot.token
-        # Perms for course text-channels
-        perms = Discordrb::Permissions.new
-        perms.can_read_messages = true
-        perms.can_send_messages = true
-        perms.can_read_message_history = true
-        perms.can_mention_everyone = true
-        large_adv = result['advisement'][0..1]
-        small_adv = result['advisement']
-        # Add the roles for each adv and create channels for each
-        [large_adv, small_adv].each do |a|
-          advrole = server.roles.find { |r| r.name == a }
-          # Create role if doesn't exist
-          if advrole.nil?
-            puts 'Creating role'
-            advrole = server.create_role
-            advrole.name = a
-            advrole.hoist = true if a.length <= 2 # This should only hoist large advisement roles
-          end
-          # Add role
-          puts 'Adding role'
-          roles_to_add << advrole
-          # Advisement channel
-          puts 'Finding channel'
-          adv_channel = event.bot.find_channel(a.downcase).first
-          if adv_channel.nil?
-            # Create if not exist
-            puts 'Creating channel'
-            adv_channel = server.create_channel(a)
-            adv_channel.topic = "Private chat for Advisement #{a}"
-
-            pos = server.text_channels.find_all { |c| c.name.start_with? a[0] }.sort { |a, b| a.position <=> b.position }.last.position + 1
-            adv_channel.position = pos # This keeps advisement channels above group channels
-            puts 'Updating perms'
-            Discordrb::API.update_role_overrides(token, adv_channel.id, server.id, 0, perms.bits) # @everyone
-            Discordrb::API.update_role_overrides(token, adv_channel.id, advrole.id, perms.bits, 0) # advisement role
-            Discordrb::API.update_role_overrides(token, adv_channel.id, bots_role_id, perms.bits, 0) # bots
-          end
-          sleep 1
-        end
 				
 				unless summer?
+					# Decide grade for role
+					digit = result['advisement'][0].to_i
+					rolename = 'Freshmen'
+					if digit == 2
+						rolename = 'Sophomores'
+					elsif digit == 3
+						rolename = 'Juniors'
+					elsif digit == 4
+						rolename = 'Seniors'
+					end
+					puts "Adding '#{rolename}' role"
+					# Add grade role
+					grole = server.roles.find { |r| r.name == rolename }
+					roles_to_add << grole
+					sleep 0.5
+					bots_role_id = server.roles.find { |r| r.name == 'bots' }.id
+
+					# Advisement channel handling
+					token = event.bot.token
+					# Perms for course text-channels
+					perms = Discordrb::Permissions.new
+					perms.can_read_messages = true
+					perms.can_send_messages = true
+					perms.can_read_message_history = true
+					perms.can_mention_everyone = true
+					large_adv = result['advisement'][0..1]
+					small_adv = result['advisement']
+					# Add the roles for each adv and create channels for each
+					[large_adv, small_adv].each do |a|
+						advrole = server.roles.find { |r| r.name == a }
+						# Create role if doesn't exist
+						if advrole.nil?
+							puts 'Creating role'
+							advrole = server.create_role
+							advrole.name = a
+							advrole.hoist = true if a.length <= 2 # This should only hoist large advisement roles
+						end
+						# Add role
+						puts 'Adding role'
+						roles_to_add << advrole
+						# Advisement channel
+						puts 'Finding channel'
+						adv_channel = event.bot.find_channel(a.downcase).first
+						if adv_channel.nil?
+							# Create if not exist
+							puts 'Creating channel'
+							adv_channel = server.create_channel(a)
+							adv_channel.topic = "Private chat for Advisement #{a}"
+
+							pos = server.text_channels.find_all { |c| c.name.start_with? a[0] }.sort { |a, b| a.position <=> b.position }.last.position + 1
+							adv_channel.position = pos # This keeps advisement channels above group channels
+							puts 'Updating perms'
+							Discordrb::API.update_role_overrides(token, adv_channel.id, server.id, 0, perms.bits) # @everyone
+							Discordrb::API.update_role_overrides(token, adv_channel.id, advrole.id, perms.bits, 0) # advisement role
+							Discordrb::API.update_role_overrides(token, adv_channel.id, bots_role_id, perms.bits, 0) # bots
+						end
+						sleep 1
+					end
+
 					# THE GOOD STUFF
 					# Get all classes for this student
 					query = "SELECT courses.id, courses.title, courses.room_id, staffs.last_name FROM courses JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id JOIN staffs ON staffs.id=courses.teacher_id WHERE students.discord_id=#{event.user.id} AND courses.is_class=1"
@@ -192,7 +192,16 @@ module RegistrationCommands
           roles_to_add << group_role unless group_role.nil?
         end
 
-        roles_to_add.each { |r| user.add_role(r); sleep 1 }
+        roles_to_add.each do |r| 
+					puts "Adding role #{r.name}"
+					begin
+						user.add_role(r)
+					rescue => e
+						puts 'FAILED!'
+						puts e
+					end
+					sleep 1
+				end
         
         user.remove_role(server.roles.find { |r| r.name == 'Guests' })
         
