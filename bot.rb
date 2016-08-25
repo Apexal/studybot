@@ -39,10 +39,12 @@ $unallowed = %w(Phys Guidance Speech Advisement Health Amer)
 
 bot.bucket :abusable, limit: 3, time_span: 60, delay: 10
 bot.bucket :study, limit: 10, time_span: 60, delay: 5
+bot.bucket :reporting, limit: 1, time_span: 120, delay: 60
 
 bot.set_role_permission(152956497679220736, 1)
-bot.set_user_permission(152621041976344577, 2)
-bot.set_user_permission(152189849284247553, 2)
+bot.set_role_permission(200261631974834176, 2)
+bot.set_user_permission(152621041976344577, 3)
+bot.set_user_permission(152189849284247553, 3)
 
 bot.include! StartupEvents
 bot.include! RegistrationEvents
@@ -59,6 +61,7 @@ bot.include! Suppressor
 bot.include! CourseCommands
 bot.include! SpecialRoomEvents
 bot.include! SteamCommands
+bot.include! ModeratorCommands
 #bot.include! NicknameEvents
 
 begin

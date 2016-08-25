@@ -7,7 +7,7 @@ end
 
 module RoomCommands
   extend Discordrb::Commands::CommandContainer
-  command(:groups, description: 'List availble groups.', permission_level: 1) do |event|
+  command(:groups, min_args: 0, max_args: 0, description: 'List availble groups.', permission_level: 1) do |event|
     server = event.bot.server(150_739_077_757_403_137)
     user = event.user.on(server)
     to_delete = [event.message]
@@ -32,7 +32,7 @@ module RoomCommands
     nil
   end
 
-  command(:toggleprivate, description: 'Toggle your group\'s privacy status.', permission_level: 1) do |event|
+  command(:toggleprivate, min_args: 0, max_args: 0, description: 'Toggle your group\'s privacy status.', permission_level: 1) do |event|
     event.message.delete unless event.channel.private?
 
     channel = nil
@@ -57,7 +57,7 @@ module RoomCommands
     nil
   end
 
-  command(:creategroup, description: 'Create a group to get your own role and text-channel. Usage: `!creategroup "Name" "Description" yes/no (private)`', permission_level: 1) do |event, full_name, description, private|
+  command(:creategroup, min_args: 2, max_args: 3, description: 'Create a group to get your own role and text-channel.', usage: '`!creategroup "Name" "Description" yes/no (private)`', permission_level: 1) do |event, full_name, description, private|
     event.message.delete unless event.channel.private?
 
     full_name.strip!
@@ -134,7 +134,7 @@ module RoomCommands
     nil
   end
 
-  command(:deletegroup, description: 'Delete a group that you started.', permission_level: 1) do |event|
+  command(:deletegroup, min_args: 0, max_args: 0, description: 'Delete a group that you started.', permission_level: 1) do |event|
     event.message.delete unless event.channel.private?
     
     server = event.bot.server(150_739_077_757_403_137)
@@ -159,7 +159,7 @@ module RoomCommands
   end
   
   invites = {}
-  command(:invite, description: 'Invite a student to a private group. Usage: `!invite "Group" @user`', permission_level: 1) do |event, group_name|
+  command(:invite, min_args: 2, max_args: 2, description: 'Invite a student to a private group.', usage: '`!invite "Group" @user`', permission_level: 1) do |event, group_name|
     event.message.delete unless event.channel.private?
     if group_name.nil? or event.message.mentions.empty?
       event.user.pm "Invalid syntax. `!invite 'Group' @user`"
@@ -192,7 +192,7 @@ module RoomCommands
   end
   
   # List of special channels
-  command(:join, description: 'Join a group. Usage: `!join "group"`', permission_level: 1) do |event, group_name|
+  command(:join, min_args: 1, max_args: 1, description: 'Join a group.', usage: '`!join "group"`', permission_level: 1) do |event, group_name|
     event.message.delete unless event.channel.private?
     return if group_name.nil?
 
@@ -239,7 +239,7 @@ module RoomCommands
     nil
   end
 
-  command(:leave, description: 'Leave a group. Usage: `!leave group`', permission_level: 1) do |event, group_name|
+  command(:leave, min_args: 0, max_args: 1, description: 'Leave a group.', usage: '`!leave "group"` or while in a group\'s text-channel: `!leave`', permission_level: 1) do |event, group_name|
     event.message.delete unless event.channel.private?
 
     server = event.bot.server(150_739_077_757_403_137)
@@ -273,7 +273,7 @@ module RoomCommands
     nil
   end
 
-  command(:description, description: 'Change the description of your group.', permission_level: 1) do |event, description|
+  command(:description, min_args: 1, max_args: 1, description: 'Change the description of your group.', usage: '`!description "New Description"`', permission_level: 1) do |event, description|
     event.message.delete unless event.channel.private?
 
     channel = nil

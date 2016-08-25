@@ -8,7 +8,7 @@ module UtilityCommands
   extend Discordrb::Commands::CommandContainer
 
   pokemon_theme = File.open('./resources/pokemon.txt', 'r')
-  command(:pry, permission_level: 2) do |event|
+  command(:pry, permission_level: 3) do |event|
     event.message.delete unless event.channel.private?
     server = event.bot.server(150_739_077_757_403_137)
 
@@ -20,7 +20,7 @@ module UtilityCommands
     'Designed by *Liam Quinn*'
   end
 
-  command(:eval, permission_level: 2) do |event, code|
+  command(:eval, permission_level: 3) do |event, code|
     event.message.delete unless event.channel.private?
 
     eval(code) # not the safest...
@@ -28,7 +28,7 @@ module UtilityCommands
     "Successfully executed code."
   end
 
-  command(:addall, permission_level: 2) do |event, group|
+  command(:addall, permission_level: 3) do |event, group|
     puts "Adding all users to Group #{group}"
     role = event.server.roles.find { |r| r.name == group }
     verified = event.server.roles.find { |r| r.name == 'Verified' }
@@ -44,7 +44,7 @@ module UtilityCommands
     nil
   end
 
-  command(:theverybest, permission_level: 2) do |event|
+  command(:theverybest, permission_level: 3) do |event|
     pokemon_theme.each_line do |line|
       event.channel.send line, true
       sleep 1.5

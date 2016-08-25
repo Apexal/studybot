@@ -1,7 +1,7 @@
 module SteamCommands
   extend Discordrb::Commands::CommandContainer
   
-  command(:setsteam, description: 'Set your Steam profile link. Usage: `!setsteam link`', permission_level: 1) do |event, link|
+  command(:setsteam, min_args: 1, max_args: 1, description: 'Set your Steam profile link.', usage: '`!setsteam link`', permission_level: 1) do |event, link|
     event.message.delete unless event.channel.private?
 
     server = event.bot.server(150_739_077_757_403_137)
@@ -26,7 +26,7 @@ module SteamCommands
     nil
   end
   
-  command(:steam, description: 'Show someone\'s Steam profile link. Usage: `!steam @user`', permission_level: 1) do |event|
+  command(:steam, min_args: 0, max_args: 1, description: 'Show someone\'s Steam profile link. Usage: `!steam @user`', permission_level: 1) do |event|
     if event.message.channel.name == "work"
       event.message.delete 
       event.user.pm 'Steam commands are not allowed in #work.'

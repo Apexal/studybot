@@ -2,7 +2,7 @@ module CourseCommands
   extend Discordrb::Commands::CommandContainer
 
   # END OF YEAR COMMAND
-  command(:endyear, permission_level: 2) do |event|
+  command(:endyear, permission_level: 3) do |event|
     puts 'Ending the year. Deleting course rooms and channels.'
     #event.bot.find_channel('announcements').first.send_message "@everyone Removing all outdated roles/text-channels."
     # Remove course rooms
@@ -49,7 +49,7 @@ module CourseCommands
 		end
   end
 
-  command(:updatecourses, permission_level: 2) do |event|
+  command(:updatecourses, permission_level: 3) do |event|
     server = event.bot.server(150_739_077_757_403_137)
 
     # Perms for course text-channels

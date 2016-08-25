@@ -25,7 +25,7 @@ module RegistrationCommands
 
   welcome_info = File.open('./resources/intro.txt', 'r')
 
-  command(:register, description: 'Connect your account to your Regis account. Usage: `!register regisusername`') do |event, username|
+  command(:register, min_args: 1, max_args: 1, description: 'Connect your account to your Regis account.', usage: '`!register regisusername`') do |event, username|
     # Check if username was passed and that its not a teacher's email
     if !!username && /^[a-z]+\d{2}$/.match(username)
       # Convert the hex username back to its string
@@ -57,7 +57,7 @@ module RegistrationCommands
     nil
   end
 
-  command(:verify, description: 'Verifies your identity with the emailed code.') do |event, code|
+  command(:verify, min_args: 1, max_args: 1, description: 'Verifies your identity with the emailed code.', usage: '`!verify code`') do |event, code|
     server = event.bot.server(150_739_077_757_403_137)
     user = event.user.on(server)
     puts "Attempting to verify #{user} (#{event.user.name})"
@@ -208,15 +208,15 @@ module RegistrationCommands
         # PM him a congratulatory message
         status_message.edit("**Congratulations, #{result['first_name']}. You are now a verified Regis Discord User!**")
         # Make an announcement welcoming him to everyone
-        #event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
+        event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{event.user.mention})* to the Discord Server!"
 
         welcome_info.each_line do |line|
           begin
 						user.pm(line)
-          rescue
+						sleep 4
+					rescue
 						puts "Failed sending line: #{line}"
 					end
-					sleep 4
         end
 
         # Set his discord_id and make him verified in the db

@@ -1,7 +1,7 @@
 module ModeratorCommands
 	extend Discordrb::Commands::CommandContainer
 	
-	command(:report, description: "Send a report to the servers' Moderators. Usage: `!report 'Message' @optionaluser`") do |event, message|
+	command(:report, min_args: 1, max_args: 1, description: "Send a report to the servers' Moderators.", usage: "`!report 'Message' @optionaluser`", bucket: :reporting, rate_limit_message: "**Woah there.** You must wait %time% seconds before attempting to report again.") do |event, message|
 		event.message.delete unless event.channel.private?
 		
 		server = event.bot.server(150_739_077_757_403_137)
@@ -13,6 +13,11 @@ module ModeratorCommands
 		end
 		
 		mod_channel = server.text_channels.find { |t| t.name == 'moderators' }
+		# TODO: db stuff
+		mod_channel.send_message "**REPORT FROM #{user.mention}:** #{message}"
 		
+		user.pm "Sent report."
+		
+		nil
 	end
 end

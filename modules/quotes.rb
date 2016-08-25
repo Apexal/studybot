@@ -1,6 +1,6 @@
 module QuoteCommands
   extend Discordrb::Commands::CommandContainer
-  command(:addquote, description: 'Quote someone!', bucket: :abusable, permission_level: 1) do |event, quote, user|
+  command(:addquote, min_args: 1, max_args: 2, description: 'Quote someone!', bucket: :abusable, permission_level: 1) do |event, quote, user|
     puts "Adding quote from #{event.user.name}"
     if !quote.nil? and quote.split(' ').length == 1 and quote.start_with? '<@'
       quote = nil
@@ -57,7 +57,7 @@ module QuoteCommands
     end
   end
 
-  command(:quotes, description: 'List all of your quotes!', bucket: :abusable, permission_level: 1) do |event|
+  command(:quotes, max_args: 1, description: 'List all of your quotes!', bucket: :abusable, permission_level: 1) do |event|
     if event.channel.name == "work"
       event.message.delete
       event.user.pm "Quotes are not allowed in #work!"
@@ -103,7 +103,7 @@ module QuoteCommands
     nil
   end
 
-  command(:delquote, description: 'Delete a quote.', bucket: :abusable, permission_level: 1) do |event, *indexes|
+  command(:delquote, max_args: 1, description: 'Delete a quote.', bucket: :abusable, permission_level: 1) do |event, *indexes|
     if event.channel.name == 'work'
       event.user.pm 'Quotes can not be viewed in #work! Try #recreation.'
       return
