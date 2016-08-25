@@ -179,7 +179,7 @@ def handle_game_parties(server)
 
       mentions = server.online_members.find_all { |u| u.role? game_role and !v.users.include? u and u.game.nil? }.map { |u| u.mention }
 
-      game_channel.send_message "A #{game} session has started. Join voice-channel **#{game} Party**! #{mentions.join ' '}"
+      game_channel.send_message "A #{game} session has started. Join voice-channel **#{game} Party**: #{mentions.join ' '}"
       break
     end
     sleep 1

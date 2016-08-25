@@ -253,7 +253,31 @@ module Suppressor
 
     event.channel.send("^^^ #{mentions.map { |m| m.mention }.join(' ')}") unless mentions.empty?
   end
+  
+  message(containing: '@Room') do |event|
+    return if event.channel.private?
 
+    mentions = []
+    channels = []
+
+    words = event.message.content.split ' '
+    words.each do |w|
+      next if channels.include? w
+      if w.start_with? '@'
+        channel_name = w.tr('@', '').tr('-', ' ').tr('_', ' ')
+        begin
+          channel = event.server.voice_channels.find { |v| v.name.downcase == channel_name.downcase }
+          mentions = channel.users.map { |u| u.mention }
+        rescue
+          puts 'Doesn\'t exist'
+        end
+        channels << w
+      end
+    end
+    
+    event.channel.send_message(mentions.join ' ').delete unless mentions.empty?
+  end
+  
   message(containing: '@here') do |event|
     return if event.channel.private?
 		# Check if channel allows @everyone
@@ -264,4 +288,9 @@ module Suppressor
 			m.delete
 		end
   end
+	
+	message do |event|
+		return if event.channel.private?
+		event.message.delete if event.user.on(event.server).role? event.server.roles.find { |r| r.name == 'Muted' }
+	end
 end
