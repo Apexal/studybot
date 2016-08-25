@@ -143,6 +143,7 @@ def handle_group_voice_channels(server)
 end
 
 
+$timings = {}
 def handle_game_parties(server)
   game_role = server.roles.find { |r| r.name == 'Gaming' }
   game_channel = server.text_channels.find { |c| c.name == 'gaming' }
@@ -166,7 +167,12 @@ def handle_game_parties(server)
       percent = t / user_count.to_f
 
       next if percent < min
-
+			
+			# 5 minutes between game parties (prevent spam)
+			next if !$timings[game].nil? and (Time.new - $timings[game]) < 60 * 5
+			
+			# ITS A PAAAAARTY
+			$timings[game] = Time.new
       v.name = "#{game} Party"
       server.text_channels.find { |c| c.id == $hierarchy[v.id] }.topic = "Private chat for all those in the voice channel '#{game} Party'."
       puts "Started #{game} Party room"
