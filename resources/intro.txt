@@ -1,7 +1,7 @@
 You can now access:
 `-` `!whois` which will tell you the real name and advisement of users (i.e. `!whois @Frank`)
 `-` private **advisement** text-channels (small and large)
-`-` private **school course** text-channels**
+`-` private **school course** text-channels
 `-` user-made groups by typing `!groups` (i.e. `!join 'Gaming'`)
 `-` `!study` to toggle your access to distracting voice/text channels
 `-` And much more!

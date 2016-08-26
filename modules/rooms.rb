@@ -159,7 +159,7 @@ module RoomCommands
   end
   
   invites = {}
-  command(:invite, min_args: 2, max_args: 2, description: 'Invite a student to a private group.', usage: '`!invite "Group" @user`', permission_level: 1) do |event, group_name|
+  command(:invite, min_args: 2, max_args: 2, description: 'Invite a student to a group.', usage: '`!invite "Group" @user`', permission_level: 1) do |event, group_name|
     event.message.delete unless event.channel.private?
     if group_name.nil? or event.message.mentions.empty?
       event.user.pm "Invalid syntax. `!invite 'Group' @user`"
@@ -169,21 +169,33 @@ module RoomCommands
     server = event.bot.server(150_739_077_757_403_137)
     user = event.user.on(server)
     
-    target = event.message.mentions.first
-    
+    target = event.message.mentions.first.on(server)
+    unless target.role? server.roles.find { |r| r.name == 'Verified' }
+			user.pm 'You can only invite Regians to groups.'
+			return
+		end
+		
     role = nil
     group_name = $db.escape(group_name)
-    $db.query("SELECT role_id, room_id FROM groups WHERE name='#{group_name}' AND private=1").each do |row|
-      role = server.roles.find { |r| r.id == Integer(row['role_id']) }
+		is_private = nil
+    $db.query("SELECT role_id, room_id, private FROM groups WHERE name='#{group_name}'").each do |row|
+      is_private = row['private'] == 1
+			role = server.roles.find { |r| r.id == Integer(row['role_id']) }
     end
     
     if role.nil?
       user.pm 'Invalid group.'
     else
-      if user.role? role 
-        target.pm "You have been invited to the private **Group #{group_name}**. Type `!join '#{group_name}'` to enter!"
-        invites[target.id] = group_name
-      else
+      if user.role? role
+				if target.role? role
+					user.pm 'They are already in that group!'
+				elsif is_private
+					target.pm "You have been invited to the private **Group #{group_name}**. Type `!join '#{group_name}'` to enter!"
+					invites[target.id] = group_name
+				else
+					target.pm "#{user.mention} wants you to join public **Group #{group_name}**! `!join '#{group_name}'`"
+				end
+			else
         user.pm 'You can only invite users to a group you are in yourself.'
       end
     end

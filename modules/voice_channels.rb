@@ -85,12 +85,14 @@ def handle_associated_channel(server, user, voice_channel, perms)
   if text_channel.nil?
     # Doesn't have a associated text-channel!
     puts "Creating #voice-channel for #{voice_channel.name}"
-	# Name it 'voice-channel' or 'Music'
-	c_name = voice_channel.name == 'Music Room' ? 'music' : 'voice-channel'
+		# Name it 'voice-channel' or 'Music'
+		c_name = voice_channel.name == 'Music Room' ? 'music' : 'voice-channel'
     text_channel = server.create_channel(c_name)
     text_channel.topic = "Private chat for all those in the voice channel '**#{voice_channel.name}**'"
-	text_channel.topic = 'Private chat room for DJ commands' if c_name == 'Music'
-	
+		text_channel.topic = 'Private chat room for DJ commands' if c_name == 'Music'
+		
+		text_channel.send_message "Use `!rename` or `!rename 'Any of Your Teachers'` to change the name of your voice-channel!\n---"
+		
     # Set permissions
     Discordrb::API.update_role_overrides($token, text_channel.id, server.roles.find{|r| r.name == "bots"}.id, perms.bits, 0)
     Discordrb::API.update_user_overrides($token, text_channel.id, user.id, perms.bits, 0)

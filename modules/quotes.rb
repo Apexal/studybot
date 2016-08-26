@@ -1,6 +1,6 @@
 module QuoteCommands
   extend Discordrb::Commands::CommandContainer
-  command(:addquote, min_args: 1, max_args: 2, description: 'Quote someone!', bucket: :abusable, permission_level: 1) do |event, quote, user|
+  command(:addquote, min_args: 0, max_args: 2, description: 'Quote someone!', bucket: :abusable, permission_level: 1) do |event, quote, user|
     puts "Adding quote from #{event.user.name}"
     if !quote.nil? and quote.split(' ').length == 1 and quote.start_with? '<@'
       quote = nil
@@ -41,7 +41,7 @@ module QuoteCommands
 
       quote = $db.escape(quote) # Escape text so no SQL injection
 
-      if quote.length > 450
+      if quote.length > 650
         event << 'Quote too long!'
         return
       end
