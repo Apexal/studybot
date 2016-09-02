@@ -50,7 +50,7 @@ def handle_public_room(server)
 end
 
 def sort_channels(server)
-  start_pos = 16
+  start_pos = 14
   %w(1 2 3 4).each do |g|
     channels = server.text_channels.find_all { |c| c.name.start_with? g }
       # channels.sort { |a, b| a.position <=> b.position }.first.position
@@ -62,7 +62,7 @@ def sort_channels(server)
       sleep 1
     end
 
-    start_pos += channels.length
+    start_pos += (channels.length-1)
     sleep 1
   end
 end
@@ -169,7 +169,7 @@ def handle_game_parties(server)
       next if percent < min
 			
 			# 5 minutes between game parties (prevent spam)
-			next if !$timings[game].nil? and (Time.new - $timings[game]) < 60 * 5
+			next if !$timings[game].nil? and (Time.new - $timings[game]) < 60 * 10 # 10 minutes
 			
 			# ITS A PAAAAARTY
 			$timings[game] = Time.new

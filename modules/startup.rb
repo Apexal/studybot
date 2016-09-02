@@ -46,12 +46,11 @@ module StartupEvents
     # Create #voice-channel's for all voice channels used right now
     puts "Creating all necessary #voice-channel's and adding users to them"
     server.voice_channels.find_all { |r| r.name != 'AFK' and r.name != $OPEN_ROOM_NAME }.each do |c|
-      puts c.name
+		puts c.name
       
 	  text_channel = c.name == 'Music Room' ? server.text_channels.find { |t| t.name == 'music' } : server.create_channel('voice-channel')
-      puts text_channel.id
+    puts text_channel.id
 	  text_channel.topic = c.name == 'Music Room' ? 'Private chat room for DJ commands.' : "Private chat for all those in the voice channel '**#{c.name}**'"
-
       # Give the current user and BOTS access to it, restrict @everyone
       c.users.each do |u|
         $voice_states[u.id] = c.id

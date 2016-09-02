@@ -10,7 +10,11 @@ def get_rand_teacher(user)
   $user_teachers[user.id] = teachers
   randteacher = teachers.sample
 
-  randteacher
+	if summer?
+		return 'Summer'
+	else
+		return randteacher
+	end	
 end
 
 def room_exists?(server, name)

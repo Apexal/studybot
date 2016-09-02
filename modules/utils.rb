@@ -178,7 +178,7 @@ module UtilityCommands
         result = result.first
         user = event.bot.user(result['discord_id'])
 				
-				message = "**#{result['first_name']} #{result['last_name']}** #{summer? ? '' : "of **#{result['advisement']}** "}is #{user.mention()}!"
+				message = "**#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** is #{user.mention()}!"
 				
         event << message
       else
@@ -196,8 +196,8 @@ module UtilityCommands
     if who.name == 'studybot'
       event << '**I am the bot that automates every single part of the Discord server!** Made by Frank Matranga https://github.com/Apexal/studybot'
       return
-    elsif who.id == event.server.owner.id
-      event << "#{event.server.owner.mention} is the **Owner** of the server."
+    elsif who.id == server.owner.id
+      event << "#{server.owner.mention} is the **Owner** of the server."
       return
     elsif who.role? server.roles.find { |r| r.name == 'Guests' }
       #event << "*#{who.display_name}* is a **Guest** (Non-Regian)."
@@ -215,7 +215,7 @@ module UtilityCommands
     result = $db.query("SELECT * FROM students WHERE discord_id=#{who.id}")
     if result.count > 0
       result = result.first
-      event << "*#{who.display_name}* is **#{result['first_name']} #{result['last_name']}**#{summer? ? '' :" of **#{result['advisement']}**!"}"
+      event << "*#{who.display_name}* is **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}**!"
     else
       "*#{who.display_name}* is not yet registered!"
     end
@@ -338,6 +338,7 @@ module Suppressor
 		unless event.user.on(event.server).permission?(:mention_everyone, event.channel)
 			m = event.channel.send_message '^^^ @here'
 			puts 'Manually replace @here'
+			sleep 5
 			m.delete
 		end
   end

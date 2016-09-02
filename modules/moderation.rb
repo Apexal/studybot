@@ -1,6 +1,18 @@
 module ModeratorCommands
 	extend Discordrb::Commands::CommandContainer
 	
+	command(:fixregistration) do |event|
+		server = event.bot.server(150_739_077_757_403_137)
+		vrole = server.roles.find { |r| r.name == "Verified" }
+		verified = $db.query("SELECT discord_id FROM students WHERE verified=1").map { |row| Integer(row['discord_id']) }
+		
+		server.members.find_all { |m| m.role? vrole and !verified.include? m.id }.each do |m|
+			puts "#{m.display_name}"
+			#m.pm 'There was a little issue... Please run the `!verify code` command once again, the same exact way you did when you first registered.'
+			#sleep 1
+		end
+	end
+	
 	command(:mute, min_args: 1, max_args: 1, description: 'Toggle a text mute on a user.', usage: '`!mute @user`', permission_level: 2) do |event|
 		event.message.delete unless event.channel.private?
 		

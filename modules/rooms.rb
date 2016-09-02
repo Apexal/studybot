@@ -128,8 +128,8 @@ module RoomCommands
 		user.pm "Invite other users with `!invite '#{full_name}' @user`" if p == 1
 		user.pm "Change the description of the group with `!description \"New Description\"`.\nDelete the group with `!deletegroup`."
     handle_group_voice_channels(server)
-    # Announce to #meta
-    #server.text_channels.find{|c| c.name == 'meta'}.send_message "@everyone #{user.mention} has just created the group **#{full_name}**. Join with `!join \"#{full_name}\"`"
+    # Announce to #meta (if public)
+    server.text_channels.find{|c| c.name == 'meta'}.send_message("@everyone #{user.mention} has just created the group **#{full_name}**. Join with `!join \"#{full_name}\"`") unless private == 1
 		user.pm "*As group founder, you can manage (delete/pin) messages in your group's text-channel.*"
     nil
   end

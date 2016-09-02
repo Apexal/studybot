@@ -21,7 +21,7 @@ module SpecialRoomEvents
     end
 
     # Advisement Voice Channels
-    if !summer? and event.user.on(server).role?(server.roles.find { |r| r.name == 'Verified' })
+    if event.user.on(server).role?(server.roles.find { |r| r.name == 'Verified' })
       advisement = advisements[event.user.id]
       if advisement.nil?
         advisement = $db.query("SELECT advisement FROM students WHERE discord_id=#{event.user.id}").map { |row| row['advisement'][0..1] }.first
@@ -48,28 +48,26 @@ module SpecialRoomEvents
     end
 
     # Grade Voice Channels
-		unless summer?
-			grades = %w(Freshmen Sophomores Juniors Seniors)
-			Hash[grades.map { |g| [server.roles.find { |r| r.name == g }, server.voice_channels.find { |c| c.name == g } ] }]
-				.each do |role, channel|
-					next if role.nil?
-					channel = server.voice_channels.find { |v| v.name == role.name }
-					online_count = server.online_members.count { |m| m.role? role}
-					if online_count >= 7
-						if channel.nil?
-							puts "Creating voice-channel for #{role.name}"
-							channel = server.create_channel(role.name, 'voice')
-							channel.position = 2
-							channel.define_overwrite(role, perms, 0)
-							Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
-						end
-					else
-						# 1 or 0 online
-						delete_channel(server, channel) unless channel.nil? or !channel.users.empty?
-					end
-				end
-		end
-		
+    grades = %w(Freshmen Sophomores Juniors Seniors)
+    Hash[grades.map { |g| [server.roles.find { |r| r.name == g }, server.voice_channels.find { |c| c.name == g } ] }]
+      .each do |role, channel|
+        next if role.nil?
+        channel = server.voice_channels.find { |v| v.name == role.name }
+        online_count = server.online_members.count { |m| m.role? role}
+        if online_count >= 7
+          if channel.nil?
+            puts "Creating voice-channel for #{role.name}"
+            channel = server.create_channel(role.name, 'voice')
+            channel.position = 2
+            channel.define_overwrite(role, perms, 0)
+            Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
+          end
+        else
+          # 1 or 0 online
+          delete_channel(server, channel) unless channel.nil? or !channel.users.empty?
+        end
+      end
+
     if event.user.status == :offline
       $db.query("UPDATE students SET last_online='#{Time.new}' WHERE discord_id=#{event.user.id}")
     end
