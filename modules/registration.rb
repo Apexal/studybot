@@ -58,8 +58,13 @@ module RegistrationCommands
   end
 
   command(:verify, min_args: 1, max_args: 2, description: 'Verifies your identity with the emailed code.', usage: '`!verify code`') do |event, code|
+    event.message.delete unless event.channel.private?
+
     server = event.bot.server(150_739_077_757_403_137)
-    user = event.message.mentions.empty? ? event.user.on(server) : event.message.mentions.first.on(server)
+    user = event.user.on(server)
+
+    user = event.message.mentions.first.on(server) if !event.message.mentions.empty? and event.user.id == server.owner.id
+
     puts "Attempting to verify #{user} (#{user.name})"
 
     status_message = user.pm.send_message('Registering...')
