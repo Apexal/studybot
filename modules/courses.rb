@@ -163,7 +163,7 @@ module CourseCommands
       # Get all classes for this student
       query = "SELECT courses.id, courses.title, courses.room_id, staffs.last_name FROM courses JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id JOIN staffs ON staffs.id=courses.teacher_id WHERE students.discord_id=#{user.id} AND courses.is_class=1"
       
-      unless summer?
+      #unless summer?
         $db.query(query).each do |course|
           # Ignore unnecessary classes
           next if $unallowed.any? { |w| course['title'].include? w } # Honestly Ruby is great
@@ -175,7 +175,7 @@ module CourseCommands
           puts "Handling course room for #{course['title']}"
           course_room = nil
           begin
-            course_room = server.text_channels.find{ |c| c.id == Integer(course['room_id']) }
+            course_room = server.text_channels.find { |c| c.id == Integer(course['room_id']) }
             if course_room.nil?
               # Course room doesn't exist
               puts 'Missing room! Creating.'
@@ -195,10 +195,11 @@ module CourseCommands
           $db.query("UPDATE courses SET room_id='#{course_room.id}' WHERE id=#{course['id']}")
           sleep 0.5
         end
-      end
+      #end
+
     end
     puts "Done."
-    
+
     nil
   end
 end

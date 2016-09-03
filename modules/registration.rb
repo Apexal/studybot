@@ -144,6 +144,7 @@ module RegistrationCommands
               puts 'Creating channel'
               adv_channel = server.create_channel(a)
               adv_channel.topic = "Private chat for Advisement #{a}"
+              adv_channel.position = server.text_channels.find_all { |t| %w(1 2 3 4).include? t.name[0] }.sort { |a, b| a.position <=> b.position }.last.position - 1
 
               pos = server.text_channels.find_all { |c| c.name.start_with? a[0] }.sort { |a, b| a.position <=> b.position }.last.position + 1
               adv_channel.position = pos # This keeps advisement channels above group channels

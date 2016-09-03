@@ -6,15 +6,15 @@ $voice_states = {}
 
 # UTILITY METHODS
 def get_rand_teacher(user)
-  teachers = $user_teachers[user.id].nil? ? $db.query("SELECT staffs.last_name FROM staffs JOIN courses ON courses.teacher_id=staffs.id JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id WHERE students.discord_id=#{user.id}").map { |t| t['last_name'] }.uniq : $user_teachers[user.id]
+  teachers = $user_teachers[user.id].nil? ? $db.query("SELECT staffs.last_name FROM staffs JOIN courses ON courses.teacher_id=staffs.id JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id WHERE students.discord_id=#{user.id} AND courses.is_class=1").map { |t| t['last_name'] }.uniq : $user_teachers[user.id]
   $user_teachers[user.id] = teachers
   randteacher = teachers.sample
 
-	if summer?
-		return 'Summer'
-	else
+	#if summer?
+	#	return 'Summer'
+	#else
 		return randteacher
-	end	
+	#end	
 end
 
 def room_exists?(server, name)

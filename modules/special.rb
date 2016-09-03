@@ -1,11 +1,6 @@
 module SpecialRoomEvents
   extend Discordrb::EventContainer
 
-  advisements = {}
-  # {
-  #   my id => "2B-1"
-  # }
-
   presence do |event|
     server = event.server
 
@@ -22,18 +17,14 @@ module SpecialRoomEvents
 
     # Advisement Voice Channels
     if event.user.on(server).role?(server.roles.find { |r| r.name == 'Verified' })
-      advisement = advisements[event.user.id]
-      if advisement.nil?
-        advisement = $db.query("SELECT advisement FROM students WHERE discord_id=#{event.user.id}").map { |row| row['advisement'][0..1] }.first
-        advisements[event.user.id] = advisement
-      end
+      user = event.user.on(server)
+      advisement_role = user.roles.find { |r| r.name.length == 2 and %w(1 2 3 4).include? r.name[0] }
 
-      advisement_role = server.roles.find { |r| r.name == advisement }
       online_count = server.online_members.count { |m| m.role? advisement_role }
 
-      channel = server.voice_channels.find { |v| v.name == advisement }
+      channel = server.voice_channels.find { |v| v.name == "Advisement #{advisement_role.name}" }
 
-      if online_count >= 7
+      if online_count >= 6
         if channel.nil?
           puts "Creating voice-channel for Advisement #{advisement}"
           channel = server.create_channel("Advisement #{advisement}", 'voice')

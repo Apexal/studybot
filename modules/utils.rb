@@ -11,61 +11,61 @@ module UtilityCommands
   command(:pry, permission_level: 3) do |event|
     event.message.delete unless event.channel.private?
     server = event.bot.server(150_739_077_757_403_137)
-		user = event.user.on(server)
+    user = event.user.on(server)
 
     binding.pry
   end
-	
-	emailed = []
-	command(:recruit, min_args: 1, max_args: 1, description: 'Invite a student to the server with an email!', usage: '`!invite regisusername`', permission_level: 1) do |event, username|
-		event.message.delete unless event.channel.private?
-		server = event.bot.server(150_739_077_757_403_137)
-		user = event.user.on(server)
-		
-		username = $db.escape(username)
-		# Check if they are already registered
-		inviter = $db.query("SELECT * FROM students WHERE discord_id=#{user.id}")
-		
-		if inviter.count == 0
-			return
-		else
-			inviter = inviter.first
-		end
-		
-		$db.query("SELECT first_name, username, verified, discord_id FROM students WHERE username='#{username}' ").each do |row|
-			if row['verified'] == 1
-				user.pm "They are already registered! <@#{row['discord_id']}>"
-				return
-			else
-				if emailed.include? username
-					user.pm 'They have already been emailed an invitation.'
-					return
-				else
-					mail = Mail.new do
-						from "Regis Discord Server <#{$CONFIG['auth']['gmail']['username']}@gmail.com>"
-						to    "#{username}@regis.org"
-						subject "Invite from #{inviter['advisement']}"
 
-						html_part do
-							content_type 'text/html; charset=UTF-8'
-							body File.read('./resources/recruit_email.html').sub('%code', username.each_byte.map { |b| b.to_s(16) }.join).sub('%first_name%', row['first_name']).sub('%inviter%', "#{inviter['first_name']} #{inviter['last_name']} of #{inviter['advisement']}")
-						end
-					end
-					mail.deliver!
-				
-					puts "#{inviter['username']} invited #{row['username']}"
-					
-					user.pm 'Successfully invited user!'
-					
-					emailed << username
-				end
-			end
-			break
-		end
-		
-		nil
-	end
-	
+  emailed = []
+  command(:recruit, min_args: 1, max_args: 1, description: 'Invite a student to the server with an email!', usage: '`!invite regisusername`', permission_level: 1) do |event, username|
+    event.message.delete unless event.channel.private?
+    server = event.bot.server(150_739_077_757_403_137)
+    user = event.user.on(server)
+    
+    username = $db.escape(username)
+    # Check if they are already registered
+    inviter = $db.query("SELECT * FROM students WHERE discord_id=#{user.id}")
+    
+    if inviter.count == 0
+      return
+    else
+      inviter = inviter.first
+    end
+    
+    $db.query("SELECT first_name, username, verified, discord_id FROM students WHERE username='#{username}' ").each do |row|
+      if row['verified'] == 1
+        user.pm "They are already registered! <@#{row['discord_id']}>"
+        return
+      else
+        if emailed.include? username
+          user.pm 'They have already been emailed an invitation.'
+          return
+        else
+          mail = Mail.new do
+            from "Regis Discord Server <#{$CONFIG['auth']['gmail']['username']}@gmail.com>"
+            to    "#{username}@regis.org"
+            subject "Invite from #{inviter['advisement']}"
+
+            html_part do
+              content_type 'text/html; charset=UTF-8'
+              body File.read('./resources/recruit_email.html').sub('%code', username.each_byte.map { |b| b.to_s(16) }.join).sub('%first_name%', row['first_name']).sub('%inviter%', "#{inviter['first_name']} #{inviter['last_name']} of #{inviter['advisement']}")
+            end
+          end
+          mail.deliver!
+        
+          puts "#{inviter['username']} invited #{row['username']}"
+          
+          user.pm 'Successfully invited user!'
+          
+          emailed << username
+        end
+      end
+      break
+    end
+    
+    nil
+  end
+  
   command(:flag, description: 'Show the official Regis Discord flag!') do |event|
     event.channel.send_file(File.open('./resources/flag.png', 'rb'))
     'Designed by *Liam Quinn*'
@@ -98,9 +98,9 @@ module UtilityCommands
   command(:theverybest, permission_level: 3) do |event|
     pokemon_theme.each_line do |line|
       begin
-				event.channel.send line, true
+        event.channel.send line, true
       rescue;end
-			sleep 1.5
+      sleep 1.5
     end
 
     nil
@@ -177,9 +177,9 @@ module UtilityCommands
       if result.count > 0
         result = result.first
         user = event.bot.user(result['discord_id'])
-				
-				message = "**#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** is #{user.mention()}!"
-				
+        
+        message = "**#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** is #{user.mention()}!"
+        
         event << message
       else
         event << "*#{username}* is not yet registered!"
@@ -333,19 +333,19 @@ module Suppressor
   
   message(containing: '@here') do |event|
     return if event.channel.private?
-		# Check if channel allows @everyone
-		
-		unless event.user.on(event.server).permission?(:mention_everyone, event.channel)
-			m = event.channel.send_message '^^^ @here'
-			puts 'Manually replace @here'
-			sleep 5
-			m.delete
-		end
+    # Check if channel allows @everyone
+    
+    unless event.user.on(event.server).permission?(:mention_everyone, event.channel)
+      m = event.channel.send_message '^^^ @here'
+      puts 'Manually replace @here'
+      sleep 5
+      m.delete
+    end
   end
-	
-	message do |event|
-		unless event.channel.private?
-			event.message.delete if event.user.on(event.server).role? event.server.roles.find { |r| r.name == 'Muted' }
-		end
-	end
+  
+  message do |event|
+    unless event.channel.private?
+      event.message.delete if event.user.on(event.server).role? event.server.roles.find { |r| r.name == 'Muted' }
+    end
+  end
 end
