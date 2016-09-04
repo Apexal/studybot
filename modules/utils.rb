@@ -16,8 +16,36 @@ module UtilityCommands
     binding.pry
   end
 
+  command(:birthday, min_args: 0, max_args: 1, description: 'Find birthday info about a student.', usage: '`!birthday @user` or `!birthday regisusername`', permission_level: 1) do |event, username|
+    server = event.bot.server(150_739_077_757_403_137)
+
+    # Decide who to look up
+    where = nil
+    if username.nil? or username.start_with? '<@'
+      where = "discord_id = '#{(event.message.mentions.empty? ? event.user : event.message.mentions.first).id}'"
+    else
+      username = $db.escape(username)
+      where = "username = '#{username}'"
+    end
+    #puts where
+    target = $db.query("SELECT first_name, last_name, birthday FROM students WHERE #{where}").first
+    if target.nil?
+      event << 'Failed to find birthday info.'
+      return
+    end
+
+    now = DateTime.now
+    date_str = target['birthday'].strftime("%B %-d")
+    date = Date.new(now.year, target['birthday'].month, target['birthday'].day)
+
+    date = Date.new(now.year + 1, date.month, date.day) if date < now
+
+    days_away = (date - now).to_i
+    "**#{target['first_name']} #{target['last_name']}**'s birthday is **#{date_str}**! That's #{days_away} days away."
+  end
+
   emailed = []
-  command(:recruit, min_args: 1, max_args: 1, description: 'Invite a student to the server with an email!', usage: '`!invite regisusername`', permission_level: 1) do |event, username|
+  command(:recruit, min_args: 1, max_args: 1, description: 'Invite a student to the server with an email!', usage: '`!recruit regisusername`', permission_level: 1) do |event, username|
     event.message.delete unless event.channel.private?
     server = event.bot.server(150_739_077_757_403_137)
     user = event.user.on(server)
@@ -48,7 +76,7 @@ module UtilityCommands
 
             html_part do
               content_type 'text/html; charset=UTF-8'
-              body File.read('./resources/recruit_email.html').sub('%code', username.each_byte.map { |b| b.to_s(16) }.join).sub('%first_name%', row['first_name']).sub('%inviter%', "#{inviter['first_name']} #{inviter['last_name']} of #{inviter['advisement']}")
+              body File.read('./resources/recruit_email.html').sub('%code%', username.each_byte.map { |b| b.to_s(16) }.join).sub('%first_name%', row['first_name']).sub('%inviter%', "#{inviter['first_name']} #{inviter['last_name']} of #{inviter['advisement']}")
             end
           end
           mail.deliver!
@@ -126,7 +154,7 @@ module UtilityCommands
 
     old_teacher = voice_channel.name.split(' ')[-1] # Get's last word
 
-    teachers = $user_teachers[event.user.id].nil? ? $db.query("SELECT staffs.last_name FROM staffs JOIN courses ON courses.teacher_id=staffs.id JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id WHERE students.discord_id=#{event.user.id}").map { |t| t['last_name'] }.uniq : $user_teachers[event.user.id]
+    teachers = $user_teachers[event.user.id].nil? ? $db.query("SELECT staffs.last_name FROM staffs JOIN courses ON courses.teacher_id=staffs.id JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id WHERE students.discord_id=#{event.user.id} AND courses.is_class=1").map { |t| t['last_name'] }.uniq : $user_teachers[event.user.id]
     $user_teachers[event.user.id] = teachers
     teacher = teachers.include?(name) ? name : teachers.sample
 

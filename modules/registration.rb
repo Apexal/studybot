@@ -15,6 +15,7 @@ module RegistrationEvents
     event.user.pm '**I am an automated bot for the Regis Discord server.** :robot:'
     sleep 1
     event.user.pm 'Please type `!register yourregisusername`. *You will not be able to participate in the server until you do this.*'
+    event.user.pm '**Quickstart Guide** <https://www.youtube.com/watch?v=pynmRmJUDJs>'
     sleep 60 * 3
     m.delete
   end
@@ -95,7 +96,7 @@ module RegistrationCommands
         vrole = server.roles.find{|r| r.name == 'Verified'}
         roles_to_add << vrole
 
-        unless summer?
+        #unless summer?
           # Decide grade for role
           digit = result['advisement'][0].to_i
           rolename = 'Freshmen'
@@ -158,7 +159,7 @@ module RegistrationCommands
 
           # THE GOOD STUFF
           # Get all classes for this student
-          query = "SELECT courses.id, courses.title, courses.room_id, staffs.last_name FROM courses JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id JOIN staffs ON staffs.id=courses.teacher_id WHERE students.discord_id=#{user.id} AND courses.is_class=1"
+          query = "SELECT courses.id, courses.title, courses.room_id, staffs.last_name FROM courses JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id JOIN staffs ON staffs.id=courses.teacher_id WHERE students.username='#{escaped}' AND courses.is_class=1"
           $db.query(query).each do |course|
             # Ignore unnecessary classes
             next if $unallowed.any? { |w| course['title'].include? w } # Honestly Ruby is great
@@ -190,7 +191,7 @@ module RegistrationCommands
 
             sleep 0.5
           end
-        end
+        #end
 
         # Default groups
         $db.query('SELECT room_id, role_id FROM groups WHERE default_group=1').each do |group|
@@ -214,12 +215,12 @@ module RegistrationCommands
         # PM him a congratulatory message
         status_message.edit("**Congratulations, #{result['first_name']}. You are now a verified Regis Discord User!**")
         # Make an announcement welcoming him to everyone
-        #event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{user.mention})* to the Discord Server!"
+        event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{user.mention})* to the Discord Server!"
 
         welcome_info.each_line do |line|
           begin
-            #user.pm(line)
-            #sleep 4
+            user.pm(line)
+            sleep 4
           rescue
             puts "Failed sending line: #{line}"
           end
@@ -232,7 +233,7 @@ module RegistrationCommands
       end
     end
 
-    sort_channels(server)
+    #sort_channels(server)
 
     nil
   end

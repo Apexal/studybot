@@ -13,20 +13,21 @@ module RoomCommands
     to_delete = [event.message]
     
     messages = []
-    messages << '**Public Groups**'
-    $db.query('SELECT * FROM groups WHERE private=0').each do |row|
+    $db.query('SELECT * FROM groups WHERE private=0 ORDER BY name').each do |row|
       group_role = server.roles.find { |r| r.id == Integer(row['role_id']) }
       count = server.members.find_all { |m| m.role? group_role }.length
-      owner = row['creator'] != 'server' ? "**#{row['creator']}**" : ''
+      owner = row['creator'] != 'server' ? "(#{row['creator']})" : ''
 
-      messages << "#{row['default_group'] == 1 ? '*' : ''}`#{row['name']}` *#{row['description']}* (#{count} members) #{owner}"
+      messages << "**#{row['name']}** `#{row['description']}` *#{count} users* #{owner}"
+
+      #messages << "#{row['default_group'] == 1 ? '*' : ''}`#{row['name']}` *#{row['description']}* (#{count} members) #{owner}"
     end
     messages << '*Private groups are not listed. You must be invited to these to join.*'
     messages << "\n *Use `!join \"group\"` to join."
     messages << 'Use `!creategroup "Name Here" "Description here."` to start a group.*'
 
     to_delete << event.channel.send_message(messages.join("\n"))
-    sleep 60
+    sleep 60 * 3
     to_delete.each(&:delete) unless event.channel.private?
 
     nil

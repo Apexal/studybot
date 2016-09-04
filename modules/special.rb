@@ -26,8 +26,8 @@ module SpecialRoomEvents
 
       if online_count >= 6
         if channel.nil?
-          puts "Creating voice-channel for Advisement #{advisement}"
-          channel = server.create_channel("Advisement #{advisement}", 'voice')
+          puts "Creating voice-channel for Advisement #{advisement_role.name}"
+          channel = server.create_channel("Advisement #{advisement_role.name}", 'voice')
           channel.position = 2
           channel.define_overwrite(advisement_role, perms, 0)
           Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)

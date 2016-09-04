@@ -1,6 +1,23 @@
 module ModeratorCommands
   extend Discordrb::Commands::CommandContainer
   
+  command(:reorder, permission_level: 3) do |event|
+    pos = event.server.text_channels.find { |t| t.name == 'seniors' }.position
+    adv_channels = event.server.text_channels.find_all { |t| %w(1 2 3 4).include? t.name[0] }.sort { |a, b| a.name <=> b.name }
+    adv_channels.each { |a| a.position = pos; puts "#{a.name} at #{pos}"; sleep 1; pos+=1 }
+
+    pos = event.server.text_channels.find_all { |t| %w(1 2 3 4).include? t.name[0] }.sort { |a, b| a.position <=> b.position }.last.position
+    $db.query('SELECT room_id FROM courses WHERE room_id IS NOT NULL').each do |row|
+      begin
+        event.server.text_channels.find { |t| t.id == Integer(row['room_id']) }.position = pos
+      rescue
+
+      end
+      sleep 1
+    end
+    puts 'Done.'
+  end
+  
   command(:fixregistration) do |event|
     server = event.bot.server(150_739_077_757_403_137)
     vrole = server.roles.find { |r| r.name == "Verified" }
