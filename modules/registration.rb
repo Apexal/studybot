@@ -1,3 +1,5 @@
+require 'securerandom'
+
 module RegistrationEvents
   extend Discordrb::EventContainer
   member_leave do |event|
@@ -30,8 +32,11 @@ module RegistrationCommands
     # Check if username was passed and that its not a teacher's email
     if !!username && /^[a-z]+\d{2}$/.match(username)
       # Convert the hex username back to its string
-      code = username.each_byte.map { |b| b.to_s(16) }.join
+      #code = username.each_byte.map { |b| b.to_s(16) }.join
+      
+      code = SecureRandom.hex # Make random hex code
 
+      $db.query("INSERT INTO discord_codes VALUES ('#{event.user.id}', '#{code}', '#{username}') ON DUPLICATE KEY UPDATE code='#{code}'")
       # Send a welcome email with the command to verify
       mail = Mail.new do
         from "Regis Discord Server <#{$CONFIG['auth']['gmail']['username']}@gmail.com>"
@@ -73,7 +78,14 @@ module RegistrationCommands
     # Make sure they passed a code!
     unless code.nil?
       # Change hex code back into characters
-      username = code.scan(/../).map { |x| x.hex.chr }.join
+      code = $db.escape(code)
+      u = $db.query("SELECT username, code FROM discord_codes WHERE code = '#{code}'").first
+      if u.nil?
+        user.pm 'Incorrect code!'
+        puts 'Incorrect code!'
+        return
+      end
+      username = u['username']
 
       # Escape string since techinally anything can be in there
       escaped = $db.escape(username)
@@ -81,6 +93,7 @@ module RegistrationCommands
       # Check if user is already registered with another Discord account
       if $db.query("SELECT verified FROM students WHERE username='#{escaped}' AND verified=1").count > 0
         user.pm "You are already registered on this server with another Discord account!\nAsk Frank (<@152621041976344577>) to reset this for you if you forgot the password for that account."
+        puts 'Already registered'
         return
       end
 
@@ -166,6 +179,7 @@ module RegistrationCommands
 
             # Turn something like 'Math II (Alg 2)' into 'math'
             course_name = course['title'].split(' (')[0].split(' ').join('-')
+            course_name.gsub!(/\W+/, '-')
             %w(IV III II I 9 10 11 12).each { |i| course_name.gsub!("-#{i}", '') }
             puts "Handling course room for #{course['title']}"
             course_room = nil
@@ -232,7 +246,7 @@ module RegistrationCommands
         user.pm('Incorrect code!')
       end
     end
-
+    puts 'DONE.'
     #sort_channels(server)
 
     nil
