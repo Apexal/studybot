@@ -132,6 +132,7 @@ module RoomCommands
     # Announce to #meta (if public)
     server.text_channels.find{|c| c.name == 'meta'}.send_message("@everyone #{user.mention} has just created the group **#{full_name}**. Join with `!join \"#{full_name}\"`") unless private == 1
 		user.pm "*As group founder, you can manage (delete/pin) messages in your group's text-channel.*"
+    $groups = $db.query('SELECT * FROM groups WHERE creator != "server" AND voice_channel_allowed=1')
     nil
   end
 
@@ -251,7 +252,28 @@ module RoomCommands
     handle_group_voice_channels(server)
     nil
   end
-
+  
+  command(:togglevoicechannel, min_args: 1, max_args: 1, description: 'Toggle whether a group can get a private voice-channel.', usage: '`!togglevoicechannel "Group"`', permission_level: 2) do |event, group|
+    event.message.delete unless event.channel.private?
+    server = event.bot.server(150_739_077_757_403_137)
+    group = $db.escape(group)
+    
+    $db.query("SELECT voice_channel_allowed FROM groups WHERE name='#{group}'").each do |row|
+      status = row['voice_channel_allowed'] == 1 ? 0 : 1
+      $db.query("UPDATE groups SET voice_channel_allowed=#{status} WHERE name='#{group}'")
+      puts "Group #{group} #{status == 1 ? 'now gets' : 'can no longer get'} a voice-channel"
+      event.user.pm("Group #{group} #{status == 1 ? 'now gets' : 'can no longer get'} a voice-channel")
+      
+      # Remove voice channel if open
+      delete_channel(server, server.voice_channels.find { |v| v.name == "Group #{group}" })
+      break
+    end
+    
+    $groups = $db.query('SELECT * FROM groups WHERE creator != "server" AND voice_channel_allowed=1')
+    handle_group_voice_channels(server)
+    nil
+  end
+  
   command(:leave, min_args: 0, max_args: 1, description: 'Leave a group.', usage: '`!leave "group"` or while in a group\'s text-channel: `!leave`', permission_level: 1) do |event, group_name|
     event.message.delete unless event.channel.private?
 

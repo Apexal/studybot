@@ -1,4 +1,5 @@
 require 'pry'
+require 'securerandom'
 
 module UtilityEvents
   extend Discordrb::EventContainer
@@ -69,6 +70,8 @@ module UtilityCommands
           user.pm 'They have already been emailed an invitation.'
           return
         else
+          code = SecureRandom.hex
+          $db.query("INSERT INTO discord_codes VALUES (NULL, '#{code}', '#{username}') ON DUPLICATE KEY UPDATE code='#{code}'")
           mail = Mail.new do
             from "Regis Discord Server <#{$CONFIG['auth']['gmail']['username']}@gmail.com>"
             to    "#{username}@regis.org"
@@ -76,7 +79,7 @@ module UtilityCommands
 
             html_part do
               content_type 'text/html; charset=UTF-8'
-              body File.read('./resources/recruit_email.html').sub('%code%', username.each_byte.map { |b| b.to_s(16) }.join).sub('%first_name%', row['first_name']).sub('%inviter%', "#{inviter['first_name']} #{inviter['last_name']} of #{inviter['advisement']}")
+              body File.read('./resources/recruit_email.html').sub('%code%', code).sub('%first_name%', row['first_name']).sub('%inviter%', "#{inviter['first_name']} #{inviter['last_name']} of #{inviter['advisement']}")
             end
           end
           mail.deliver!

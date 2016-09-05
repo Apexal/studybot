@@ -105,9 +105,8 @@ end
 
 $groups = nil
 def handle_group_voice_channels(server)
-  return
   if $groups.nil?
-    $groups = $db.query('SELECT * FROM groups WHERE creator != "server"')
+    $groups = $db.query('SELECT * FROM groups WHERE creator != "server" AND voice_channel_allowed=1')
   end
 
   $groups.each do |row|
@@ -135,7 +134,7 @@ def handle_group_voice_channels(server)
         study_perms.can_speak = true
         channel.define_overwrite(study_role, 0, study_perms)
       end
-    else
+    elsif count <= 2
       delete_channel(server, channel) unless channel.nil?  or !channel.users.empty?
       # puts 'Less than 5 online members in #{row['name']}'
     end
