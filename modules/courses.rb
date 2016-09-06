@@ -1,6 +1,30 @@
 module CourseCommands
   extend Discordrb::Commands::CommandContainer
 
+  command(:teachers, min_args: 0, max_args: 1, description: 'List your teachers or another student\'s teachers.', usage: '`!teachers` or `!teachers @student`', permission_level: 1) do |event|
+    to_delete = [event.message]
+
+    user = event.message.mentions.empty? ? event.user : event.message.mentions.first
+    message = []
+
+    username = nil
+    $db.query("SELECT students.username, courses.title, staffs.last_name FROM staffs JOIN courses ON courses.teacher_id=staffs.id JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id WHERE students.discord_id=#{user.id} AND courses.is_class=1").each do |row|
+      username = row['username']
+      message << "`-` #{row['title']}: *#{row['last_name']}*"
+    end
+    if username.nil?
+      event.message.delete unless event.channel.private?
+      event.user.pm 'Invalid user!'
+      return
+    end
+    to_delete << event.channel.send_message("**Teacher List for #{username}**")
+    to_delete << event.channel.send_message(message.join "\n")
+
+    sleep 60 * 3
+    begin;to_delete.map(&:delete);rescue;end
+    nil
+  end
+
   # END OF YEAR COMMAND
   command(:endyear, permission_level: 3) do |event|
     puts 'Ending the year. Deleting course rooms and channels.'
