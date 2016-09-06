@@ -73,13 +73,24 @@ module RoomCommands
       event.message.reply 'A group by that name already exists or you already started a group.'
       return
     end
-
+    
     # Sanitize group name
     group_name.downcase!
     group_name.strip!
+    
+    if group_name.length < 3
+      event.user.pm 'Group name is too short. It must be at least 3 characters long.'
+      return
+    end
+    
+    if group_name.length > 20
+      event.user.pm 'Group name is too long. It must be less than 21 characters.'
+      return
+    end
+    
     group_name.gsub!(/\s+/, '-')
     group_name.gsub!(/[^\p{Alnum}-]/, '')
-
+    
     server = event.bot.server(150_739_077_757_403_137)
     user = event.user.on(server)
     # Good to go

@@ -42,7 +42,11 @@ module StartupEvents
       end
       
     end
-
+    
+    $hierarchy.each do |vc_id, _|
+      $hierarchy.delete(vc_id) if server.voice_channels.find { |v| v.id == vc_id }.nil?
+    end
+    
     server.text_channels.find_all { |t| t.name == 'voice-channel' and !$hierarchy.values.include? t.id }.each do |t|
       begin
         puts "DELETING #{t.topic}"

@@ -98,6 +98,24 @@ module ModeratorCommands
     end
   end
   
+  command(:closecourses, permission_level: 3) do |event|
+    event.message.delete unless event.channel.private?
+    
+    server = event.bot.server(150_739_077_757_403_137)
+    # Remove course rooms
+    $db.query('SELECT room_id FROM courses WHERE room_id IS NOT NULL').each do |row|
+      begin
+        event.server.text_channels.find{ |c| c.id == Integer(row['room_id']) }.delete
+        sleep 0.5
+      rescue
+        puts "No room #{row['room_id']}"
+      end
+    end
+    $db.query('UPDATE courses SET room_id=NULL WHERE room_id IS NOT NULL')
+    event.user.pm 'Closed course channels.'
+    nil
+  end
+
   command(:mute, min_args: 1, max_args: 1, description: 'Toggle a text mute on a user.', usage: '`!mute @user`', permission_level: 2) do |event|
     event.message.delete unless event.channel.private?
     

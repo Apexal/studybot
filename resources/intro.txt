@@ -8,3 +8,6 @@ You can now access:
 Type `!help` and `!help commandname` to see more options!
 
 If you have any questions, direct message the Founder Frank Matranga of 2B-1 (<@152621041976344577>).
+---
+Check out this video which explains everything you need to know about the server:
+https://www.youtube.com/watch?v=pynmRmJUDJs&feature=youtu.be

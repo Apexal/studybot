@@ -98,7 +98,43 @@ module UtilityCommands
     days_away = (date - now).to_i
     "**#{target['first_name']} #{target['last_name']}**'s birthday is **#{date_str}**! That's #{days_away} days away."
   end
+  
+  adv_invited = []
+  command(:expand, max_args: 0, description: 'Email everyone in your big advisement an invitation to join!', permission_level: 1) do |event|
+    event.message.delete unless event.channel.private?
+    server = event.bot.server(150_739_077_757_403_137)
+    
+    $db.query("SELECT advisement FROM students WHERE discord_id='#{event.user.id}'").map { |row| row['advisement'][0..1] }.each do |adv|
+      if adv_invited.include? adv
+        event.user.pm 'Your advisement has already been emailed!'
+        return
+      end
+      all = $db.query("SELECT username, first_name, last_name, verified FROM students WHERE advisement LIKE '#{adv}%'")
+      
+      registered = all.find_all { |row| row['verified'] == 1 }
+      unregistered = all.find_all { |row| row['verified'] == 0 }
+      
+      list = registered.map { |u| "<li>#{u['first_name']} #{u['last_name']}</li>" }.join "\n"
+      
+      mail = Mail.new do
+        from "Regis Discord Server <#{$CONFIG['auth']['gmail']['username']}@gmail.com>"
+        to    unregistered.map { |row| "#{row['username']}@regis.org" }
+        subject "Your Advisement Calls"
 
+        html_part do
+          content_type 'text/html; charset=UTF-8'
+          body File.read('./resources/expand_email.html').gsub('%adv%', adv).gsub('%count%', registered.length.to_s).gsub('%list%', list)
+        end
+      end
+      mail.deliver!
+      
+      adv_invited << adv
+      event.user.pm "Successfully invited the rest of #{adv}"
+      break
+    end
+    nil
+  end
+  
   emailed = []
   command(:recruit, min_args: 1, max_args: 1, description: 'Invite a student to the server with an email!', usage: '`!recruit regisusername`', permission_level: 1) do |event, username|
     event.message.delete unless event.channel.private?
@@ -353,7 +389,7 @@ module UtilityCommands
     save_hierarchy
     event.bot.stop
   end
-
+  
   command(:restart, description: 'Restart the bot.') do |event|
     puts 'Restarting!'
     save_hierarchy

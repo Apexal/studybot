@@ -99,17 +99,17 @@ def delete_channel(server, channel, count=1)
 
   return if server.text_channels.find { |t| t.id == $hierarchy[channel.id] }.nil?
 
-  begin
-    server.text_channels.find { |t| t.id == $hierarchy[channel.id] }.delete
-    $hierarchy.delete channel.id
-  rescue => e
-    puts 'Failed to find/delete associated #voice-channel'
-    puts e
-    if count < 2
-      sleep 1.1
-      delete_channel(server, channel, count + 1) # Is this recursion?
-    end
-  end
+  # begin
+    # server.text_channels.find { |t| t.id == $hierarchy[channel.id] }.delete
+    # $hierarchy.delete channel.id
+  # rescue => e
+    # puts 'Failed to find/delete associated #voice-channel'
+    # puts e
+    # if count < 2
+      # sleep 1.1
+      # delete_channel(server, channel, count + 1) # Is this recursion?
+    # end
+  # end
 end
 
 $groups = nil

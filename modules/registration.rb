@@ -174,6 +174,7 @@ module RegistrationCommands
 
           # THE GOOD STUFF
           # Get all classes for this student
+        unless summer?
           query = "SELECT courses.id, courses.title, courses.room_id, staffs.last_name FROM courses JOIN students_courses ON students_courses.course_id=courses.id JOIN students ON students.id=students_courses.student_id JOIN staffs ON staffs.id=courses.teacher_id WHERE students.username='#{escaped}' AND courses.is_class=1"
           $db.query(query).each do |course|
             # Ignore unnecessary classes
@@ -207,6 +208,7 @@ module RegistrationCommands
 
             sleep 0.5
           end
+        end
         #end
 
         # Default groups
@@ -232,7 +234,8 @@ module RegistrationCommands
         status_message.edit("**Congratulations, #{result['first_name']}. You are now a verified Regis Discord User!**")
         # Make an announcement welcoming him to everyone
         event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{user.mention})* to the Discord Server!"
-
+        
+        
         welcome_info.each_line do |line|
           begin
             user.pm(line)
@@ -241,7 +244,11 @@ module RegistrationCommands
             puts "Failed sending line: #{line}"
           end
         end
-
+        
+        begin
+        event.bot.find_channel(result['advisement'][0..1]).first.send_message "@everyone **#{result['first_name']} #{result['last_name']}** from your advisement has joined!"
+        rescue;puts 'Couldn\'t announce to advisement channel.';end
+        
         # Set his discord_id and make him verified in the db
         $db.query("UPDATE students SET discord_id='#{user.id}', verified=1 WHERE username='#{escaped}'")
       else
