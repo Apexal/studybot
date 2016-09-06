@@ -68,6 +68,7 @@ module StartupEvents
     puts 'Doing game parties'
     handle_game_parties(server)
     handle_public_room(server)
+    handle_grade_voice_channels(server)
     puts 'Done.'
     puts "FINISHED STARTUP\n------------------------------------------------\n"
   end

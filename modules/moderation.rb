@@ -18,23 +18,11 @@ module ModeratorCommands
     puts 'Done.'
   end
   
-  command(:fixregistration) do |event|
+  command(:purgatory) do |event|
     server = event.bot.server(150_739_077_757_403_137)
-    vrole = server.roles.find { |r| r.name == "Verified" }
-    verified = $db.query("SELECT discord_id FROM students WHERE verified=1").map { |row| Integer(row['discord_id']) }
-    
-    lost_boys = server.members.find_all { |m| m.role? vrole and !verified.include? m.id }
-    puts lost_boys.length
-    #lost_boys.each do |m|
-      #begin
-        #puts "!verify #{m.pm.history(100).find { |m| m.content.start_with? '!verify' }.content.split(' ')[1]} #{m.mention}"
-      #rescue
-
-      #end
-      #puts "#{m.display_name}"
-      #m.pm 'There was a little issue... Please run the `!verify code` command once again, the same exact way you did when you first registered.'
-      #sleep 1
-    #end
+    server.members.find_all { |m| m.roles.empty? }.each do |m|
+      m.pm 'Hey! You haven\'t registered yet! You can\' use anything in the server until you do this. Just send me the message `!register regisusername` (with your Regis username).'
+    end
   end
   
   command(:mute, min_args: 1, max_args: 1, description: 'Toggle a text mute on a user.', usage: '`!mute @user`', permission_level: 2) do |event|

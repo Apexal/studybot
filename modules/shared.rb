@@ -120,21 +120,22 @@ def handle_group_voice_channels(server)
     perms = Discordrb::Permissions.new
     perms.can_connect = true
 
-    minimum = (total_count * 0.25).floor > 5 ? (total_count * 0.25).floor > minimum : 5 
-    minimum = 10 if minimum > 10
-
+    #minimum = (total_count * 0.25).floor > 5 ? (total_count * 0.25).floor > minimum : 5 
+    #minimum = 10 if minimum > 10
+    minimum = 4
+    
     if count > minimum
-      if channel.nil? and server.voice_channels.find { |c| c.name == row['name'] }.nil?
-        puts "Opening group voice channel for #{row['name']}"
-        channel = server.create_channel("Group #{row['name']}", 'voice')
-        study_role = server.roles.find { |r| r.name == 'studying' }
-        channel.define_overwrite(group_role, perms, 0)
-        Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
-        study_perms = perms
-        study_perms.can_speak = true
-        channel.define_overwrite(study_role, 0, study_perms)
-      end
-    elsif count <= 2
+      # if channel.nil? and server.voice_channels.find { |c| c.name == row['name'] }.nil?
+        # puts "Opening group voice channel for #{row['name']}"
+        # channel = server.create_channel("Group #{row['name']}", 'voice')
+        # study_role = server.roles.find { |r| r.name == 'studying' }
+        # channel.define_overwrite(group_role, perms, 0)
+        # Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
+        # study_perms = perms
+        # study_perms.can_speak = true
+        # channel.define_overwrite(study_role, 0, study_perms)
+      # end
+    elsif count <= 2 and !channel.nil? and channel.users.empty?
       delete_channel(server, channel) unless channel.nil?  or !channel.users.empty?
       # puts 'Less than 5 online members in #{row['name']}'
     end

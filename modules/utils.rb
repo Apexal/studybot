@@ -16,7 +16,61 @@ module UtilityCommands
 
     binding.pry
   end
+  
+  command(:vc, max_args: 0, description: 'Open up a voice channel for a grade if none exists.', permission_level: 1) do |event|
+    event.message.delete unless event.channel.private?
+    server = event.bot.server(150_739_077_757_403_137)
+    perms = Discordrb::Permissions.new
+    perms.can_connect = true
+    if %w(freshmen sophomores juniors seniors).include? event.channel.name
+      role = server.roles.find { |r| r.name == event.channel.name.capitalize }
+      channel = server.voice_channels.find { |v| v.name == event.channel.name.capitalize }
+      unless role.nil? or !channel.nil?
+        puts "Creating voice-channel for #{role.name}"
+        channel = server.create_channel(role.name, 'voice')
+        channel.position = 2
+        channel.define_overwrite(role, perms, 0)
+        Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
+      end
+    elsif $groups.map { |g| g['name'].downcase }.include? event.channel.name
+      g_name = $groups.find { |g| Integer(g['room_id']) == event.channel.id }['name']
+      group_role = server.roles.find { |r| r.id == Integer($groups.find { |g| Integer(g['room_id']) == event.channel.id }['role_id']) }
+      puts "Manually opening channel for Group #{g_name}"
+      
+      perms = Discordrb::Permissions.new
+      perms.can_connect = true
+      
+      channel = server.create_channel("Group #{g_name}", 'voice')
+      study_role = server.roles.find { |r| r.name == 'studying' }
+      channel.define_overwrite(group_role, perms, 0)
+      Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
+      study_perms = perms
+      study_perms.can_speak = true
+      channel.define_overwrite(study_role, 0, study_perms)
+    else
+      advisement = $db.query("SELECT advisement FROM students WHERE discord_id='#{event.user.id}'").first
+      unless advisement.nil?
+        adv = advisement['advisement'][0..1]
+        
+        if adv.downcase == event.channel.name[0..1]
+          unless server.voice_channels.find { |v| v.name == "Advisement #{adv}" }.nil?
+            event.user.pm "A voice-channel for Advisement #{adv} is already open."
+            return
+          end
 
+          advisement_role = server.roles.find { |r| r.name == adv }
+          puts "Creating voice-channel for Advisement #{advisement_role.name}"
+          channel = server.create_channel("Advisement #{advisement_role.name}", 'voice')
+          channel.position = 2
+          channel.define_overwrite(advisement_role, perms, 0)
+          Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
+        end
+      end
+    end
+
+    nil
+  end
+  
   command(:birthday, min_args: 0, max_args: 1, description: 'Find birthday info about a student.', usage: '`!birthday @user` or `!birthday regisusername`', permission_level: 1) do |event, username|
     server = event.bot.server(150_739_077_757_403_137)
 

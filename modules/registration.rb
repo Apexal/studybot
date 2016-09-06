@@ -31,6 +31,8 @@ module RegistrationCommands
   command(:register, min_args: 1, max_args: 1, description: 'Connect your account to your Regis account.', usage: '`!register regisusername`') do |event, username|
     # Check if username was passed and that its not a teacher's email
     if !!username && /^[a-z]+\d{2}$/.match(username)
+      username = $db.escape(username)
+
       # Convert the hex username back to its string
       #code = username.each_byte.map { |b| b.to_s(16) }.join
       

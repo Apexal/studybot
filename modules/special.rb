@@ -1,3 +1,16 @@
+def handle_grade_voice_channels(server)
+  # Grade Voice Channels
+  grades = %w(Freshmen Sophomores Juniors Seniors)
+  Hash[grades.map { |g| [server.roles.find { |r| r.name == g }, server.voice_channels.find { |c| c.name == g } ] }]
+    .each do |role, channel|
+      next if role.nil?
+      channel = server.voice_channels.find { |v| v.name == role.name }
+      online_count = server.online_members.count { |m| m.role? role}
+      
+      delete_channel(server, channel) if (!channel.nil? and online_count <= 2 and channel.users.empty?)
+    end
+end
+
 module SpecialRoomEvents
   extend Discordrb::EventContainer
 
@@ -23,41 +36,10 @@ module SpecialRoomEvents
       online_count = server.online_members.count { |m| m.role? advisement_role }
 
       channel = server.voice_channels.find { |v| v.name == "Advisement #{advisement_role.name}" }
-
-      if online_count >= 6
-        if channel.nil?
-          puts "Creating voice-channel for Advisement #{advisement_role.name}"
-          channel = server.create_channel("Advisement #{advisement_role.name}", 'voice')
-          channel.position = 2
-          channel.define_overwrite(advisement_role, perms, 0)
-          Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
-        end
-      elsif online_count <= 2
-        # 1 or 0 online
-        delete_channel(server, channel) unless channel.nil?
-      end
+      delete_channel(server, channel) if (online_count <= 2 and !channel.nil? and channel.users.empty?)
     end
 
-    # Grade Voice Channels
-    grades = %w(Freshmen Sophomores Juniors Seniors)
-    Hash[grades.map { |g| [server.roles.find { |r| r.name == g }, server.voice_channels.find { |c| c.name == g } ] }]
-      .each do |role, channel|
-        next if role.nil?
-        channel = server.voice_channels.find { |v| v.name == role.name }
-        online_count = server.online_members.count { |m| m.role? role}
-        if online_count >= 4
-          if channel.nil?
-            puts "Creating voice-channel for #{role.name}"
-            channel = server.create_channel(role.name, 'voice')
-            channel.position = 2
-            channel.define_overwrite(role, perms, 0)
-            Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
-          end
-        elsif online_count <= 2
-          # 1 or 0 online
-          delete_channel(server, channel) unless channel.nil? or !channel.users.empty?
-        end
-      end
+    handle_grade_voice_channels(server)
 
     if event.user.status == :offline
       $db.query("UPDATE students SET last_online='#{Time.new}' WHERE discord_id=#{event.user.id}")
