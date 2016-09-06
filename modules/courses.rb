@@ -194,8 +194,10 @@ module CourseCommands
 
           # Turn something like 'Math II (Alg 2)' into 'math'
           course_name = course['title'].split(' (')[0].split(' ').join('-')
+          course_name.gsub!(/\W+/, '-')
           %w(IV III II I 9 10 11 12).each { |i| course_name.gsub!("-#{i}", '') }
-
+          
+          
           puts "Handling course room for #{course['title']}"
           course_room = nil
           begin

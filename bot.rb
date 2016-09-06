@@ -69,6 +69,7 @@ begin
   school_loop
   bot.sync
 rescue Interrupt
+  save_hierarchy
   puts 'Shutting down...'
   bot.stop
 end

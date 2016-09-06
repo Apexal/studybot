@@ -1,3 +1,12 @@
+def save_hierarchy
+  puts 'Saving hierarchy to DB'
+  $db.query('DELETE FROM channel_links')
+  $hierarchy.each do |vc_id, tc_id|
+    puts "#{vc_id} | #{tc_id}"
+    $db.query("INSERT INTO channel_links VALUES ('#{vc_id}', '#{tc_id}') ON DUPLICATE KEY UPDATE text_channel_id='#{tc_id}'")
+  end
+end
+
 def replace_mentions(message)
   message.strip!
   message.gsub! '**', ''

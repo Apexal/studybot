@@ -32,11 +32,12 @@ module SpecialRoomEvents
     if event.user.on(server).role?(server.roles.find { |r| r.name == 'Verified' })
       user = event.user.on(server)
       advisement_role = user.roles.find { |r| r.name.length == 2 and %w(1 2 3 4).include? r.name[0] }
+      unless advisement_role.nil?
+        online_count = server.online_members.count { |m| m.role? advisement_role }
 
-      online_count = server.online_members.count { |m| m.role? advisement_role }
-
-      channel = server.voice_channels.find { |v| v.name == "Advisement #{advisement_role.name}" }
-      delete_channel(server, channel) if (online_count <= 2 and !channel.nil? and channel.users.empty?)
+        channel = server.voice_channels.find { |v| v.name == "Advisement #{advisement_role.name}" }
+        delete_channel(server, channel) if (online_count <= 2 and !channel.nil? and channel.users.empty?)
+      end
     end
 
     handle_grade_voice_channels(server)

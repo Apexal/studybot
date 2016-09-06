@@ -350,11 +350,13 @@ module UtilityCommands
 
     puts 'Shutting down!'
     event.user.pm 'See ya!'
+    save_hierarchy
     event.bot.stop
   end
 
   command(:restart, description: 'Restart the bot.') do |event|
     puts 'Restarting!'
+    save_hierarchy
     event.bot.stop
     exec('./run')
   end

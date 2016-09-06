@@ -46,6 +46,7 @@ def handle_room(event, r)
   # Temporary fix for stupid discordrb bug
   if r.name == $OPEN_ROOM_NAME and r.users.empty?
     puts 'Restarting due to users caching bug!'
+    save_hierarchy
     event.bot.stop
     exec('./run')
 	return

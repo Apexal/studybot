@@ -18,6 +18,79 @@ module ModeratorCommands
     puts 'Done.'
   end
   
+  command(:sync, permission_level: 3) do |event|
+    server = event.bot.server(150_739_077_757_403_137)
+    puts 'GROUPS'
+    # GROUP PERMS
+    perms = Discordrb::Permissions.new
+    perms.can_read_messages = true
+    perms.can_read_message_history = true
+    perms.can_send_messages = true
+		perms.can_mention_everyone = true
+		
+		# Fix for @here replacing
+		g_perms = perms.clone
+		g_perms.can_mention_everyone = false
+
+		other_p = Discordrb::Permissions.new
+		other_p.can_mention_everyone = true
+    $db.query("SELECT * FROM groups").each do |row|
+      puts row['name']
+      role = server.roles.find { |r| r.id == Integer(row['role_id']) }
+
+      channel_name = row['name']
+      channel_name.downcase!
+      channel_name.strip!
+      channel_name.gsub!(/\s+/, '-')
+      channel_name.gsub!(/[^\p{Alnum}-]/, '')
+
+
+      channel = server.text_channels.find { |t| t.name == channel_name }
+      
+      # GROUP CHANNEL IS MISSING!
+      if channel.nil?
+        puts 'Creating text-channel.'
+        channel = server.create_channel row['name']
+        channel.define_overwrite(role, g_perms, other_p)
+        Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
+        $db.query("UPDATE groups SET room_id='#{channel.id}' WHERE name='#{row['name']}'")
+      else
+        puts 'Already has text-channel.'
+      end
+      channel.topic = row['description']
+
+      sleep 0.5
+    end
+    puts 'Done.'
+
+
+    # GRADE PERMS
+    perms = Discordrb::Permissions.new
+    perms.can_read_messages = true
+    perms.can_read_message_history = true
+    perms.can_send_messages = true
+		perms.can_mention_everyone = true
+
+    puts 'Grade text-channels'
+    grades = %w(Freshmen Sophomores Juniors Seniors).reverse
+    grades.each do |grade|
+      puts grade
+      role = server.roles.find { |r| r.name == grade.downcase }
+      channel = server.text_channels.find { |t| t.name == grade.downcase }
+
+      if channel.nil?
+        puts 'Creating...'
+        channel = server.create_channel grade
+        channel.topic = "Private discussion room for all **#{grade}**."
+        channel.position = 5
+        channel.define_overwrite(role, perms, 0)
+        Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
+      end
+    end
+    puts 'Done.'
+  end
+
+
   command(:purgatory) do |event|
     server = event.bot.server(150_739_077_757_403_137)
     server.members.find_all { |m| m.roles.empty? }.each do |m|
