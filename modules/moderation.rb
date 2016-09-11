@@ -1,3 +1,5 @@
+require 'date'
+
 module ModeratorCommands
   extend Discordrb::Commands::CommandContainer
   
@@ -18,6 +20,69 @@ module ModeratorCommands
     puts 'Done.'
   end
   
+  command(:strikes, min_args: 0, max_args: 1, description: '', permission_level: 1) do |event|
+    event.message.delete unless event.channel.private?
+    server = event.bot.server(150_739_077_757_403_137)
+    user = event.user.on(server)
+
+    if !event.message.mentions.empty? and (!user.role? server.roles.find { |r| r.name == 'Moderators' } or user.id != server.owner.id)
+      user.pm 'Only moderators can view strikes on other users!'
+      return
+    end
+
+    target = event.message.mentions.empty? ? user : event.message.mentions.first.on(server)
+
+    strikes = $db.query("SELECT reason, added_date FROM strikes WHERE discord_id='#{target.id}'")
+    list = strikes.count > 0 ? strikes.map { |row| "`-` #{row['reason']} (#{row['added_date']})" } : ["*None!*"]
+    
+    info = []
+    info << "\n__**Server Rule Violation Info**__"
+    info << "1st — *Warning*"
+    info << "2nd — *Warning*"
+    info << "3rd — *Text mute for 1 day*"
+    info << "4th — *1 week ban*"
+    info << "5th and more — *1 month ban (each time)*"
+    
+    user.pm ":warning: **Your Active Strikes** (#{strikes.count}) :warning:\n#{list.join "\n"}\n#{info.join "\n"}"
+    
+    nil
+  end
+  
+  command(:strike, min_args: 2, max_args: 2, description: 'Add a strike to a user for a rule violation.', usage: '`!strike "reason" @user` (in quotes!)', permission_level: 2) do |event, reason|
+    event.message.delete unless event.channel.private?
+    server = event.bot.server(150_739_077_757_403_137)
+    
+    user = event.user.on(server)
+    
+    if reason.empty? or reason.length <= 5
+      event.user.pm 'Reason is too short!'
+      return
+    end
+    
+    target = event.message.mentions.first
+    unless target.nil?
+      target = target.on(server)
+      unless target.role? server.roles.find { |r| r.name == 'Verified' } 
+        event.user.pm 'You can only give a strike to verified users.'
+        return
+      end
+      
+      $db.query("INSERT INTO strikes (discord_id, reason, added_date) VALUES ('#{target.id}', '#{reason}', '#{DateTime.now}')")
+      strike_count = $db.query("SELECT reason, added_date FROM strikes WHERE discord_id='#{target.id}'").count
+      
+      if strike_count >= 3
+        server.owner.pm "#{target.mention} has received a strike, bringing them to #{strike_count}. Do it."
+      end
+      
+      target.pm ":warning: **YOU HAVE BEEN GIVEN STRIKE ##{strike_count} BY A MODERATOR FOR THE FOLLOWING REASON** :warning: \n'#{reason}'\n*Use `!strkes` to see all of your existing strikes and the punishments.*"
+    else
+      
+    end
+    
+    event.bot.find_channel('moderators').first.send_message "**#{target.mention} was given strike ##{} by Moderator #{user.mention} for reason:**\n'#{reason}'"
+    nil
+  end
+  
   command(:sync, permission_level: 3) do |event|
     server = event.bot.server(150_739_077_757_403_137)
     puts 'GROUPS'
@@ -35,7 +100,7 @@ module ModeratorCommands
 		other_p = Discordrb::Permissions.new
 		other_p.can_mention_everyone = true
     $db.query("SELECT * FROM groups").each do |row|
-      puts row['name']
+      #puts row['name']
       role = server.roles.find { |r| r.id == Integer(row['role_id']) }
 
       channel_name = row['name']
@@ -46,6 +111,15 @@ module ModeratorCommands
 
 
       channel = server.text_channels.find { |t| t.name == channel_name }
+      puts channel.name
+      puts channel.id
+      if channel.nil?
+        puts channel_name + " NOOOOOPE"
+        next
+      end
+      $db.query("UPDATE groups SET room_id='#{channel.id}' WHERE role_id='#{role.id}'")
+      sleep 1
+      next
       
       # GROUP CHANNEL IS MISSING!
       if channel.nil?
@@ -53,7 +127,7 @@ module ModeratorCommands
         channel = server.create_channel row['name']
         channel.define_overwrite(role, g_perms, other_p)
         Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
-        $db.query("UPDATE groups SET room_id='#{channel.id}' WHERE name='#{row['name']}'")
+        
       else
         puts 'Already has text-channel.'
       end
@@ -62,7 +136,8 @@ module ModeratorCommands
       sleep 0.5
     end
     puts 'Done.'
-
+    
+    return
 
     # GRADE PERMS
     perms = Discordrb::Permissions.new
@@ -93,8 +168,16 @@ module ModeratorCommands
 
   command(:purgatory) do |event|
     server = event.bot.server(150_739_077_757_403_137)
-    server.members.find_all { |m| m.roles.empty? }.each do |m|
-      m.pm 'Hey! You haven\'t registered yet! You can\' use anything in the server until you do this. Just send me the message `!register regisusername` (with your Regis username).'
+    lost = server.members.find_all { |m| m.roles.empty? }
+    puts "#{lost.length} lost boys"
+    lost.each do |m|
+      puts "#{m.display_name} #{m.id}"
+      
+      begin
+        m.pm #'Hey! You haven\'t registered yet! You can\'t use anything in the server until you do this. Just send me the message `!register regisusername` (with your Regis username).'
+      rescue
+        puts 'Nope!'
+      end
     end
   end
   

@@ -49,8 +49,8 @@ bot.set_user_permission(152189849284247553, 3)
 bot.include! StartupEvents
 bot.include! RegistrationEvents
 bot.include! RegistrationCommands
-bot.include! RoomCommands
-bot.include! RoomEvents
+bot.include! GroupCommands
+bot.include! GroupEvents
 bot.include! GameEvents
 bot.include! VoiceChannelEvents
 bot.include! UtilityEvents

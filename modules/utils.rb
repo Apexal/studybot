@@ -9,7 +9,7 @@ module UtilityCommands
   extend Discordrb::Commands::CommandContainer
 
   pokemon_theme = File.open('./resources/pokemon.txt', 'r')
-  command(:pry, permission_level: 3) do |event|
+  command(:pry, permission_level: 2) do |event|
     event.message.delete unless event.channel.private?
     server = event.bot.server(150_739_077_757_403_137)
     user = event.user.on(server)
@@ -129,7 +129,7 @@ module UtilityCommands
       mail.deliver!
       
       adv_invited << adv
-      event.user.pm "Successfully invited the rest of #{adv}"
+      event.user.on(server).pm "Successfully invited the rest of #{adv}"
       break
     end
     nil
@@ -294,10 +294,10 @@ module UtilityCommands
     if !username.nil? and !username.start_with?('<@')
       # Prevent nasty SQL injection
       username = $db.escape(username)
-      result = $db.query("SELECT * FROM students WHERE username='#{username}'")
+      result = $db.query("SELECT * FROM students WHERE username='#{username}' AND verified=1")
       if result.count > 0
         result = result.first
-        user = event.bot.user(result['discord_id'])
+        user = server.member(result['discord_id'])
         
         message = "**#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** is #{user.mention()}!"
         

@@ -18,6 +18,7 @@ module RegistrationEvents
     sleep 1
     event.user.pm 'Please type `!register yourregisusername`. *You will not be able to participate in the server until you do this.*'
     event.user.pm '**Quickstart Guide** <https://www.youtube.com/watch?v=pynmRmJUDJs>'
+    event.server.owner.pm "New user!"
     sleep 60 * 3
     m.delete
   end
@@ -29,9 +30,22 @@ module RegistrationCommands
   welcome_info = File.open('./resources/intro.txt', 'r')
 
   command(:register, min_args: 1, max_args: 1, description: 'Connect your account to your Regis account.', usage: '`!register regisusername`') do |event, username|
+    server = event.bot.server(150_739_077_757_403_137)
     # Check if username was passed and that its not a teacher's email
     if !!username && /^[a-z]+\d{2}$/.match(username)
       username = $db.escape(username)
+      puts "Attempting to send register email to #{username}..."
+      # Check if already verified
+      check = $db.query("SELECT verified as count FROM students WHERE username='#{username}'").first
+      if check.nil?
+        puts 'Invalid username'
+        event.user.pm "That is an invalid Regis username."
+        return
+      elsif check['verified'] == 1
+        puts 'Already registered.'
+        event.user.pm "Somebody has already registered as **#{username}**. If it was not you, please alert #{server.owner.mention} immediately."
+        return
+      end
 
       # Convert the hex username back to its string
       #code = username.each_byte.map { |b| b.to_s(16) }.join
@@ -58,6 +72,7 @@ module RegistrationCommands
 
       # Alert the user to the email
       event.user.pm('**Great!** Please check your Regis email to finish. https://owa.regis.org/owa/')
+      puts 'Done.'
     else
       event.user.pm('Invalid username! Please use your Regis username.')
     end
@@ -170,6 +185,7 @@ module RegistrationCommands
               Discordrb::API.update_role_overrides(token, adv_channel.id, bots_role_id, perms.bits, 0) # bots
             end
             sleep 1
+            break if a[0] == '4'
           end
 
           # THE GOOD STUFF
@@ -231,7 +247,7 @@ module RegistrationCommands
         user.remove_role(server.roles.find { |r| r.name == 'Guests' })
 
         # PM him a congratulatory message
-        status_message.edit("**Congratulations, #{result['first_name']}. You are now a verified Regis Discord User!**")
+        status_message.edit("**Congratulations, #{result['first_name']}. You are now a verified user!** *Please remember that this is not an official Regis server and is totally student-run.*")
         # Make an announcement welcoming him to everyone
         event.bot.find_channel('announcements').first.send_message "@everyone Please welcome **#{result['first_name']} #{result['last_name']}** of **#{result['advisement']}** *(#{user.mention})* to the Discord Server!"
         
@@ -246,7 +262,7 @@ module RegistrationCommands
         end
         
         begin
-        event.bot.find_channel(result['advisement'][0..1]).first.send_message "@everyone **#{result['first_name']} #{result['last_name']}** from your advisement has joined!"
+        event.bot.find_channel(result['advisement'][0..1].downcase).first.send_message "@everyone **#{result['first_name']} #{result['last_name']}** from your advisement has joined!"
         rescue;puts 'Couldn\'t announce to advisement channel.';end
         
         # Set his discord_id and make him verified in the db

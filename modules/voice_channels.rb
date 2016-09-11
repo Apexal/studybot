@@ -30,13 +30,13 @@ def set_voice_channel_name(server, user, room)
   while room_exists?(server, "Room #{randteacher}")
     randteacher = get_rand_teacher(user)
     count += 1
-    if count == 7
+    if count == $user_teachers[user.id].length
       randteacher += ' II'
       break
     end
   end
   # Finally rename the voice channel
-  room.name = "Room #{randteacher}"
+  room.name = "Room #{randteacher.nil? or randteacher.empty? ? "Unknown" : randteacher}"
 end
 
 def handle_room(event, r)
@@ -99,10 +99,13 @@ def handle_associated_channel(server, user, voice_channel, perms)
 		text_channel.send_message "Use `!rename` or `!rename 'Any of Your Teachers'` to change the name of your voice-channel!\n---"
 		
     # Set permissions
-    Discordrb::API.update_role_overrides($token, text_channel.id, server.roles.find{|r| r.name == "bots"}.id, perms.bits, 0)
-    Discordrb::API.update_user_overrides($token, text_channel.id, user.id, perms.bits, 0)
-    Discordrb::API.update_role_overrides($token, text_channel.id, server.id, 0, perms.bits)
-
+    begin
+      Discordrb::API.update_role_overrides($token, text_channel.id, server.roles.find{|r| r.name == "bots"}.id, perms.bits, 0)
+      Discordrb::API.update_user_overrides($token, text_channel.id, user.id, perms.bits, 0)
+      Discordrb::API.update_role_overrides($token, text_channel.id, server.id, 0, perms.bits)
+    rescue
+      
+    end
     # Link the id's of both channels together
     begin
 	  puts 'Linking channels'

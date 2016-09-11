@@ -186,8 +186,15 @@ def handle_game_parties(server)
       server.text_channels.find { |c| c.id == $hierarchy[v.id] }.topic = "Private chat for all those in the voice channel '#{game} Party'."
       puts "Started #{game} Party room"
 
-      mentions = server.online_members.find_all { |u| u.role? game_role and !v.users.include? u and u.game.nil? }.map { |u| u.mention }
-
+      
+      
+      name = game.downcase
+      name.strip!
+      name.gsub!(/[^\p{Alnum}-]/, '')
+      possible = $db.query("SELECT discord_id FROM game_interests WHERE game='#{name}'").map { |row| server.member(Integer(row['discord_id'])) }
+      #mentions = server.online_members.find_all { |u| u.role? game_role and !v.users.include? u and u.game.nil? }.map { |u| u.mention }
+      mentions = possible.find_all { |u| u.role? game_role and !v.users.include? u and u.game.nil? }.map { |u| u.mention }
+      
       game_channel.send_message "A #{game} session has started. Join voice-channel **#{game} Party**: #{mentions.join ' '}"
       break
     end

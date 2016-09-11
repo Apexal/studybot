@@ -1,4 +1,52 @@
 module GameEvents
+  extend Discordrb::Commands::CommandContainer
+  
+  command(:optin, min_args: 1, max_args: 1, description: 'Choose to be mentioned when a specific game party starts.', usage: '`!optin "Game"` (don\'t forget the quotes!)', permission_level: 1) do |event, game|
+    event.message.delete unless event.channel.private?
+    
+    unless event.channel.name == 'gaming'
+      event.user.pm 'You must be in the Gaming group to use this command. And you must type it in #gaming'
+      return
+    end
+    
+    server = event.bot.server(150_739_077_757_403_137)
+    user = event.user.on(server)
+    
+    game = $db.escape(game)
+    game.downcase!
+    game.strip!
+    game.gsub!(/[^\p{Alnum}-]/, '')
+    
+    begin
+      $db.query("INSERT INTO game_interests VALUES ('#{user.id}', '#{game}')")
+      user.pm "You have been opted in for **#{game} Party announcements.**"
+      puts "#{event.user.name} has opted-in for #{game} announcements."
+    rescue
+      user.pm "You're already opted in for **#{game}**."
+    end
+    
+    nil
+  end
+  
+  command(:optout, min_args: 1, max_args: 1, description: 'Choose *not* to be mentioned when a specific game party starts.', usage: '`!optout "Game"` (don\'t forget the quotes!)', permission_level: 1) do |event, game|
+    event.message.delete unless event.channel.private?
+    server = event.bot.server(150_739_077_757_403_137)
+    user = event.user.on(server)
+    
+
+    game = $db.escape(game)
+    game.downcase!
+    game.strip!
+    game.gsub!(/[^\p{Alnum}-]/, '')
+    
+    $db.query("DELETE FROM game_interests WHERE discord_id='#{user.id}' AND game='#{game}'")
+    user.pm "You have been opted out of **#{game} Party announcements.**"
+    puts "#{event.user.name} has opted-out of #{game} announcements."
+    nil
+  end
+end
+
+module GameEvents
   extend Discordrb::EventContainer
 
   # Stores info on who is playing what

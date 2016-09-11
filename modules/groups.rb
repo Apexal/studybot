@@ -1,11 +1,11 @@
-module RoomEvents
+module GroupEvents
   extend Discordrb::EventContainer
   presence do |event|
     handle_group_voice_channels(event.server)
   end
 end
 
-module RoomCommands
+module GroupCommands
   extend Discordrb::Commands::CommandContainer
   command(:groups, min_args: 0, max_args: 0, description: 'List availble groups.', permission_level: 1) do |event|
     server = event.bot.server(150_739_077_757_403_137)
@@ -25,11 +25,17 @@ module RoomCommands
     messages << '*Private groups are not listed. You must be invited to these to join.*'
     messages << "\n *Use `!join \"group\"` to join."
     messages << 'Use `!creategroup "Name Here" "Description here."` to start a group.*'
-
-    to_delete << event.channel.send_message(messages.join("\n"))
+    
+    puts messages.join("\n").length
+    messages.each_slice(10) do |messages|
+      to_delete << event.channel.send_message(messages.join("\n"))
+    end
     sleep 60 * 3
-    to_delete.each(&:delete) unless event.channel.private?
-
+    begin  
+      to_delete.each(&:delete) unless event.channel.private?
+    rescue
+    
+    end
     nil
   end
 
