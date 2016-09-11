@@ -196,11 +196,14 @@ module GroupCommands
 		
     role = nil
     group_name = $db.escape(group_name)
+		room = nil
 		is_private = nil
     $db.query("SELECT role_id, room_id, private FROM groups WHERE name='#{group_name}'").each do |row|
       is_private = row['private'] == 1
 			role = server.roles.find { |r| r.id == Integer(row['role_id']) }
-    end
+			room = server.text_channels.find { |t| t.id == Integer(row['room_id']) }
+			break
+		end
     
     if role.nil?
       user.pm 'Invalid group.'
@@ -211,8 +214,10 @@ module GroupCommands
 				elsif is_private
 					target.pm "You have been invited to the private **Group #{group_name}**. Type `!join '#{group_name}'` to enter!"
 					invites[target.id] = group_name
+					room.send_message "#{} has been invited to join the group."
 				else
 					target.pm "#{user.mention} wants you to join public **Group #{group_name}**! `!join '#{group_name}'`"
+					room.send_message "#{} has been asked to join the group."
 				end
 			else
         user.pm 'You can only invite users to a group you are in yourself.'
