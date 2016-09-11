@@ -70,9 +70,7 @@ module ModeratorCommands
       $db.query("INSERT INTO strikes (discord_id, reason, added_date) VALUES ('#{target.id}', '#{reason}', '#{DateTime.now}')")
       strike_count = $db.query("SELECT reason, added_date FROM strikes WHERE discord_id='#{target.id}'").count
       
-      if strike_count >= 3
-        server.owner.pm "#{target.mention} has received a strike, bringing them to #{strike_count}. Do it."
-      end
+      server.owner.pm "#{target.mention} has received a strike, bringing them to #{strike_count}."
       
       target.pm ":warning: **YOU HAVE BEEN GIVEN STRIKE ##{strike_count} BY A MODERATOR FOR THE FOLLOWING REASON** :warning: \n'#{reason}'\n*Use `!strkes` to see all of your existing strikes and the punishments.*"
     else

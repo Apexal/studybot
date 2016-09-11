@@ -12,16 +12,21 @@ module GameEvents
     server = event.bot.server(150_739_077_757_403_137)
     user = event.user.on(server)
     
-    game = $db.escape(game)
-    game.downcase!
-    game.strip!
-    game.gsub!(/[^\p{Alnum}-]/, '')
+    short_name = $db.escape(game).downcase.strip.gsub(/[^\p{Alnum}-]/, '')
     
+		game_id = $db.query("SELECT id FROM games WHERE short_name='#{short_name}'").first
+		if game_id.nil?
+			user.pm "That game isn't in the list yet. Someone on the server must play the game at least once to add it to the list."
+			return
+		end
+		game_id = game_id['id']
+		
     begin
-      $db.query("INSERT INTO game_interests VALUES ('#{user.id}', '#{game}')")
+      $db.query("INSERT INTO game_interests VALUES ('#{user.id}', #{game_id})")
       user.pm "You have been opted in for **#{game} Party announcements.**"
       puts "#{event.user.name} has opted-in for #{game} announcements."
-    rescue
+    rescue => e
+			#puts e
       user.pm "You're already opted in for **#{game}**."
     end
     
@@ -33,13 +38,9 @@ module GameEvents
     server = event.bot.server(150_739_077_757_403_137)
     user = event.user.on(server)
     
-
-    game = $db.escape(game)
-    game.downcase!
-    game.strip!
-    game.gsub!(/[^\p{Alnum}-]/, '')
+		short_name = $db.escape(game).downcase.strip.gsub(/[^\p{Alnum}-]/, '')
     
-    $db.query("DELETE FROM game_interests WHERE discord_id='#{user.id}' AND game='#{game}'")
+    $db.query("DELETE game_interests FROM game_interests JOIN games ON games.id=game_interests.game_id WHERE game_interests.discord_id='#{user.id}' AND games.short_name='#{short_name}'")
     user.pm "You have been opted out of **#{game} Party announcements.**"
     puts "#{event.user.name} has opted-out of #{game} announcements."
     nil
@@ -51,7 +52,7 @@ module GameEvents
 
   # Stores info on who is playing what
   $playing = {}
-
+	
   playing do |event|
     server = event.server
     game = event.game
@@ -68,6 +69,12 @@ module GameEvents
       else
         # Joining game
         $playing[event.user.id] = game
+				short_name = game.downcase.strip.gsub(/[^\p{Alnum}-]/, '')
+				
+				if $db.query("SELECT COUNT(*) as count FROM games WHERE full_name='#{$db.escape(game)}'").first['count'] == 0
+					$db.query("INSERT INTO games (full_name, short_name) VALUES ('#{$db.escape(game)}', '#{$db.escape(short_name)}')")
+					puts "Added #{game} to game list."
+				end
         #to_delete << event.bot.find_channel('gaming').first.send_message("**#{event.user.on(server).display_name}** is now playing **#{game}**")
       end
 
