@@ -23,7 +23,11 @@ module StartupEvents
       $hierarchy ||= {}
       $hierarchy[Integer(row['voice_channel_id'])] = Integer(row['text_channel_id'])
     end
-
+    
+    music_room_id = 223570352385687552
+    music_channel_id = 224644696838766592
+    $hierarchy[music_room_id] = music_channel_id
+    
     server.voice_channels.find_all { |r| r.name != 'AFK' and r.name != $OPEN_ROOM_NAME }.each do |c|
       puts $hierarchy.values.join ' '
       puts $hierarchy[c.id]

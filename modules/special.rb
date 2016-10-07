@@ -7,6 +7,21 @@ def handle_grade_voice_channels(server)
       channel = server.voice_channels.find { |v| v.name == role.name }
       online_count = server.online_members.count { |m| m.role? role}
       
+      
+      #puts "#{channel.name}: #{channel.id}" unless channel.nil?
+      
+      if channel.nil? and online_count >= 3
+        puts "#{role.name} POP"
+        perms = Discordrb::Permissions.new
+        perms.can_connect = true
+      
+        puts "Creating voice-channel for #{role.name}"
+        channel = server.create_channel(role.name, 'voice')
+        channel.position = 2
+        channel.define_overwrite(role, perms, 0)
+        Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
+      end
+      
       delete_channel(server, channel) if (!channel.nil? and online_count <= 2 and channel.users.empty?)
     end
 end

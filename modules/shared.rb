@@ -188,7 +188,7 @@ def handle_game_parties(server)
 
       short_name = game.downcase.strip.gsub(/[^\p{Alnum}-]/, '')
 			
-      possible = $db.query("SELECT game_interests.discord_id FROM game_interests JOIN games ON game.id=game_interests.game_id WHERE games.short_name='#{short_name}'").map { |row| server.member(Integer(row['discord_id'])) }
+      possible = $db.query("SELECT game_interests.discord_id FROM game_interests JOIN games ON games.id=game_interests.game_id WHERE games.short_name='#{short_name}'").map { |row| server.member(Integer(row['discord_id'])) }
       #mentions = server.online_members.find_all { |u| u.role? game_role and !v.users.include? u and u.game.nil? }.map { |u| u.mention }
       mentions = possible.find_all { |u| u.role? game_role and !v.users.include? u and u.game.nil? }.map { |u| u.mention }
       

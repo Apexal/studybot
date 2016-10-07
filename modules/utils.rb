@@ -17,22 +17,12 @@ module UtilityCommands
     binding.pry
   end
   
-  command(:vc, max_args: 0, description: 'Open up a voice channel for a grade if none exists.', permission_level: 1) do |event|
+  command(:vc, max_args: 0, description: 'Open up a voice channel for a advisement or group if none exists.', permission_level: 1) do |event|
     event.message.delete unless event.channel.private?
     server = event.bot.server(150_739_077_757_403_137)
     perms = Discordrb::Permissions.new
     perms.can_connect = true
-    if %w(freshmen sophomores juniors seniors).include? event.channel.name
-      role = server.roles.find { |r| r.name == event.channel.name.capitalize }
-      channel = server.voice_channels.find { |v| v.name == event.channel.name.capitalize }
-      unless role.nil? or !channel.nil?
-        puts "Creating voice-channel for #{role.name}"
-        channel = server.create_channel(role.name, 'voice')
-        channel.position = 2
-        channel.define_overwrite(role, perms, 0)
-        Discordrb::API.update_role_overrides($token, channel.id, server.id, 0, perms.bits)
-      end
-    elsif $groups.map { |g| g['name'].downcase }.include? event.channel.name
+    if $groups.map { |g| g['name'].downcase }.include? event.channel.name
       g_name = $groups.find { |g| Integer(g['room_id']) == event.channel.id }['name']
       group_role = server.roles.find { |r| r.id == Integer($groups.find { |g| Integer(g['room_id']) == event.channel.id }['role_id']) }
       puts "Manually opening channel for Group #{g_name}"
@@ -287,8 +277,31 @@ module UtilityCommands
       "The available colors are **#{colors.join ', '}, and default**."
     end
   end
-
-  command(:whois, description: 'Returns information on the user mentioned. Usage: `!whois @user or !whois regisusername`') do |event, username|
+  
+  command(:photo, description: 'Get the profile picture of a student.', usage: '`!whois @user` or `!whois regisusername`', permission_level: 1) do |event, username|
+    messages = [event.message]
+    
+    where = "discord_id='#{event.user.id}'"
+    if !username.nil? and !username.start_with?('<@')
+      where = "username='#{$db.escape(username)}'"
+    elsif !event.message.mentions.empty?
+      where = "discord_id='#{event.message.mentions.first.id}'"
+    end
+    
+    url = $db.query("SELECT mpicture FROM students WHERE #{where}").first
+    if url.nil? or url['mpicture'].empty? or url['mpicture'].nil?
+      event << "They do not have a profile picture set."
+      return
+    end
+    
+    messages << event.channel.send_message(url['mpicture'])
+    
+    sleep 60
+    begin;messages.map(&:delete);rescue;end
+    nil
+  end
+  
+  command(:whois, description: 'Returns information on the user mentioned.', usage: '`!whois @user or !whois regisusername`', permission_level: 1) do |event, username|
     server = event.bot.server(150_739_077_757_403_137)
     # Get user mentioned or default to sender of command
     if !username.nil? and !username.start_with?('<@')
@@ -380,17 +393,16 @@ module UtilityCommands
     event << '`3` No NSFW content.'
   end
 
-  command(:shutdown) do |event|
+  command(:shutdown, permission_level: 3) do |event|
     event.message.delete unless event.channel.private?
-    return unless event.user.id == event.server.owner.id
-
+    
     puts 'Shutting down!'
     event.user.pm 'See ya!'
     save_hierarchy
     event.bot.stop
   end
   
-  command(:restart, description: 'Restart the bot.') do |event|
+  command(:restart, description: 'Restart the bot.', permission_level: 3) do |event|
     puts 'Restarting!'
     save_hierarchy
     event.bot.stop

@@ -93,6 +93,7 @@ def handle_associated_channel(server, user, voice_channel, perms)
 		# Name it 'voice-channel' or 'Music'
 		c_name = voice_channel.name == 'Music Room' ? 'music' : 'voice-channel'
     text_channel = server.create_channel(c_name)
+    
     text_channel.topic = "Private chat for all those in the voice channel '**#{voice_channel.name}**'"
 		text_channel.topic = 'Private chat room for DJ commands' if c_name == 'Music'
 		
@@ -127,21 +128,22 @@ def handle_associated_channel(server, user, voice_channel, perms)
         puts "1) Failed to update user overrides:\n#{e}"
       end
     end
-	# User now only has perms for associated #voice-channel
+    # User now only has perms for associated #voice-channel
   else
     #puts "Adding #{user.display_name} to #voice-channel for #{voice_channel.name}."
     # Remove the user's perms in all other 'voice-channel'
     $hierarchy.each do |_, text_id|
 	  next if text_id == text_channel.id
-      begin
-		#puts "2) Removing #{user.display_name} from #voice-channel for #{voice_channel.name}"
-		Discordrb::API.update_user_overrides($token, text_id, user.id, 0, 0)
+    
+    begin
+      #puts "2) Removing #{user.display_name} from #voice-channel for #{voice_channel.name}"
+      Discordrb::API.update_user_overrides($token, text_id, user.id, 0, 0)
       rescue => e
         puts "2) Failed to update user overrides:\n#{e}"
       end
     end
-	# Give them view perms in the proper #voice-channel
-	Discordrb::API.update_user_overrides($token, text_channel.id, user.id, perms.bits, 0)
+    # Give them view perms in the proper #voice-channel
+    Discordrb::API.update_user_overrides($token, text_channel.id, user.id, perms.bits, 0)
   end
 
 end
@@ -163,6 +165,66 @@ module VoiceChannelEvents
       rescue;end
     end
   end
+  
+  # channel_update do |event|
+    # unless event.channel.type == 'text' and event.channel.name != 'AFK' and event.channel.name != $OPEN_ROOM_NAME
+      # puts "ROOM OPEN: #{event.channel.name}"
+      # server = event.server
+      # voice_channel = event.channel
+      
+      #Associated text-channel
+      # text_channel = server.text_channels.find { |c| c.id == $hierarchy[event.channel.id] }
+      
+      # if text_channel.nil?
+        #Doesn't have a associated text-channel!
+        # puts "Creating #voice-channel for #{voice_channel.name}"
+        #Name it 'voice-channel' or 'Music'
+        # c_name = voice_channel.name == 'Music Room' ? 'music' : 'voice-channel'
+        # text_channel = server.create_channel(c_name)
+        # text_channel.topic = "Private chat for all those in the voice channel '**#{voice_channel.name}**'"
+        # text_channel.topic = 'Private chat room for DJ commands' if c_name == 'Music'
+        
+        # text_channel.send_message "Use `!rename` or `!rename 'Any of Your Teachers'` to change the name of your voice-channel!\n---"
+        
+        #Set permissions
+        # begin
+          # Discordrb::API.update_role_overrides($token, text_channel.id, server.roles.find{|r| r.name == "bots"}.id, perms.bits, 0)
+          # Discordrb::API.update_role_overrides($token, text_channel.id, server.id, 0, perms.bits)
+        # rescue
+          
+        # end
+        
+        #Link the id's of both channels together
+        # begin
+          # puts 'Linking channels'
+          # $hierarchy[voice_channel.id] = text_channel.id
+        # rescue RuntimeError
+          # puts 'Failed to link channels, retrying...'
+          # sleep 1
+          # $hierarchy[voice_channel.id] = text_channel.id
+        # end
+        
+        
+        #Put users in
+        # voice_channel.users.each do |u|
+          #Remove the user's perms in all other 'voice-channel'
+          # $hierarchy.each do |_, text_id|
+            # next if text_channel.id == text_id
+
+            # begin
+              #puts "2) Removing #{user.display_name} from #voice-channel for #{voice_channel.name}"
+              # Discordrb::API.update_user_overrides($token, text_id, u.id, 0, 0)
+            # rescue => e
+              # puts "1) Failed to update user overrides:\n#{e}"
+            # end
+          # end
+          
+          #Give them perms in this #text-channel
+          # Discordrb::API.update_user_overrides($token, text_channel.id, u.id, perms.bits, 0)
+        # end
+      # end
+    # end
+  # end
   
   voice_state_update do |event|
     #puts 'VOICE STATE UPDATE: '
@@ -187,12 +249,12 @@ module VoiceChannelEvents
     if !event.channel.nil? and event.channel.name != 'AFK'
       handle_associated_channel(server, event.user.on(server), event.channel, perms)
     else
-	  # Remove the user's perms in all other 'voice-channel' since they are not in a voice channel anymore
+      # Remove the user's perms in all other 'voice-channel' since they are not in a voice channel anymore
       $hierarchy.each do |_, text_id|
         text_channel = server.text_channels.find { |t| t.id == text_id }
-		begin
-		  text_channel.define_overwrite(event.user, 0, 0)
-		rescue => e
+        begin
+          text_channel.define_overwrite(event.user, 0, 0)
+        rescue => e
           puts "Failed to update overrides:\n#{e}"
         end
       end

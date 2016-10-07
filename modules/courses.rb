@@ -162,6 +162,7 @@ module CourseCommands
           Discordrb::API.update_role_overrides($token, adv_channel.id, bots_role_id, perms.bits, 0) # bots
         end
         sleep 0.5
+        break if a[0] == '4'
       end
 
       # Grade channel handling

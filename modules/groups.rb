@@ -214,16 +214,16 @@ module GroupCommands
 				elsif is_private
 					target.pm "You have been invited to the private **Group #{group_name}**. Type `!join '#{group_name}'` to enter!"
 					invites[target.id] = group_name
-					room.send_message "#{} has been invited to join the group."
+					room.send_message "#{target.mention} has been invited to join the group."
 				else
 					target.pm "#{user.mention} wants you to join public **Group #{group_name}**! `!join '#{group_name}'`"
-					room.send_message "#{} has been asked to join the group."
+					room.send_message "#{target.mention} has been asked to join the group."
 				end
 			else
         user.pm 'You can only invite users to a group you are in yourself.'
       end
     end
-    
+
     nil
   end
   
@@ -249,7 +249,7 @@ module GroupCommands
       user.pm 'Invalid group! For a list of availble groups type `!groups`.'
     else
       if private
-        if invites[user.id] == group_name
+        if invites[user.id].downcase == group_name.downcase
           # Was invited
           user.add_role role
           unless channel.nil?

@@ -102,7 +102,7 @@ module WorkCommands
       end
 
       # Check if current voice-channel (if exists) allows studying students and move them if necessary
-      unless user.voice_channel.nil? or user.permission? 'can_connect', user.voice_channel
+      unless user.voice_channel.nil? or user.voice_channel.name.include?('Study ')
         puts 'Moving to allowed voice-channel'
         server.move user, server.voice_channels.find { |c| c.name == '[New Room]' }
         user.pm 'You were moved into a new voice-channel because your previous one did not allow students in studymode.'
@@ -134,17 +134,17 @@ module WorkCommands
 		
 			# Get stats
 			last_day = $sd.keys.sort.last
-			days_left = 0
+			#days_left = (now - $sd.keys.sort.index(last_day)).to_i
 		
 			closest_day = Time.now.strftime(DATE_FORMAT)
 			if $sd[closest_day].nil?
 				closest_day = $sd.keys.sort.find_all { |date_str| date_str <= today }.last
 			end
 			class_days_left = $sd.keys.sort.index(last_day) - $sd.keys.sort.index(closest_day)
-		
-			lines << "\nThe last day of school is #{last_day}."
-			lines << "There are **#{class_days_left}** school days left."
-			lines << "There are **#{}** days left."
+
+			lines << "\nThe last day of school is **#{Date.parse(last_day).strftime('%A, %B %-d')}**."
+			lines << "There are **#{class_days_left}** class days left."
+			#lines << "There are **#{days_left}** total days left."
 		
 		end
 		

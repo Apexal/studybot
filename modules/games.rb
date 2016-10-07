@@ -59,7 +59,7 @@ module GameEvents
     to_delete = []
     
     # DiscordDJ says it plays whatever song it is on
-    if event.user.name != 'DiscordDJ'
+    if event.user.id != 195674370826436609
       joining = (!!game ? true : false)
 
       if joining == false

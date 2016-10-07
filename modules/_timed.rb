@@ -18,10 +18,14 @@ end
 def school_day?
   now = Time.now
   now_str = now.strftime(DATE_FORMAT)
+
   return false if $sd[now_str].nil?
+  return true
 end
 
 def get_sd
+  now = Time.now
+  now_str = now.strftime(DATE_FORMAT)
   $sd[now_str]
 end
 

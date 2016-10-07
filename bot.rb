@@ -35,7 +35,7 @@ bot = Discordrb::Commands::CommandBot.new(
 )
 
 $token = bot.token
-$unallowed = %w(Phys Guidance Speech Advisement Health Amer)
+$unallowed = ['Phys Ed', 'Guidance', 'Speech', 'Advisement', 'Health', 'Amer']
 
 bot.bucket :abusable, limit: 3, time_span: 60, delay: 10
 bot.bucket :study, limit: 10, time_span: 60, delay: 5
