@@ -149,7 +149,7 @@ module GroupCommands
     # Announce to #meta (if public)
     server.text_channels.find{|c| c.name == 'meta'}.send_message("@everyone #{user.mention} has just created the group **#{full_name}**. Join with `!join \"#{full_name}\"`") unless private == 1
 		user.pm "*As group founder, you can manage (delete/pin) messages in your group's text-channel.*"
-    $groups = $db.query('SELECT * FROM groups WHERE creator != "server" AND voice_channel_allowed=1')
+    $groups = $db.query('SELECT * FROM groups WHERE voice_channel_allowed=1')
     nil
   end
 
@@ -291,7 +291,7 @@ module GroupCommands
       break
     end
     
-    $groups = $db.query('SELECT * FROM groups WHERE creator != "server" AND voice_channel_allowed=1')
+    $groups = $db.query('SELECT * FROM groups WHERE voice_channel_allowed=1')
     handle_group_voice_channels(server)
     nil
   end

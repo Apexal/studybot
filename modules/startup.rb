@@ -93,6 +93,7 @@ module StartupEvents
     handle_public_room(server)
     handle_grade_voice_channels(server)
     puts 'Done.'
+    $groups = $db.query('SELECT * FROM groups WHERE voice_channel_allowed=1')
     puts "FINISHED STARTUP\n------------------------------------------------\n"
   end
 end

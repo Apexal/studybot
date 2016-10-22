@@ -115,7 +115,7 @@ end
 $groups = nil
 def handle_group_voice_channels(server)
   if $groups.nil?
-    $groups = $db.query('SELECT * FROM groups WHERE creator != "server" AND voice_channel_allowed=1')
+    $groups = $db.query('SELECT * FROM groups WHERE voice_channel_allowed=1')
   end
 
   $groups.each do |row|

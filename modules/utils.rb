@@ -22,8 +22,10 @@ module UtilityCommands
     server = event.bot.server(150_739_077_757_403_137)
     perms = Discordrb::Permissions.new
     perms.can_connect = true
+
     if $groups.map { |g| g['name'].downcase }.include? event.channel.name
       g_name = $groups.find { |g| Integer(g['room_id']) == event.channel.id }['name']
+
       group_role = server.roles.find { |r| r.id == Integer($groups.find { |g| Integer(g['room_id']) == event.channel.id }['role_id']) }
       puts "Manually opening channel for Group #{g_name}"
       
