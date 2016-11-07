@@ -1,2 +1,2 @@
 # studybot
-The moderator and supreme leader of the Regis Discord Server.
+The moderator and supreme leader of my high school's Discord Server.
