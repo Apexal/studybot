@@ -109,7 +109,7 @@ module UtilityCommands
       list = registered.map { |u| "<li>#{u['first_name']} #{u['last_name']}</li>" }.join "\n"
       
       mail = Mail.new do
-        from "Regis Discord Server <#{$CONFIG['auth']['gmail']['username']}@gmail.com>"
+        from "Student Discord Server <#{$CONFIG['auth']['gmail']['username']}@gmail.com>"
         to    unregistered.map { |row| "#{row['username']}@regis.org" }
         subject "Your Advisement Calls"
 
@@ -155,7 +155,7 @@ module UtilityCommands
           code = SecureRandom.hex
           $db.query("INSERT INTO discord_codes VALUES (NULL, '#{code}', '#{username}') ON DUPLICATE KEY UPDATE code='#{code}'")
           mail = Mail.new do
-            from "Regis Discord Server <#{$CONFIG['auth']['gmail']['username']}@gmail.com>"
+            from "Student Discord Server <#{$CONFIG['auth']['gmail']['username']}@gmail.com>"
             to    "#{username}@regis.org"
             subject "Invite from #{inviter['advisement']}"
 
@@ -179,7 +179,7 @@ module UtilityCommands
     nil
   end
   
-  command(:flag, description: 'Show the official Regis Discord flag!') do |event|
+  command(:flag, description: 'Show the official Student Discord flag!') do |event|
     event.channel.send_file(File.open('./resources/flag.png', 'rb'))
     'Designed by *Liam Quinn*'
   end

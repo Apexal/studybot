@@ -14,7 +14,7 @@ module RegistrationEvents
     sleep 3
     m = event.bot.find_channel('welcome').first.send_message "#{event.user.mention} Hello! Please check your Direct Messages (top left) to get started!"
     sleep 1
-    event.user.pm '**I am an automated bot for the Regis Discord server.** :robot:'
+    event.user.pm '**I am an automated bot for the Student Discord Server.** :robot:'
     sleep 1
     event.user.pm 'Please type `!register yourregisusername`. *You will not be able to participate in the server until you do this.*'
     event.user.pm '**Quickstart Guide** <https://www.youtube.com/watch?v=pynmRmJUDJs>'
@@ -55,7 +55,7 @@ module RegistrationCommands
       $db.query("INSERT INTO discord_codes VALUES ('#{event.user.id}', '#{code}', '#{username}') ON DUPLICATE KEY UPDATE code='#{code}'")
       # Send a welcome email with the command to verify
       mail = Mail.new do
-        from "Regis Discord Server <#{$CONFIG['auth']['gmail']['username']}@gmail.com>"
+        from "Student Discord Server <#{$CONFIG['auth']['gmail']['username']}@gmail.com>"
         to      "#{username}@regis.org"
         subject 'Verify Your Discord Account'
 
@@ -65,7 +65,7 @@ module RegistrationCommands
 
         html_part do
           content_type 'text/html; charset=UTF-8'
-          body "<h1>Regis Discord Server</h1><img src='https://cdn.discordapp.com/attachments/150739077757403137/152977845621096449/flag.png'><br><p>Welcome to Discord, <b>#{event.user.name}</b>!<br> Please verify your identity on the server by sending <i>@studybot</i> the following message. After this you will be able to participate.</p> <code>!verify #{code}</code> <br><p><i>If you did not attempt to register on the server, someone is trying to impersonate you.</i></p>"
+          body "<h1>Student Discord Server</h1><img src='https://cdn.discordapp.com/attachments/150739077757403137/152977845621096449/flag.png'><br><p>Welcome to Discord, <b>#{event.user.name}</b>!<br> Please verify your identity on the server by sending <i>@studybot</i> the following message. After this you will be able to participate.</p> <code>!verify #{code}</code> <br><p><i>If you did not attempt to register on the server, someone is trying to impersonate you.</i></p>"
         end
       end
       mail.deliver!
