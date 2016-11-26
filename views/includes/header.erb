@@ -18,6 +18,7 @@
         <% if @logged_in %>
           <li><a href="/groups">Groups</a></li>
           <li><a href="#">Members</a></li>
+          <li><a target="new" href="https://discordapp.com/channels/150739077757403137/150739077757403137">Discord</a></li>
         <% end %>
       </ul>
 
@@ -27,8 +28,7 @@
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><%= @user.display_name %> <span class="caret"></span></a>
             <ul class="dropdown-menu">
               <li><a href="#"><%= @username %></a></li>
-              <li><a href="#">Another action</a></li>
-              <li><a href="#">Something else here</a></li>
+              <li><a onclick="alert('Toggling studymode... This will take a few seconds.');" href="/studymode"><% if @studymode %>Deactivate<% else %>Activate<% end %> Studymode</a></li>
               <li role="separator" class="divider"></li>
               <li><a href="/logout">Logout</a></li>
             </ul>

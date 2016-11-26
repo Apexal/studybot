@@ -1,12 +1,14 @@
 <div class="row">
-    <div class="jumbotron clearfix">
-        <img class="right" src="http://az616578.vo.msecnd.net/files/2015/07/23/635732924053603777-93632716_group.png">
-        <h1>Groups</h1>
-        <p>
-            Groups allow users to communicate in private text and voice channels about topics that interest them.
-            <br><br>
-            <a class="btn btn-default" href="#groups">Browse Groups</a>
-        </p>
+    <div class="col-xs-12">
+        <div class="jumbotron clearfix">
+            <img class="right hidden-xs" src="http://az616578.vo.msecnd.net/files/2015/07/23/635732924053603777-93632716_group.png">
+            <h1>Groups</h1>
+            <p>
+                Groups allow users to communicate in private text and voice channels about topics that interest them.
+                <br><br>
+                <a class="btn btn-default" href="#groups">Browse Groups</a>
+            </p>
+        </div>
     </div>
 </div>
 
@@ -22,33 +24,37 @@
         </div>
     </div>
 
-    <% unless @owns_group %>
-        <div class="col-xs-12 col-md-6">
-            <div class="panel panel-primary ">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Create Group</h3>
-                </div>
-                <div class="panel-body">
-                    <form onsubmit="return confirm('Are you sure you want to create a group? You only get one.');" action='/groups/create' method='POST'>
-                        <div class="form-group">
-                            <label for="name">Group Name</label>
-                            <input class="form-control" type="text" name="name" placeholder="What will it be called?" maxlength="40" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="description">Group Description</label>
-                            <input class="form-control" type="text" name="description" placeholder="What is it about?" maxlength="100" required>
-                        </div>
-                        <div class="checkbox">
-                            <label>
-                            <input type="checkbox" name="public" checked="checked"> Public <span class="text-muted"> | Whether anyone can join it or not.</span> 
-                            </label>
-                        </div>
-                        <button class="btn btn-primary right" type='submit'>Create</button>
-                    </form>
-                </div>
+    
+    <div class="col-xs-12 col-md-6">
+        <div class="panel panel-primary ">
+            <div class="panel-heading">
+                <h3 class="panel-title">Create Group</h3>
+            </div>
+            <div class="panel-body">
+                <% if @has_group %>
+                <form onsubmit="return confirm('Are you sure you want to create a group? You only get one.');" action='/groups/create' method='POST'>
+                    <div class="form-group">
+                        <label for="name">Group Name</label>
+                        <input class="form-control" type="text" name="name" placeholder="What will it be called?" maxlength="40" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Group Description</label>
+                        <input class="form-control" type="text" name="description" placeholder="What is it about?" maxlength="100" required>
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                        <input type="checkbox" name="public" checked="checked"> Public <span class="text-muted"> | Whether anyone can join it or not.</span> 
+                        </label>
+                    </div>
+                    <button class="btn btn-primary right" type='submit'>Create</button>
+                </form>
+                <% else %>
+                    <p class="text-muted">You have already created a group. The limit is 1 right now.</p>
+                <% end %>
             </div>
         </div>
-    <% end %>
+    </div>
+    
 </div>
 <hr>
 
@@ -61,7 +67,7 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Description</th>
+                    <th class="hidden-xs">Description</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -70,17 +76,25 @@
                 <% @groups.select { |m| m['private'] == 1 and m['member_ids'].include? @user.id }.each do |g| %>
                     <tr>
                         <td title="Owned by <%= g['creator'] %>"><%= g['name'] %></td>
-                        <td><%= g['description'] %> <i class="right"><%= g['member_ids'].length %> members</i></td>
+                        <td class="hidden-xs"><%= g['description'] %> <i class="right"><%= g['member_ids'].length %> members</i></td>
                         
                         <% if g['creator'] == @username %>
-                            <td><a class="btn btn-default" href="/groups/<%= g['id'] %>/manage">Manage</a></td>
+                            <td class="hidden-xs">
+                                <a class="btn btn-default manage-group" href="/groups/<%= g['id'] %>/manage">Manage</a>
+                                <a class="btn btn-default view-group" href="/groups/<%= g['id'] %>">View</a>
+                            </td>
                         <% else %>
-                            <td>
+                            <td class="hidden-xs">
                                 <form onsubmit="return confirm('Do you really want to leave <%= g['name'] %>?');" method="POST" action='/groups/<%= g['id'] %>/leave'>
-                                    <button class="btn btn-danger" type='submit'>Leave</button>
+                                    <button class="btn btn-danger leave-group" type='submit'>Leave</button>
+                                    <a class="btn btn-default view-group" href="/groups/<%= g['id'] %>">View</a>
                                 </form>
                             </td>
                         <% end %>
+                        
+                        <td class="visible-xs">
+                            <a class="btn btn-default view-group" href="/groups/<%= g['id'] %>">View</a>
+                        </td>
                     </tr>
                 <% end %>
             </tbody>
@@ -97,7 +111,7 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Description</th>
+                    <th class="hidden-xs hidden-sm">Description</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -106,23 +120,30 @@
                 <% @groups.select { |m| m['private'] == 0 }.each do |g| %>
                     <tr class="<% if g['member_ids'].include? @user.id %>active<% end %>">
                         <td title="Owned by <%= g['creator'] %>"><%= g['name'] %></td>
-                        <td><%= g['description'] %> <i class="right"><%= g['member_ids'].length %> members</i></td>
+                        <td class="hidden-xs hidden-sm"><%= g['description'] %> <i class="right"><%= g['member_ids'].length %> members</i></td>
                         
                         <% if g['creator'] == @username %>
-                            <td><a class="btn btn-default" href="/groups/<%= g['id'] %>/manage">Manage</a></td>
+                            <td class="hidden-xs"><a class="btn btn-default" href="/groups/<%= g['id'] %>/manage">Manage</a></td>
+                            <a class="btn btn-default hidden-xs" href="/groups/<%= g['id'] %>">View</a>
                         <% elsif g['member_ids'].include? @user.id %>
-                            <td>
+                            <td class="hidden-xs">
                                 <form onsubmit="return confirm('Do you really want to leave <%= g['name'] %>?');" method="POST" action='/groups/<%= g['id'] %>/leave'>
-                                    <button class="btn btn-danger" type='submit'>Leave</button>
+                                    <button class="btn btn-danger leave-group" type='submit'>Leave</button>
+                                    <a class="btn btn-default view-group" href="/groups/<%= g['id'] %>">View</a>
                                 </form>
                             </td>
                         <% else %>
-                            <td>
+                            <td class="hidden-xs">
                                 <form onsubmit="return confirm('Do you really want to join <%= g['name'] %>?');" method="POST" action='/groups/<%= g['id'] %>/join'>
-                                    <button class="btn btn-info" type='submit'>Join</button>
+                                    <button class="btn btn-info join-group" type='submit'>Join</button>
+                                    <a class="btn btn-default view-group" href="/groups/<%= g['id'] %>">View</a>
                                 </form>
                             </td>
                         <% end %>
+                    
+                        <td class="visible-xs">
+                            <a class="btn btn-default view-group" href="/groups/<%= g['id'] %>">View</a>
+                        </td>
                     </tr>
                 <% end %>
             </tbody>

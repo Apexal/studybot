@@ -5,3 +5,16 @@
 .jumbotron img.right {
     max-width: 300px;
 }
+
+.manage-group, .view-group, .join-group, .leave-group {
+  width: 80px;
+  float: right;
+}
+
+.group-member img {
+  width: 80px;
+}
+
+body {
+  padding-bottom: 50px;
+}

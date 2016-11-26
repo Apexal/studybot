@@ -1,0 +1,78 @@
+<div class="row">
+    <div class="col-xs-12">
+        <div class="jumbotron">
+            <h1>Group <%= @group['name'] %></h1>
+            <p>
+                "<%= @group['description'] %>"
+            </p>
+            <br>
+            
+            <% if @group['creator'] == @username %>
+                <a class="btn btn-default right" href="/groups/<%= @group['id'] %>/manage">Manage</a>
+            <% elsif @group['members'].map { |m| m[:discord].id }.include? @user.id %>
+                <form onsubmit="return confirm('Do you really want to leave <%= @group['name'] %>?');" method="POST" action='/groups/<%= @group['id'] %>/leave'>
+                    <button class="btn btn-danger right" type='submit'>Leave Group</button>
+                </form>
+            <% else %>
+                <form onsubmit="return confirm('Do you really want to join <%= @group['name'] %>?');" method="POST" action='/groups/<%= @group['id'] %>/join'>
+                    <button class="btn btn-info right" type='submit'>Join Group</button>
+                </form>
+            <% end %>
+            <a href="/groups" class="btn btn-default">Groups Index</a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <h3 class="text-center"><b><%= @group['name'] %></b> is owned by <b><%= @group['creator'] %></b></h3>
+        <h3 class="text-center"><b><%= @group['name'] %></b> is ranked #0 in groups by member count <i class="text-muted">(<%= @group['members'].length %> current members)</i>.</h3>
+    </di
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="page-header">
+            <h1>Current Members</h1>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Picture</th>
+                    <th>Name</th>
+                    <th>Current Discord Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% @group['members'].each do |m| %>
+                    <tr>
+                        <td class="group-member" ><img src='<%= m[:info]['mpicture'] %>'></td>
+                        <td><%= m[:info]['first_name'] + " " + m[:info]['last_name'] + " of " + m[:info]['advisement'] %></td>
+                        <td><%= m[:discord].display_name %></td>
+                    </tr>
+                <% end %>
+            </tbody>
+        </table>
+    </div>
+</div>
+<hr>
+<div class="row">
+    <div class="col-xs-12">
+        <a href="/groups" class="btn btn-default">Back to Groups Page</a>
+        <% if @group['creator'] == @username %>
+            <a class="btn btn-default" href="/groups/<%= @group['id'] %>/manage">Manage</a>
+        <% elsif @group['members'].map { |m| m[:discord].id }.include? @user.id %>
+            <form onsubmit="return confirm('Do you really want to leave <%= @group['name'] %>?');" method="POST" action='/groups/<%= @group['id'] %>/leave'>
+                <button class="btn btn-danger" type='submit'>Leave</button>
+            </form>
+        <% else %>
+            <form onsubmit="return confirm('Do you really want to join <%= @group['name'] %>?');" method="POST" action='/groups/<%= @group['id'] %>/join'>
+                <button class="btn btn-info" type='submit'>Join Group</button>
+            </form>
+        <% end %>
+    </div>
+</div>

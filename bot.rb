@@ -86,7 +86,7 @@ get '*' do
   @user = server.members.find { |m| m.id == session['user_id'] } if session['logged_in']
   @username = session['username']
   @logged_in = session['logged_in']
-
+  @studymode = @user.display_name.start_with? "[S]" if @logged_in
   @info = session['info']
   session['info'] = []
   pass
@@ -133,8 +133,18 @@ get '/' do
   erb :index, layout: :layout
 end
 
+get '/studymode' do
+  redirect(to('/')) unless session['logged_in']
+  
+  user = server.members.find { |m| m.id == session['user_id'] }
+  toggle_studymode(server, user)
+  
+  redirect back
+end
+
 get '/groups' do
   redirect(to('/')) unless session['logged_in']
+  
   @title = 'Groups'
 
   @owns_group = false
@@ -150,7 +160,32 @@ get '/groups' do
   erb :groups, layout: :layout
 end
 
+get '/groups/:id' do
+  redirect(to('/')) unless session['logged_in']
+  
+  group_id = Integer(params['id'])
+  @group = $db.query("SELECT * FROM groups WHERE id='#{group_id}'").first
+  if @group.nil?
+    session['info'] << 'Failed to find group!'
+    redirect back
+    return
+  end
+  
+  @title = "Group #{@group['name']}"
+  
+  role = server.roles.find { |r| r.id == Integer(@group['role_id']) }
+  @group['members'] = []
+  server.members.find_all { |m| m.roles.include? role }.each do |m|
+    info = $db.query("SELECT * FROM students WHERE discord_id='#{m.id}'").first
+    @group['members'] << { info: info, discord: m } unless info.nil?
+  end
+  
+  erb :group, layout: :layout
+end
+
 post '/groups/:id/join' do
+  redirect(to('/')) unless session['logged_in']
+  
   group_id = params['id']
   user = server.members.find { |m| m.id == session['user_id'] }
   group = add_user_to_group(server, user, group_id)
@@ -160,6 +195,8 @@ post '/groups/:id/join' do
 end
 
 post '/groups/:id/leave' do
+  redirect(to('/')) unless session['logged_in']
+  
   group_id = params['id']
   user = server.members.find { |m| m.id == session['user_id'] }
   group = remove_user_from_group(server, user, group_id)
@@ -169,6 +206,8 @@ post '/groups/:id/leave' do
 end
 
 post '/groups/create' do
+  redirect(to('/')) unless session['logged_in']
+  
   # Check for missing data
   if params['name'].nil? or params['name'].empty? or params['description'].empty? or params['description'].nil?
     session['info'] << 'Missing data to create group!'

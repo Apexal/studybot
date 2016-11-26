@@ -2,6 +2,113 @@ require 'date'
 
 DATE_FORMAT = '%Y-%m-%d'.freeze
 
+
+def toggle_studymode(server, user)
+  grades = %w(Freshmen Sophomores Juniors Seniors)
+  
+  studyrole = server.roles.find { |r| r.name == 'studying' }
+  user = user.on(server)
+  clean_name = user.display_name
+  clean_name.sub! '[S] ', ''
+  
+  # PUBLIC ROOM
+  public_room = server.text_channels.find { |t| t.name == 'public-room' }
+  groups = $db.query('SELECT * FROM groups')
+  
+  # Permissions
+  perms = Discordrb::Permissions.new
+  perms.can_read_messages = true
+  perms.can_read_message_history = true
+  perms.can_send_messages = true
+  
+  # WORK CHANNEL
+  work_channel = server.text_channels.find { |t| t.name == 'work' }
+  work_perms = Discordrb::Permissions.new
+  work_perms.can_send_messages = true
+  
+  if user.role? studyrole
+    # LEAVING STUDYMODE
+    user.nickname = clean_name
+    user.remove_role studyrole
+    
+    # Public Room
+    Discordrb::API.update_user_overrides($token, public_room.id, user.id, 0, 0)
+    
+    # Work room
+    #Discordrb::API.update_user_overrides(event.bot.token, work_channel.id, user.id, 0, 0)
+    
+    # Issue for grade channels
+    grades.each do |g|
+      gname = g.downcase
+      role = server.roles.find { |r| r.name == g }
+      if !role.nil? and user.role? role
+        grade_channel = server.text_channels.find { |c| c.name == gname }
+        Discordrb::API.update_user_overrides($token, grade_channel.id, user.id, 0, 0)
+      end
+    end
+    groups.each do |row|
+      group_role = server.roles.find { |r| r.id == Integer(row['role_id']) }
+      next if group_role.nil? or !user.role? group_role
+
+      group_channel = server.text_channels.find{ |c| c.id == Integer(row['room_id']) }
+      Discordrb::API.update_user_overrides($token, group_channel.id, user.id, 0, 0)
+      #group_channel.define_overwrite(user, 0, 0)
+      sleep 0.5
+    end
+
+    if !user.voice_channel.nil? and !user.permission? 'can_connect', user.voice_channel
+      puts 'Moving to allowed voice-channel'
+      server.move user, server.voice_channels.find { |c| c.name == '[New Room]' }
+      user.pm 'You were moved into a new voice-channel because your previous one only allowed students in studymode.'
+    end
+    
+    puts "#{user.display_name} exited studymode"
+    user.pm 'You have left **studymode**.'
+  else
+    # GOING INTO STUDYMODE
+    user.nickname = "[S] #{clean_name}"[0..30]
+    user.add_role studyrole
+    
+    # Public Room
+    Discordrb::API.update_user_overrides($token, public_room.id, user.id, 0, perms.bits)
+    
+    # Work room
+    #Discordrb::API.update_user_overrides($token, work_channel.id, user.id, 0, work_perms.bits)
+    
+    # Issue for grade channels
+    grades.each do |g|
+      gname = g.downcase
+      role = server.roles.find { |r| r.name == g }
+      if !role.nil? and user.role? role
+        grade_channel = server.text_channels.find { |c| c.name == gname }
+        Discordrb::API.update_user_overrides($token, grade_channel.id, user.id, 0, perms.bits)
+        sleep 0.5
+      end
+    end
+    
+    groups.each do |row|
+      group_role = server.roles.find { |r| r.id == Integer(row['role_id']) }
+      next if group_role.nil? or !user.role? group_role
+      
+      group_channel = server.text_channels.find { |c| c.id == Integer(row['room_id']) }
+      puts group_channel.name
+      #group_channel.define_overwrite(user, 0, perms)
+      Discordrb::API.update_user_overrides($token, group_channel.id, user.id, 0, perms.bits)
+      sleep 0.5
+    end
+
+    # Check if current voice-channel (if exists) allows studying students and move them if necessary
+    unless user.voice_channel.nil? or user.voice_channel.name.include?('Study ')
+      puts 'Moving to allowed voice-channel'
+      server.move user, server.voice_channels.find { |c| c.name == '[New Room]' }
+      user.pm 'You were moved into a new voice-channel because your previous one did not allow students in studymode.'
+    end
+    
+    puts "#{user.display_name} entered studymode"
+    user.pm 'You are now in **studymode**! Type `!study` again to leave this mode.'
+  end
+end
+
 module WorkCommands
   extend Discordrb::Commands::CommandContainer
 
