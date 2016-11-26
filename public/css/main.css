@@ -1,0 +1,7 @@
+.right {
+    float: right;
+}
+
+.jumbotron img.right {
+    max-width: 300px;
+}

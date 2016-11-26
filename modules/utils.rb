@@ -184,6 +184,19 @@ module UtilityCommands
     'Designed by *Liam Quinn*'
   end
 
+  command(:login, description: 'Get the link to login to the server\'s website!', permission_level: 1) do |event|
+    event.message.delete unless event.channel.private?
+    
+    # Get user's secret code
+    code = nil
+    $db.query("SELECT code FROM discord_codes WHERE discord_id='#{event.user.id}'").each do |row|
+      code = row['code']
+    end
+
+    event.user.pm "http://discord.getontrac.info/login?code=#{code}" unless code.nil?
+    nil
+  end
+
   command(:eval, permission_level: 3) do |event, code|
     event.message.delete unless event.channel.private?
 

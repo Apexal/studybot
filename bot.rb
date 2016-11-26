@@ -3,6 +3,7 @@ require 'mysql2'
 require 'mail'
 require 'yaml'
 require 'date'
+require 'sinatra'
 
 puts 'STARTING UP'
 
@@ -66,10 +67,72 @@ bot.include! ModeratorCommands
 
 begin
   bot.run :async
-  school_loop
-  bot.sync
 rescue Interrupt
   save_hierarchy
   puts 'Shutting down...'
   bot.stop
+end
+
+server = bot.server(150_739_077_757_403_137)
+
+# SINATRA
+set :bind, '0.0.0.0'
+enable :sessions
+
+get '*' do
+  session['info'] ||= []
+  session['logged_in'] ||= false
+
+  @user = server.members.find { |m| m.id == session['user_id'] } if session['logged_in']
+  @logged_in = session['logged_in']
+
+  @info = session['info']
+  session['info'] = []
+  pass
+end
+
+get '/login' do
+  secret_code = params['code']
+  if secret_code.nil? or secret_code.empty?
+    session['info'] << 'Failed to login!'
+    redirect back
+  end
+
+  $db.query("SELECT username, discord_id FROM discord_codes WHERE code='#{secret_code}'").each do |row|
+    session['user_id'] = Integer(row['discord_id'])
+  end
+  session['info'] << "You have logged in!"
+  session['logged_in'] = true
+
+  redirect to('/')
+end
+
+get '/logout' do
+  session['logged_in'] = false
+  session['user_id'] = nil
+  session['info'] << 'You have logged out.'
+  redirect back
+end
+
+get '/' do
+  puts session['info']
+  @channels = server.text_channels.sort { |a,b| a.name <=> b.name }
+  @students = $db.query('SELECT id, username, first_name, last_name, advisement, mpicture, discord_id FROM students WHERE verified=1 ORDER BY advisement, last_online ASC')
+  @students.each { |s| s['discord_user'] = server.members.find { |m| m.id == Integer(s['discord_id']) }}
+
+  erb :index, layout: :layout
+end
+
+get '/groups' do
+  redirect(to('/')) unless session['logged_in']
+  @title = 'Groups'
+
+  @groups = $db.query('SELECT * FROM groups').to_a
+  @groups.each do |g|
+    # Assign member list
+    role = server.roles.find { |r| r.id == Integer(g['role_id']) }
+    g['member_ids'] = server.members.find_all { |m| m.roles.include? role }.map { |m| m.id }
+  end
+
+  erb :groups, layout: :layout
 end

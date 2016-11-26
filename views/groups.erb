@@ -1,0 +1,33 @@
+<div class="row">
+    <div class="jumbotron clearfix">
+        <img class="right" src="http://az616578.vo.msecnd.net/files/2015/07/23/635732924053603777-93632716_group.png">
+        <h1>Groups</h1>
+        <p>
+            Groups allow users to communicate in private text and voice channels about topics that interest them.
+        </p>
+    </div>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <% @groups.each do |g| %>
+            <tr class="<% if g['member_ids'].include? @user.id %>success<% end %>">
+                <td title="Owned by <%= g['creator'] %>"><%= g['name'] %></td>
+                <td><%= g['description'] %> <i class="right"><%= g['member_ids'].length %> members</i></td>
+                <% if g['member_ids'].include? @user.id %>
+                    <td><a onclick='return confirm("Are you sure?");' href='/leavegroup/<%= g['id'] %>'>Leave</a></td>
+                <% else %>
+                    <td><a onclick='return confirm("Are you sure?");' href='/joingroup/<%= g['id'] %>'>Join</a></td>
+                <% end %>
+            </tr>
+        <% end %>
+    </tbody>
+</table>

@@ -41,19 +41,3 @@ def during_school?
   return true if now >= start_time and now <= end_time
   return false
 end
-
-# Every hour check if during school hours
-
-def school_loop
-  loop do
-    during_school = during_school?
-
-    if during_school
-
-    else
-
-    end
-
-    sleep 60 * 20
-  end
-end

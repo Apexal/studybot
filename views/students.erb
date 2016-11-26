@@ -1,0 +1,30 @@
+<h3>Students</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Profile Picture</th>
+            <th>Username</th>
+            <th>Name</th>
+            <th>Advisement</th>
+            <th>Current Discord Name</th>
+            <th>Direct Message</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <% @students.each do |s| %>
+            <tr>
+                <td><img style='width: 100px' src='<%= s['mpicture'] %>'></td>
+                <td><a target='new' href='http://moodle.regis.org/user/profile.php?id=<%= s['id'] %>'><%= s['username'] %></a></td>
+                <td><%= s['first_name'] %> <%= s['last_name'] %></td>
+                <td><%= s['advisement'] %></td>
+                <td><%= s['discord_user'].display_name %></td>
+                <td>
+                    <form action='/directmessage/<%= s["discord_user"].id %>' method='POST'>
+                        <input type='text' name='text'>
+                        <button type='submit'>Send</button>
+                    </form>
+            </tr>
+        <% end %>
+    </tbody>
+</table>

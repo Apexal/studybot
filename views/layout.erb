@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title><%= "#{@title} |" if @title %> Student Discord Server</title>
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="http://bootswatch.com/cosmo/bootstrap.min.css"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
+        <link rel="stylesheet" href="/css/main.css"/>
+    </head>
+
+    <body>
+        <header>
+            <%= erb :header %>
+        </header>
+        
+        <main>
+            <div class="container">
+                <% unless @info.empty? %>
+                    <% @info.each do |i| %>
+                       <div class="alert alert-info"><%= i %></div>
+                    <% end %>
+                <% end %>
+
+                <%= yield %>
+            </div>
+        </main>
+
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    </body>
+</html>
