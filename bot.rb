@@ -77,12 +77,13 @@ server = bot.server(150_739_077_757_403_137)
 
 # SINATRA
 set :bind, '0.0.0.0'
-enable :sessions
+use Rack::Session::Pool, :expire_after => 2592000
 
 get '*' do
   session['info'] ||= []
   session['logged_in'] ||= false
 
+  @server = server
   @user = server.members.find { |m| m.id == session['user_id'] } if session['logged_in']
   @username = session['username']
   @logged_in = session['logged_in']
@@ -145,10 +146,10 @@ end
 get '/groups' do
   redirect(to('/')) unless session['logged_in']
   
+  user = server.members.find { |m| m.id == session['user_id'] }
+
   @title = 'Groups'
-
   @owns_group = false
-
   @groups = $db.query('SELECT * FROM groups').to_a
   @groups.each do |g|
     # Assign member list
@@ -157,12 +158,17 @@ get '/groups' do
     @owns_group = true if g['creator'] == session['username']
   end
 
+  @invites = []
+  @invites << $invites[user.id] unless $invites[user.id].nil?
+  @invites = @invites.map { |i| $db.query("SELECT id, name, description, private FROM groups WHERE name='#{i}'").first }
+
   erb :groups, layout: :layout
 end
 
 get '/groups/:id' do
   redirect(to('/')) unless session['logged_in']
-  
+  user = server.members.find { |m| m.id == session['user_id'] }
+
   group_id = Integer(params['id'])
   @group = $db.query("SELECT * FROM groups WHERE id='#{group_id}'").first
   if @group.nil?
@@ -180,34 +186,75 @@ get '/groups/:id' do
     @group['members'] << { info: info, discord: m } unless info.nil?
   end
   
+  if @group['private'] == 1 and !@group['members'].map { |m| m[:discord].id }.include? user.id
+    session['info'] << 'You don\'t have permission to view that private group!'
+    redirect back
+    return
+  end
+
   erb :group, layout: :layout
 end
 
 post '/groups/:id/join' do
   redirect(to('/')) unless session['logged_in']
-  
-  group_id = params['id']
-  user = server.members.find { |m| m.id == session['user_id'] }
-  group = add_user_to_group(server, user, group_id)
 
-  session['info'] << "Joined group '#{group['name']}'!"
+  user = server.members.find { |m| m.id == session['user_id'] }
+  group_id = params['id']
+  
+  begin
+    group = add_user_to_group(server, user, group_id)
+    session['info'] << "Joined group '#{group}'!"
+  rescue => e
+    session['info'] << e
+  end
+  
   redirect back
 end
 
 post '/groups/:id/leave' do
   redirect(to('/')) unless session['logged_in']
-  
-  group_id = params['id']
   user = server.members.find { |m| m.id == session['user_id'] }
+  group_id = params['id']
   group = remove_user_from_group(server, user, group_id)
 
-  session['info'] << "Left group '#{group['name']}'!"
+  session['info'] << "Left group '#{group}'!"
+  redirect back
+end
+
+post '/groups/:id/invite' do
+  redirect(to('/')) unless session['logged_in']
+  
+  user = server.members.find { |m| m.id == session['user_id'] }
+  group_id = params['id']
+  target_username = $db.escape(params['username'])
+
+  target = $db.query("SELECT discord_id FROM students WHERE username='#{target_username}'").first
+  if target.nil?
+    session['info'] << 'Failed to find member.'
+    redirect back
+  end
+
+  target = server.members.find { |m| m.id == Integer(target['discord_id']) }
+  if target.nil?
+    session['info'] << 'Failed to find member.'
+    redirect back
+  end
+  
+  begin
+    invite_user_to_group(server, user, target, group_id)
+    session['info'] << 'Successfully invited user!'
+  rescue => e
+    puts e
+    session['info'] << e
+  end
   redirect back
 end
 
 post '/groups/create' do
   redirect(to('/')) unless session['logged_in']
-  
+
+  user = server.members.find { |m| m.id == session['user_id'] }
+
   # Check for missing data
   if params['name'].nil? or params['name'].empty? or params['description'].empty? or params['description'].nil?
     session['info'] << 'Missing data to create group!'
@@ -218,10 +265,103 @@ post '/groups/create' do
   name = params['name']
   description = params['description']
   is_private = params['public'].nil?
-  user = server.members.find { |m| m.id == session['user_id'] }
 
   group = create_group(server, user, name, description, is_private)
   session['info'] << "Created group #{group['name']}!"
 
   redirect back
+end
+
+get '/groups/:id/manage' do
+  redirect(to('/')) unless session['logged_in']
+
+  user = server.members.find { |m| m.id == session['user_id'] }
+
+  group_id = Integer(params['id'])
+  @group = $db.query("SELECT * FROM groups WHERE id='#{group_id}'").first
+  if @group.nil?
+    session['info'] << 'Failed to find group!'
+    redirect back
+    return
+  end
+  
+  unless @group['creator'] == session['username']
+    session['info'] << 'You don\'t own that group!'
+    redirect back
+    return
+  end
+
+  @title = "Manage Group #{@group['name']}"
+  erb :managegroup, layout: :layout
+end
+
+post '/groups/:id/manage' do
+  redirect(to('/')) unless session['logged_in']
+
+  user = server.members.find { |m| m.id == session['user_id'] }
+
+  group_id = Integer(params['id'])
+  @group = $db.query("SELECT * FROM groups WHERE id='#{group_id}'").first
+  if @group.nil?
+    session['info'] << 'Failed to find group!'
+    redirect back
+    return
+  end
+  
+  unless @group['creator'] == session['username']
+    session['info'] << 'You don\'t own that group!'
+    redirect back
+    return
+  end
+
+  new_description = params['description']
+  if new_description.nil? or new_description.empty?
+    session['info'] << 'Failed to update group info.'
+    redirect back
+    return
+  end
+  new_is_private = params['public'].nil?
+
+  begin
+    change_group_description(server, user, new_description)
+    change_group_privacy(server, user, new_is_private)
+
+    session['info'] << 'Successfully updated group info.'
+  rescue => e
+    session['info'] << e
+  end
+  
+  redirect back
+end
+
+get '/quotes' do
+  redirect(to('/')) unless session['logged_in']
+
+  user = server.members.find { |m| m.id == session['user_id'] }
+  
+  # Get latest quotes
+  SQL = %{
+    SELECT 
+      quotes.id, 
+      quotes.date, 
+      quotes.text, 
+      Writer.username as `user_username`, 
+      Writer.discord_id as `user_discord_id`,
+      AttributedTo.username as `attributed_to_username`, 
+      AttributedTo.discord_id as `attributed_to_discord_id`, 
+      AttributedTo.mpicture as `attributed_to_mpicture`,
+      AttributedTo.first_name as `attributed_to_first_name`,
+      AttributedTo.last_name as `attributed_to_last_name`,
+      AttributedTo.advisement as `attributed_to_advisement`
+    FROM quotes
+    JOIN students AS `Writer` 
+      ON Writer.username=quotes.user
+    JOIN students as `AttributedTo`
+      ON AttributedTo.username=quotes.attributed_to 
+    ORDER BY quotes.id DESC
+    LIMIT 10
+  }
+  @latest = $db.query(SQL)
+
+  erb :quotes, layout: :layout
 end

@@ -16,5 +16,13 @@
 }
 
 body {
+  padding-top: 70px;
   padding-bottom: 50px;
+}
+
+.quote img {
+  float: left;
+  width: 80%;
+  max-width: 75px;
+  margin-right: 20px;
 }

@@ -1,0 +1,42 @@
+<div class="jumbotron">
+    <h1>Quotes</h1>
+    <p>
+        Save the dumb things your classmates say for all eternity.
+        <br><br>
+        <a class="btn btn-default" href="#/quotes/manage">Manage Saved Quotes</a>
+        <a class="btn btn-default" href="#/quotes/<%= @username %>">Your Quotes</a>
+        <a class="btn btn-default" href="#/quotes/all">All Quotes</a>
+    </p>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Statistics</h3>
+            </div>
+            <div class="panel-body">
+                sadasda
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="page-header">
+            <h2>Latest Quotes</h2>
+        </div>
+    </div>
+
+    <% @latest.each do |q| %>
+        <div class="col-xs-12 col-md-6">
+            <blockquote class="quote clearfix">
+                <img src="<%= q['attributed_to_mpicture'] %>">
+                <p>"<%= q['text'] %>"</p>
+                <footer><%= "#{q['attributed_to_first_name']} #{q['attributed_to_last_name']} of #{q['attributed_to_advisement']}" %> <cite title="Source Title">added by <%= q['user_username'] %></cite></footer>
+            </blockquote>
+        </div>
+    <% end %>
+    
+</div>

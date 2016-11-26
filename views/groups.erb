@@ -16,11 +16,22 @@
     <div class="col-xs-12 col-md-6">
         <div class="panel panel-warning ">
             <div class="panel-heading">
-                <h3 class="panel-title">Pending Invitations</h3>
+                <h3 class="panel-title">Your Pending Invitations</h3>
             </div>
-            <div class="panel-body">
-                <p class="text-muted">You have no pending private group invites!</p>
-            </div>
+            
+            <% if @invites.empty? %>
+                <div class="panel-body">
+                    <p class="text-muted">You have no pending private group invites!</p>
+                </div>
+            <% else %>
+                <div class="list-group">
+                    <% @invites.each do |i| %>
+                        <form onsubmit="return confirm('Do you really want to join <%= i['name'] %>?');" method="POST" action='/groups/<%= i['id'] %>/join'>
+                            <button type="submit" class="list-group-item"><% if i['private'] == 1 %><i class="fa fa-lock"></i> <% end %>Group <%= i['name'] %><span class="text-muted hidden-xs"> | <%= i['description'] %></span></button>
+                        </form>
+                    <% end %>
+                </div>
+            <% end %>
         </div>
     </div>
 
@@ -31,23 +42,23 @@
                 <h3 class="panel-title">Create Group</h3>
             </div>
             <div class="panel-body">
-                <% if @has_group %>
-                <form onsubmit="return confirm('Are you sure you want to create a group? You only get one.');" action='/groups/create' method='POST'>
-                    <div class="form-group">
-                        <label for="name">Group Name</label>
-                        <input class="form-control" type="text" name="name" placeholder="What will it be called?" maxlength="40" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="description">Group Description</label>
-                        <input class="form-control" type="text" name="description" placeholder="What is it about?" maxlength="100" required>
-                    </div>
-                    <div class="checkbox">
-                        <label>
-                        <input type="checkbox" name="public" checked="checked"> Public <span class="text-muted"> | Whether anyone can join it or not.</span> 
-                        </label>
-                    </div>
-                    <button class="btn btn-primary right" type='submit'>Create</button>
-                </form>
+                <% unless @owns_group %>
+                    <form onsubmit="return confirm('Are you sure you want to create a group? You only get one.');" action='/groups/create' method='POST'>
+                        <div class="form-group">
+                            <label for="name">Group Name</label>
+                            <input class="form-control" type="text" name="name" placeholder="What will it be called?" maxlength="40" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Group Description</label>
+                            <input class="form-control" type="text" name="description" placeholder="What is it about?" maxlength="100" required>
+                        </div>
+                        <div class="checkbox">
+                            <label>
+                            <input type="checkbox" name="public" checked="checked"> Public <span class="text-muted"> | Whether anyone can join it or not.</span> 
+                            </label>
+                        </div>
+                        <button class="btn btn-primary right" type='submit'>Create</button>
+                    </form>
                 <% else %>
                     <p class="text-muted">You have already created a group. The limit is 1 right now.</p>
                 <% end %>
@@ -104,7 +115,7 @@
 
 <div class="row">
     <div class="col-xs-12" id="groups">
-        <h2>All Public Groups</h2>
+        <h2>All Public Groups <span class="text-muted right">(<%= @groups.length %> total)</span></h2>
         <p class="text-muted">These are the groups on the server that any users can join and leave. Private groups are not shown. You must be invited to private groups to join them.</p>
         <hr>
         <table class="table">
@@ -123,8 +134,11 @@
                         <td class="hidden-xs hidden-sm"><%= g['description'] %> <i class="right"><%= g['member_ids'].length %> members</i></td>
                         
                         <% if g['creator'] == @username %>
-                            <td class="hidden-xs"><a class="btn btn-default" href="/groups/<%= g['id'] %>/manage">Manage</a></td>
-                            <a class="btn btn-default hidden-xs" href="/groups/<%= g['id'] %>">View</a>
+                            <td class="hidden-xs">
+                                <a class="btn btn-default manage-group" href="/groups/<%= g['id'] %>/manage">Manage</a>
+                                <a class="btn btn-default view-group" href="/groups/<%= g['id'] %>">View</a>
+                            </td>
+                            
                         <% elsif g['member_ids'].include? @user.id %>
                             <td class="hidden-xs">
                                 <form onsubmit="return confirm('Do you really want to leave <%= g['name'] %>?');" method="POST" action='/groups/<%= g['id'] %>/leave'>

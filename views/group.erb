@@ -1,7 +1,7 @@
 <div class="row">
     <div class="col-xs-12">
         <div class="jumbotron">
-            <h1>Group <%= @group['name'] %></h1>
+            <h1><% if @group['private'] == 1 %><i title="This group is private!" class="fa fa-lock" aria-hidden="true"></i> <% end %>Group <%= @group['name'] %></h1>
             <p>
                 "<%= @group['description'] %>"
             </p>
@@ -27,7 +27,49 @@
     <div class="col-xs-12">
         <h3 class="text-center"><b><%= @group['name'] %></b> is owned by <b><%= @group['creator'] %></b></h3>
         <h3 class="text-center"><b><%= @group['name'] %></b> is ranked #0 in groups by member count <i class="text-muted">(<%= @group['members'].length %> current members)</i>.</h3>
-    </di
+    </div>
+</div>
+
+
+<div class="row">
+    <hr>
+    <% if @group['members'].map { |m| m[:discord].id }.include? @user.id %>
+        <div class="col-xs-12 col-md-6">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Invite Member</h3>
+                </div>
+                <div class="panel-body">
+                    <% if @group['private'] == 1 %>
+                        <p class="text-muted">You can invite users to join this private group by sending an invitation.</p>
+                    <% else %>
+                        <p class="text-muted">You can urge other members to join this public group.</p>
+                    <% end %>
+                    <form class="form-inline" action="/groups/<%= @group['id'] %>/invite" method="POST">
+                        <div class="form-group">
+                            <input type="text" class="form-control" name="username" placeholder="Regis Username" required>
+                        </div>
+                        <button class="btn btn-primary" type="submit">Send Invite</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <% end %>
+    <% if @group['private'] == 1 %>
+        <div class="col-xs-12 col-md-6">
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Pending Invitations</h3>
+                </div>
+                <ul class="list-group">
+                    <li class="list-group-item text-muted">There are no pending invitations.</li>
+                </ul>
+            </div>
+        </div>
+    <% end %>
+</div>
+
+
 
 <div class="row">
     <div class="col-xs-12">
@@ -35,9 +77,6 @@
             <h1>Current Members</h1>
         </div>
     </div>
-</div>
-
-<div class="row">
     <div class="col-xs-12">
         <table class="table">
             <thead>

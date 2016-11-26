@@ -1,4 +1,4 @@
-<nav class="navbar navbar-default">
+<nav class="navbar navbar-default navbar-fixed-top">
   <div class="container">
     <!-- Brand and toggle get grouped for better mobile display -->
     <div class="navbar-header">
@@ -16,8 +16,9 @@
       <ul class="nav navbar-nav">
         <li><a href="/">About</a></li>
         <% if @logged_in %>
-          <li><a href="/groups">Groups</a></li>
           <li><a href="#">Members</a></li>
+          <li><a href="/groups">Groups</a></li>
+          <li><a href="/quotes">Quotes</a></li>
           <li><a target="new" href="https://discordapp.com/channels/150739077757403137/150739077757403137">Discord</a></li>
         <% end %>
       </ul>
@@ -35,7 +36,7 @@
           </li>
         <% else %>
           <li>
-            <a href="#" onclick="window.location.href='/login?code='+prompt('What is your secret code? (Get it by DM\'ing studybot !secretcode)')">Login</a>
+            <a href="#" onclick="alert('Login by DM\'ing studybot !login and clicking the link! (bookmark it for easy access)')">Login</a>
           </li>
         <% end %>
       </ul>

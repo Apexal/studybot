@@ -12,43 +12,46 @@ def add_user_to_group(server, user, group_id)
   private = false
   role = nil
   channel = nil
-  group = nil
-  $db.query("SELECT role_id, room_id, private FROM groups WHERE id='#{group_id}'").each do |row|
-    group = row
+  group_name = nil
+  $db.query("SELECT name, role_id, room_id, private FROM groups WHERE id='#{group_id}'").each do |row|
+    group_name = row['name']
     role = server.roles.find { |r| r.id == Integer(row['role_id']) }
     channel = server.text_channels.find { |c| c.id == Integer(row['room_id']) }
     private = (row['private'] == 1)
+    break
   end
   
   if role.nil?
-    user.pm 'Invalid group! For a list of availble groups type `!groups`.'
+    raise 'Invalid group!'
   else
-    if private
-      if invites[user.id].downcase == group['name'].downcase
+    if user.role? role
+      $invites.delete user.id if $invites[user.id] == group_name
+      raise 'Already in that group!'
+    elsif private
+      if !$invites[user.id].nil? and $invites[user.id].downcase == group_name.downcase
         # Was invited
         user.add_role role
         unless channel.nil?
           channel.send_message "*#{user.mention} joined the group.*"
-          puts "#{user.display_name} joined Group #{group['name']}"
+          puts "#{user.display_name} joined Group #{group_name}"
         end
-        
-        invites.delete user.id
       else
         # Was NOT invited
-        user.pm 'You have not been invited to that private group.'
+        raise 'You have not been invited to that private group.'
       end
     else
       user.add_role role
       unless channel.nil?
         channel.send_message "*#{user.mention} joined the group.*"
       end
-      puts "#{user.display_name} joined Group #{group['name']}"
+      puts "#{user.display_name} joined Group #{group_name}"
     end
   end
 
+  $invites.delete user.id
   handle_group_voice_channels(server)
 
-  return group
+  return group_name
 end
 
 def remove_user_from_group(server, user, group_id)
@@ -57,7 +60,7 @@ def remove_user_from_group(server, user, group_id)
   role = nil
   channel = nil
   group = nil
-  $db.query("SELECT role_id, room_id FROM groups WHERE id='#{group_id}'").each do |row|
+  $db.query("SELECT name, role_id, room_id FROM groups WHERE id='#{group_id}'").each do |row|
     group = row
     role = server.roles.find { |r| r.id == Integer(row['role_id']) }
     channel = server.text_channels.find { |c| c.id == Integer(row['room_id']) }
@@ -76,7 +79,7 @@ def remove_user_from_group(server, user, group_id)
 
   handle_group_voice_channels(server)
 
-  return group
+  return group['name']
 end
 
 def create_group(server, owner, full_name, description, is_private)
@@ -158,6 +161,85 @@ def create_group(server, owner, full_name, description, is_private)
   return $db.query("SELECT * FROM groups WHERE name='#{full_name}'").first
 end
 
+$invites = {}
+def invite_user_to_group(server, user, target, group_id)
+  raise 'Invalid group id' if group_id.nil?
+
+  user = user.on(server)
+  target = target.on(server)
+
+  raise 'You can only invite Regians to groups.' unless user.role? server.roles.find { |r| r.name == 'Verified' }
+  
+  role = nil
+  group_name = nil
+  room = nil
+  is_private = nil
+  $db.query("SELECT name, role_id, room_id, private FROM groups WHERE id=#{Integer(group_id)}").each do |row|
+    group_name = row['name']
+    is_private = row['private'] == 1
+    role = server.roles.find { |r| r.id == Integer(row['role_id']) }
+    room = server.text_channels.find { |t| t.id == Integer(row['room_id']) }
+    break
+  end
+
+  if role.nil?
+    raise 'Invalid group.'
+  else
+    if user.role? role
+      if target.role? role
+        raise 'Target is already in that group!'
+      elsif is_private
+        target.pm "You have been invited to the private **Group #{group_name}**. Type `!join '#{group_name}'` to enter!"
+        $invites[target.id] = group_name
+        room.send_message "#{target.mention} has been invited to join the group."
+      else
+        target.pm "#{user.mention} wants you to join public **Group #{group_name}**! `!join '#{group_name}'`"
+        room.send_message "#{target.mention} has been asked to join the group."
+      end
+    else
+      raise 'You can only invite users to a group you are in yourself.'
+    end
+  end
+
+  return group_name
+end
+
+def change_group_description(server, user, description)
+    channel = nil
+
+    raise 'Description too long or too short.' if description.length < 3 or description.length > 40
+
+    $db.query("SELECT room_id FROM groups JOIN students ON students.username=groups.creator WHERE students.discord_id=#{user.id}").each do |row|
+      channel = server.text_channels.find{ |c| c.id == Integer(row['room_id']) }
+    end
+    unless channel.nil?
+      channel.topic = description
+      $db.query("UPDATE groups JOIN students ON students.username=groups.creator SET groups.description='#{$db.escape(description)}' WHERE students.discord_id=#{user.id}")
+      user.pm 'Updated group description.'
+    end
+    puts 'Updated group description.'
+end
+
+def change_group_privacy(server, user, is_private)
+  channel = nil
+  is_private = is_private ? 1 : 0
+
+  $db.query("SELECT room_id, private FROM groups JOIN students ON students.username=groups.creator WHERE students.discord_id=#{user.id}").each do |row|
+    channel = server.text_channels.find { |c| c.id == Integer(row['room_id']) }
+    break
+  end
+
+  if channel.nil?
+    raise 'No group found.'
+  else
+    $db.query("UPDATE groups JOIN students ON students.username=groups.creator SET groups.private=#{is_private} WHERE students.discord_id=#{user.id}")
+    unless channel.nil?
+      channel.send_message "This group is now **#{is_private == 1 ? 'private' : 'public'}**."
+    end
+  end
+  puts 'Updated group privacy status.'
+end
+
 module GroupCommands
   extend Discordrb::Commands::CommandContainer
   command(:groups, min_args: 0, max_args: 0, description: 'List availble groups.', permission_level: 1) do |event|
@@ -202,107 +284,22 @@ module GroupCommands
     $db.query("SELECT room_id, private FROM groups JOIN students ON students.username=groups.creator WHERE students.discord_id=#{event.user.id}").each do |row|
       p_status = row['private']
       channel = server.text_channels.find { |c| c.id == Integer(row['room_id']) }
+
+      p_status = !(p_status == 1) # Flip
+      change_group_privacy(server, event.user, p_status)
+      break
     end
 
-    if p_status.nil?
-      event.user.pm 'You don\'t have a group.'
-    else
-      p_status = p_status == 1 ? 0 : 1 # Flip
-      $db.query("UPDATE groups JOIN students ON students.username=groups.creator SET groups.private=#{p_status} WHERE students.discord_id=#{event.user.id}")
-      unless channel.nil?
-        channel.send_message "This group is now **#{p_status == 1 ? 'private' : 'public'}**."
-      end
-    end
-    puts 'Updated group privacy status.'
     nil
   end
 
-  command(:creategroup, min_args: 2, max_args: 3, description: 'Create a group to get your own role and text-channel.', usage: '`!creategroup "Name" "Description" yes/no (private)`', permission_level: 1) do |event, full_name, description, private|
+  command(:creategroup, min_args: 2, max_args: 3, description: 'Create a group to get your own role and text-channel.', usage: '`!creategroup "Name" "Description" yes/no (private)`', permission_level: 1) do |event, full_name, description, is_private|
     event.message.delete unless event.channel.private?
 
-    full_name.strip!
-    description = description ? description[0..254] : 'No description given.'
-    group_name = full_name.dup
-    puts "Attempting to make group '#{full_name}'"
-    # Check if group exists already or person already has group
-    group_name = $db.escape(group_name)
-    existing = $db.query("SELECT COUNT(*) AS count FROM groups JOIN students ON students.username=groups.creator WHERE students.discord_id=#{event.user.id} OR groups.name='#{group_name}'").first['count']
-    if existing > 0
-      puts 'Group exists or user already has group'
-      event.message.reply 'A group by that name already exists or you already started a group.'
-      return
-    end
-    
-    # Sanitize group name
-    group_name.downcase!
-    group_name.strip!
-    
-    if group_name.length < 3
-      event.user.pm 'Group name is too short. It must be at least 3 characters long.'
-      return
-    end
-    
-    if group_name.length > 20
-      event.user.pm 'Group name is too long. It must be less than 21 characters.'
-      return
-    end
-    
-    group_name.gsub!(/\s+/, '-')
-    group_name.gsub!(/[^\p{Alnum}-]/, '')
-    
-    server = event.bot.server(150_739_077_757_403_137)
+    server = nil
     user = event.user.on(server)
-    # Good to go
-    perms = Discordrb::Permissions.new
-    perms.can_read_messages = true
-    perms.can_read_message_history = true
-    perms.can_send_messages = true
-		perms.can_mention_everyone = true
-		
-		# Fix for @here replacing
-		g_perms = perms.clone
-		g_perms.can_mention_everyone = false
+    create_group(server, user, full_name, description, (is_private == 'yes'))
 
-		other_p = Discordrb::Permissions.new
-		other_p.can_mention_everyone = true
-		
-    # Permissions for group creator
-    creator_perms = Discordrb::Permissions.new
-    creator_perms.can_manage_messages = true
-    # Create role
-    group_role = server.create_role
-    group_role.name = full_name
-    #group_role.mentionable = true
-    user.add_role group_role
-    # Create text-channel
-    group_room = server.create_channel group_name
-    group_room.topic = description
-    group_room.define_overwrite(group_role, g_perms, other_p)
-    # group_room.define_overwrite(user, creator_perms, 0)
-    Discordrb::API.update_user_overrides(event.bot.token, group_room.id, user.id, creator_perms.bits, 0)
-    Discordrb::API.update_role_overrides(event.bot.token, group_room.id, server.id, 0, perms.bits)
-    # Get Regis username of user
-    username = 'unknown'
-    $db.query("SELECT username FROM students WHERE discord_id=#{event.user.id}").each do |row|
-      username = row['username']
-    end
-    
-    # Private
-    p = false
-    p = true if !private.nil? and (private == "yes" or private == "true" or private == "1")
-    p = if p then 1 else 0 end
-    
-    # Insert group in DB
-    $db.query("INSERT INTO groups (creator, name, private, room_id, role_id, description) VALUES ('#{username}', '#{full_name}', #{p}, '#{group_room.id}', '#{group_role.id}', '#{description}')")
-    user.pm "You have created **#{full_name}!**"
-		user.pm "Others can join with `!join \"#{full_name}\"`" if p == 0
-		user.pm "Invite other users with `!invite '#{full_name}' @user`" if p == 1
-		user.pm "Change the description of the group with `!description \"New Description\"`.\nDelete the group with `!deletegroup`."
-    handle_group_voice_channels(server)
-    # Announce to #meta (if public)
-    server.text_channels.find{|c| c.name == 'meta'}.send_message("@everyone #{user.mention} has just created the group **#{full_name}**. Join with `!join \"#{full_name}\"`") unless private == 1
-		user.pm "*As group founder, you can manage (delete/pin) messages in your group's text-channel.*"
-    $groups = $db.query('SELECT * FROM groups WHERE voice_channel_allowed=1')
     nil
   end
 
@@ -330,7 +327,7 @@ module GroupCommands
     nil
   end
   
-  invites = {}
+  
   command(:invite, min_args: 2, max_args: 2, description: 'Invite a student to a group.', usage: '`!invite "Group" @user`', permission_level: 1) do |event, group_name|
     event.message.delete unless event.channel.private?
     if group_name.nil? or event.message.mentions.empty?
@@ -366,7 +363,7 @@ module GroupCommands
 					user.pm 'They are already in that group!'
 				elsif is_private
 					target.pm "You have been invited to the private **Group #{group_name}**. Type `!join '#{group_name}'` to enter!"
-					invites[target.id] = group_name
+					$invites[target.id] = group_name
 					room.send_message "#{target.mention} has been invited to join the group."
 				else
 					target.pm "#{user.mention} wants you to join public **Group #{group_name}**! `!join '#{group_name}'`"
@@ -390,8 +387,11 @@ module GroupCommands
     
     group_name = $db.escape(group_name)
     $db.query("SELECT id FROM groups WHERE name='#{group_name}'").each do |row|
-      add_user_to_group(server, user, row['id'])
-
+      begin
+        add_user_to_group(server, user, row['id'])
+      rescue => e
+        user.pm e
+      end
       break
     end
     nil
@@ -441,19 +441,10 @@ module GroupCommands
 
   command(:description, min_args: 1, max_args: 1, description: 'Change the description of your group.', usage: '`!description "New Description"`', permission_level: 1) do |event, description|
     event.message.delete unless event.channel.private?
-
-    channel = nil
+    
     server = event.bot.server(150_739_077_757_403_137)
-
-    $db.query("SELECT room_id FROM groups JOIN students ON students.username=groups.creator WHERE students.discord_id=#{event.user.id}").each do |row|
-      channel = server.text_channels.find{|c| c.id==Integer(row['room_id'])}
-    end
-    unless channel.nil?
-      channel.topic = description
-      $db.query("UPDATE groups JOIN students ON students.username=groups.creator SET groups.description='#{description}' WHERE students.discord_id=#{event.user.id}")
-      event.user.pm 'Updated group description.'
-    end
-    puts 'Updated group description.'
+    change_group_description(server, event.user, description)
+    
     nil
   end
 end
