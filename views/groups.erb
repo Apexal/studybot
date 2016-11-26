@@ -4,30 +4,128 @@
         <h1>Groups</h1>
         <p>
             Groups allow users to communicate in private text and voice channels about topics that interest them.
+            <br><br>
+            <a class="btn btn-default" href="#groups">Browse Groups</a>
         </p>
     </div>
 </div>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
+<div class="row">
+    <div class="col-xs-12 col-md-6">
+        <div class="panel panel-warning ">
+            <div class="panel-heading">
+                <h3 class="panel-title">Pending Invitations</h3>
+            </div>
+            <div class="panel-body">
+                <p class="text-muted">You have no pending private group invites!</p>
+            </div>
+        </div>
+    </div>
 
-    <tbody>
-        <% @groups.each do |g| %>
-            <tr class="<% if g['member_ids'].include? @user.id %>success<% end %>">
-                <td title="Owned by <%= g['creator'] %>"><%= g['name'] %></td>
-                <td><%= g['description'] %> <i class="right"><%= g['member_ids'].length %> members</i></td>
-                <% if g['member_ids'].include? @user.id %>
-                    <td><a onclick='return confirm("Are you sure?");' href='/leavegroup/<%= g['id'] %>'>Leave</a></td>
-                <% else %>
-                    <td><a onclick='return confirm("Are you sure?");' href='/joingroup/<%= g['id'] %>'>Join</a></td>
+    <% unless @owns_group %>
+        <div class="col-xs-12 col-md-6">
+            <div class="panel panel-primary ">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Create Group</h3>
+                </div>
+                <div class="panel-body">
+                    <form onsubmit="return confirm('Are you sure you want to create a group? You only get one.');" action='/groups/create' method='POST'>
+                        <div class="form-group">
+                            <label for="name">Group Name</label>
+                            <input class="form-control" type="text" name="name" placeholder="What will it be called?" maxlength="40" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Group Description</label>
+                            <input class="form-control" type="text" name="description" placeholder="What is it about?" maxlength="100" required>
+                        </div>
+                        <div class="checkbox">
+                            <label>
+                            <input type="checkbox" name="public" checked="checked"> Public <span class="text-muted"> | Whether anyone can join it or not.</span> 
+                            </label>
+                        </div>
+                        <button class="btn btn-primary right" type='submit'>Create</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <% end %>
+</div>
+<hr>
+
+<div class="row">
+    <div class="col-xs-12">
+        <h2>Your Private Groups</h2>
+        <p class="text-muted">These are the private groups you have created or have accepted invites to. Be careful, if you leave any you will have to be reinvited!</p>
+        <hr>
+        <table class="table table-condensed">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <% @groups.select { |m| m['private'] == 1 and m['member_ids'].include? @user.id }.each do |g| %>
+                    <tr>
+                        <td title="Owned by <%= g['creator'] %>"><%= g['name'] %></td>
+                        <td><%= g['description'] %> <i class="right"><%= g['member_ids'].length %> members</i></td>
+                        
+                        <% if g['creator'] == @username %>
+                            <td><a class="btn btn-default" href="/groups/<%= g['id'] %>/manage">Manage</a></td>
+                        <% else %>
+                            <td>
+                                <form onsubmit="return confirm('Do you really want to leave <%= g['name'] %>?');" method="POST" action='/groups/<%= g['id'] %>/leave'>
+                                    <button class="btn btn-danger" type='submit'>Leave</button>
+                                </form>
+                            </td>
+                        <% end %>
+                    </tr>
                 <% end %>
-            </tr>
-        <% end %>
-    </tbody>
-</table>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xs-12" id="groups">
+        <h2>All Public Groups</h2>
+        <p class="text-muted">These are the groups on the server that any users can join and leave. Private groups are not shown. You must be invited to private groups to join them.</p>
+        <hr>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <% @groups.select { |m| m['private'] == 0 }.each do |g| %>
+                    <tr class="<% if g['member_ids'].include? @user.id %>active<% end %>">
+                        <td title="Owned by <%= g['creator'] %>"><%= g['name'] %></td>
+                        <td><%= g['description'] %> <i class="right"><%= g['member_ids'].length %> members</i></td>
+                        
+                        <% if g['creator'] == @username %>
+                            <td><a class="btn btn-default" href="/groups/<%= g['id'] %>/manage">Manage</a></td>
+                        <% elsif g['member_ids'].include? @user.id %>
+                            <td>
+                                <form onsubmit="return confirm('Do you really want to leave <%= g['name'] %>?');" method="POST" action='/groups/<%= g['id'] %>/leave'>
+                                    <button class="btn btn-danger" type='submit'>Leave</button>
+                                </form>
+                            </td>
+                        <% else %>
+                            <td>
+                                <form onsubmit="return confirm('Do you really want to join <%= g['name'] %>?');" method="POST" action='/groups/<%= g['id'] %>/join'>
+                                    <button class="btn btn-info" type='submit'>Join</button>
+                                </form>
+                            </td>
+                        <% end %>
+                    </tr>
+                <% end %>
+            </tbody>
+        </table>
+    </div>
+</div>

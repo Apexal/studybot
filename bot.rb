@@ -84,6 +84,7 @@ get '*' do
   session['logged_in'] ||= false
 
   @user = server.members.find { |m| m.id == session['user_id'] } if session['logged_in']
+  @username = session['username']
   @logged_in = session['logged_in']
 
   @info = session['info']
@@ -98,9 +99,17 @@ get '/login' do
     redirect back
   end
 
+  session['user_id'] = nil
   $db.query("SELECT username, discord_id FROM discord_codes WHERE code='#{secret_code}'").each do |row|
     session['user_id'] = Integer(row['discord_id'])
+    session['username'] = row['username']
   end
+  
+  if session['user_id'].nil?
+    session['info'] << 'Failed to login!'
+    redirect back
+  end
+
   session['info'] << "You have logged in!"
   session['logged_in'] = true
 
@@ -110,6 +119,7 @@ end
 get '/logout' do
   session['logged_in'] = false
   session['user_id'] = nil
+  session['username'] = nil
   session['info'] << 'You have logged out.'
   redirect back
 end
@@ -127,12 +137,52 @@ get '/groups' do
   redirect(to('/')) unless session['logged_in']
   @title = 'Groups'
 
+  @owns_group = false
+
   @groups = $db.query('SELECT * FROM groups').to_a
   @groups.each do |g|
     # Assign member list
     role = server.roles.find { |r| r.id == Integer(g['role_id']) }
     g['member_ids'] = server.members.find_all { |m| m.roles.include? role }.map { |m| m.id }
+    @owns_group = true if g['creator'] == session['username']
   end
 
   erb :groups, layout: :layout
+end
+
+post '/groups/:id/join' do
+  group_id = params['id']
+  user = server.members.find { |m| m.id == session['user_id'] }
+  group = add_user_to_group(server, user, group_id)
+
+  session['info'] << "Joined group '#{group['name']}'!"
+  redirect back
+end
+
+post '/groups/:id/leave' do
+  group_id = params['id']
+  user = server.members.find { |m| m.id == session['user_id'] }
+  group = remove_user_from_group(server, user, group_id)
+
+  session['info'] << "Left group '#{group['name']}'!"
+  redirect back
+end
+
+post '/groups/create' do
+  # Check for missing data
+  if params['name'].nil? or params['name'].empty? or params['description'].empty? or params['description'].nil?
+    session['info'] << 'Missing data to create group!'
+    redirect back
+    return
+  end
+
+  name = params['name']
+  description = params['description']
+  is_private = params['public'].nil?
+  user = server.members.find { |m| m.id == session['user_id'] }
+
+  group = create_group(server, user, name, description, is_private)
+  session['info'] << "Created group #{group['name']}!"
+
+  redirect back
 end

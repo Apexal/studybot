@@ -193,7 +193,7 @@ module UtilityCommands
       code = row['code']
     end
 
-    event.user.pm "http://discord.getontrac.info/login?code=#{code}" unless code.nil?
+    event.user.pm "http://www.getontrac.info:4567/login?code=#{code}" unless code.nil?
     nil
   end
 
